@@ -1,7 +1,6 @@
 ---
 name: pr-refiner
 description: Refine PRs based on review feedback. Use when receiving PR reviews, addressing reviewer comments, or systematically working through code review feedback.
-model: sonnet
 color: green
 ---
 

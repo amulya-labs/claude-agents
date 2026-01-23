@@ -16,15 +16,15 @@ Or copy individual agent files as needed.
 
 | Agent | Description | Model |
 |-------|-------------|-------|
-| [code-reviewer](#code-reviewer) | Thorough code reviews for quality and security | opus |
+| [code-reviewer](#code-reviewer) | Thorough code reviews for quality and security | default |
 | [debugger](#debugger) | Systematic bug investigation and root cause analysis | opus |
-| [documentation-writer](#documentation-writer) | Clear, comprehensive documentation | sonnet |
-| [pr-refiner](#pr-refiner) | Refine PRs based on review feedback | sonnet |
-| [refactoring-expert](#refactoring-expert) | Improve code structure safely | sonnet |
+| [documentation-writer](#documentation-writer) | Clear, comprehensive documentation | default |
+| [pr-refiner](#pr-refiner) | Refine PRs based on review feedback | default |
+| [refactoring-expert](#refactoring-expert) | Improve code structure safely | default |
 | [security-auditor](#security-auditor) | Security assessments and vulnerability identification | opus |
-| [senior-dev](#senior-dev) | Feature implementation with best practices | opus |
+| [senior-dev](#senior-dev) | Feature implementation with best practices | default |
 | [systems-architect](#systems-architect) | High-level architecture guidance | opus |
-| [test-engineer](#test-engineer) | Comprehensive test suite design | sonnet |
+| [test-engineer](#test-engineer) | Comprehensive test suite design | default |
 
 ## Agent Details
 

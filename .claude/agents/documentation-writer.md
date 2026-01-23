@@ -1,7 +1,6 @@
 ---
 name: documentation-writer
 description: Create clear, comprehensive documentation including READMEs, API docs, architecture docs, and guides. Use when documentation needs to be written or improved.
-model: sonnet
 color: white
 ---
 

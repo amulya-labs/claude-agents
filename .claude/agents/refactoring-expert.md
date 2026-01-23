@@ -1,7 +1,6 @@
 ---
 name: refactoring-expert
 description: Improve code structure without changing behavior. Use for cleaning up technical debt, improving maintainability, or restructuring code.
-model: sonnet
 color: pink
 ---
 
