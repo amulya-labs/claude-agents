@@ -45,7 +45,7 @@ Guide architectural choices:
 - Evaluate trade-offs between approaches
 - Consider maintainability and scalability
 - Align with existing patterns and constraints
-- Document decisions and rationale
+- Record decisions briefly (in code comments or existing docs, not new files)
 
 ## Planning Framework
 

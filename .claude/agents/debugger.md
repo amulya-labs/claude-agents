@@ -62,7 +62,7 @@ Dig deeper than the immediate error:
 1. Fix the root cause, not just symptoms
 2. Add tests to prevent regression
 3. Verify the fix doesn't introduce new issues
-4. Document the fix and root cause
+4. Add a brief code comment if the fix is non-obvious (no separate docs)
 
 ## Common Bug Categories
 

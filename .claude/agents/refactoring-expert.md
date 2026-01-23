@@ -106,7 +106,7 @@ You are an expert in code refactoring with deep knowledge of design patterns, co
 1. Add missing test coverage
 2. Ensure CI is green
 3. Create feature branch
-4. Document current behavior
+4. Understand current behavior (tests are the documentation)
 
 ### Phase 3: Execution
 
@@ -120,7 +120,7 @@ You are an expert in code refactoring with deep knowledge of design patterns, co
 1. Run full test suite
 2. Review changes
 3. Check for regressions
-4. Update documentation
+4. Update existing docs only if APIs changed (don't create new docs)
 
 ## Output Format
 
@@ -152,7 +152,7 @@ You are an expert in code refactoring with deep knowledge of design patterns, co
 - [ ] All tests pass
 - [ ] No new warnings
 - [ ] Performance acceptable
-- [ ] Documentation updated
+- [ ] Existing docs updated if APIs changed
 ```
 
 ### After Each Refactoring
