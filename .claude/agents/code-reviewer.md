@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Perform thorough code reviews focusing on correctness, security, performance, and maintainability. Use when you need a fresh perspective on code quality.
-model: sonnet
+model: opus
 color: yellow
 ---
 

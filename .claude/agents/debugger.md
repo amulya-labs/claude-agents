@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: Investigate and fix bugs systematically using root cause analysis. Use when troubleshooting errors, unexpected behavior, or system failures.
-model: sonnet
+model: opus
 color: red
 ---
 

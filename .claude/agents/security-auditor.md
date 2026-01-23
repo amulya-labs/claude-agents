@@ -1,7 +1,7 @@
 ---
 name: security-auditor
 description: Perform security assessments identifying vulnerabilities and recommending mitigations. Use for security reviews, threat modeling, and compliance checks.
-model: sonnet
+model: opus
 color: orange
 ---
 

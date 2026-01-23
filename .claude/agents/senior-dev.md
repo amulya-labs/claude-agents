@@ -1,7 +1,7 @@
 ---
 name: senior-dev
 description: Implement features, fix bugs, and refactor code with production-quality standards. Use for development tasks requiring deep codebase understanding and engineering best practices.
-model: sonnet
+model: opus
 color: cyan
 ---
 
