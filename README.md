@@ -8,16 +8,39 @@ A collection of reusable Claude Code agents for common software development task
 
 ## Installation
 
-### Option 1: Clone the entire collection
+### For Git Repos (Recommended)
+
+Use git subtree to add agents to your project. This keeps agents updatable while committing them to your repo.
+
+**First-time setup:**
+
+```bash
+# Download the helper script
+curl -o scripts/manage-agents.sh https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/manage-agents.sh
+chmod +x scripts/manage-agents.sh
+
+# Install agents
+./scripts/manage-agents.sh install
+git push
+```
+
+**Update agents later:**
+
+```bash
+./scripts/manage-agents.sh update
+git push
+```
+
+**For collaborators:** Just `git clone` and `git pull` as normal - agents are included in the repo.
+
+### Quick Copy (Non-git or One-time Use)
 
 ```bash
 git clone https://github.com/rrlamichhane/claude-agents.git
 cp -r claude-agents/.claude/agents/ /path/to/your/project/.claude/agents/
 ```
 
-### Option 2: Download specific agents
-
-Copy individual agent files from [`.claude/agents/`](.claude/agents/) to your project's `.claude/agents/` directory.
+Or copy individual agent files from [`.claude/agents/`](.claude/agents/).
 
 ## Available Agents
 
