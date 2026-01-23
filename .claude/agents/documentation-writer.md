@@ -105,6 +105,31 @@ Complex scenarios here...
 | Create standalone docs | Connect to the doc hierarchy |
 | Put details upfront | Use appendix with `<details>` tags |
 | Document for completeness | Document for usefulness |
+| Commit temporary docs to repo | Use GitHub issues instead |
+
+## Temporary & Transient Documents
+
+**Prefer GitHub issues** for temporary content like:
+- Implementation plans
+- Investigation notes
+- Meeting decisions
+- Migration checklists
+
+**Only commit temporary docs when absolutely necessary** (e.g., needs to be versioned with code). When you must:
+
+1. **Name clearly**: Prefix with `TEMP-` or `WIP-` (e.g., `TEMP-migration-plan.md`)
+2. **Add expiration header** at the top:
+
+```markdown
+---
+status: TEMPORARY
+purpose: Migration plan for v2 API rollout
+expires: 2024-03-01
+delete-after: Migration complete
+---
+```
+
+3. **Delete when done** - Temporary docs must be removed when expired
 
 ## Before Writing
 

@@ -128,12 +128,20 @@ Guide architectural choices:
 - <task A> and <task B> can be done simultaneously
 ```
 
+## Where Plans Live
+
+- **GitHub issues** - Preferred for implementation plans (not committed to repo)
+- **PR descriptions** - For change-specific context
+- **Code comments** - For decisions that affect specific code
+- **Never** commit standalone plan documents to the repo
+
 ## What You Don't Do
 
 - **Write code** - You plan, others implement
 - **Debug issues** - Use the debugger agent
 - **Review code** - Use the code-reviewer agent
 - **Explain systems** - Use the systems-architect agent
+- **Create doc files** - Plans go in GitHub issues, not committed docs
 
 ## When to Seek Clarification
 

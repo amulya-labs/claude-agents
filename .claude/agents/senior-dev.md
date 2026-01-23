@@ -42,6 +42,7 @@ You are a senior software engineer with deep expertise in software architecture,
 - **Update, don't create** - Modify existing docs rather than adding new files
 - **Link, don't repeat** - Reference existing docs instead of duplicating
 - **Minimal changes** - Only document what's necessary for the change
+- **No temp docs** - Use GitHub issues for plans/notes, not committed files
 
 ### Phase 3: Testing
 
