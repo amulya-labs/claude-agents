@@ -1,16 +1,23 @@
 # Claude Agents
 
+[![CI](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Agents](https://img.shields.io/badge/agents-9-blue.svg)](.claude/agents/)
+
 A collection of reusable Claude Code agents for common software development tasks.
 
 ## Installation
 
-Copy the `.claude/agents/` directory to your project:
+### Option 1: Clone the entire collection
 
 ```bash
-cp -r .claude/agents/ /path/to/your/project/.claude/agents/
+git clone https://github.com/rrlamichhane/claude-agents.git
+cp -r claude-agents/.claude/agents/ /path/to/your/project/.claude/agents/
 ```
 
-Or copy individual agent files as needed.
+### Option 2: Download specific agents
+
+Copy individual agent files from [`.claude/agents/`](.claude/agents/) to your project's `.claude/agents/` directory.
 
 ## Available Agents
 
@@ -120,14 +127,66 @@ Use when you need thorough test coverage.
 
 ## Usage
 
-Agents are invoked automatically by Claude Code when relevant, or you can reference them explicitly. The agents work best when given clear context about the task at hand.
+### Quick Start
+
+Once installed, agents are available in your Claude Code sessions.
+
+**Automatic invocation** — Claude selects the appropriate agent based on your request:
+
+```
+> Review this PR for security issues
+# Claude automatically uses security-auditor agent
+```
+
+**Explicit invocation** — Use `@agent-name` to invoke a specific agent:
+
+```
+> @systems-architect analyze the data flow in this service
+> @debugger help me find why this test is failing
+> @security-auditor review the authentication module
+```
+
+### Examples
+
+| Task | Command |
+|------|---------|
+| Security review | `@security-auditor review the auth module` |
+| Debug an issue | `@debugger the API returns 500 on POST` |
+| Implement feature | `@senior-dev add pagination to the users endpoint` |
+| Architecture question | `@systems-architect how does caching work here?` |
+| Address PR feedback | `@pr-refiner address the review comments` |
+| Write tests | `@test-engineer add tests for the payment service` |
+| Refactor code | `@refactoring-expert clean up the legacy handlers` |
+| Review code | `@code-reviewer check my changes` |
+| Write docs | `@documentation-writer create API docs for this module` |
+
+### Learn More
+
+See the [Claude Code agents documentation](https://docs.anthropic.com/en/docs/claude-code/agents) for more details.
 
 ## Contributing
 
-Feel free to submit PRs to add new agents or improve existing ones. Agents should be:
-- Generalized (not project-specific)
-- Well-structured with clear sections
-- Focused on a specific domain or task
+PRs welcome! When adding or improving agents:
+
+- **Generalized** — No project-specific references
+- **Well-structured** — Use clear sections with headers and bullets
+- **Focused** — One domain or task per agent
+- **Tested** — Ensure CI passes (validates frontmatter syntax)
+
+### Agent File Format
+
+```yaml
+---
+name: agent-name
+description: Brief description of when to use this agent.
+model: opus  # optional: opus, sonnet, haiku (omit for default)
+color: blue  # optional: terminal color
+---
+
+# Agent Title
+
+Agent instructions in markdown...
+```
 
 ## License
 
