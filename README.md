@@ -19,7 +19,7 @@ Or copy individual agent files as needed.
 | [code-reviewer](#code-reviewer) | Thorough code reviews for quality and security | sonnet |
 | [debugger](#debugger) | Systematic bug investigation and root cause analysis | sonnet |
 | [documentation-writer](#documentation-writer) | Clear, comprehensive documentation | sonnet |
-| [pr-reviewer](#pr-reviewer) | Process and address PR feedback | sonnet |
+| [pr-refiner](#pr-refiner) | Refine PRs based on review feedback | sonnet |
 | [refactoring-expert](#refactoring-expert) | Improve code structure safely | sonnet |
 | [security-auditor](#security-auditor) | Security assessments and vulnerability identification | sonnet |
 | [senior-dev](#senior-dev) | Feature implementation with best practices | sonnet |
@@ -58,15 +58,15 @@ Creates clear documentation including:
 
 Use when documentation needs to be written or improved.
 
-### pr-reviewer
+### pr-refiner
 
-Processes pull request feedback by:
+Refines PRs based on review feedback by:
 - Extracting all review comments
 - Creating prioritized todo lists
 - Critically evaluating suggestions
-- Implementing or pushing back on feedback
+- Implementing changes or pushing back with reasoning
 
-Use when addressing code review comments.
+Use when addressing code review comments to refine your PR.
 
 ### refactoring-expert
 
