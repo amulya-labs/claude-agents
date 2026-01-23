@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-agents:
+    name: Validate Agent Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate agent frontmatter
+        run: |
+          python << 'EOF'
+          import sys
+          import yaml
+          from pathlib import Path
+
+          errors = []
+          agents_dir = Path(".claude/agents")
+
+          if not agents_dir.exists():
+              print("No .claude/agents directory found")
+              sys.exit(1)
+
+          agent_files = list(agents_dir.glob("*.md"))
+          if not agent_files:
+              print("No agent files found")
+              sys.exit(1)
+
+          print(f"Found {len(agent_files)} agent file(s)")
+
+          for agent_file in agent_files:
+              print(f"\nValidating: {agent_file.name}")
+              content = agent_file.read_text()
+
+              # Check frontmatter delimiters
+              if not content.startswith("---"):
+                  errors.append(f"{agent_file.name}: Missing opening frontmatter delimiter (---)")
+                  continue
+
+              parts = content.split("---", 2)
+              if len(parts) < 3:
+                  errors.append(f"{agent_file.name}: Missing closing frontmatter delimiter (---)")
+                  continue
+
+              frontmatter_text = parts[1].strip()
+
+              # Parse YAML
+              try:
+                  frontmatter = yaml.safe_load(frontmatter_text)
+              except yaml.YAMLError as e:
+                  errors.append(f"{agent_file.name}: Invalid YAML in frontmatter: {e}")
+                  continue
+
+              if not isinstance(frontmatter, dict):
+                  errors.append(f"{agent_file.name}: Frontmatter must be a YAML object")
+                  continue
+
+              # Check required fields
+              required_fields = ["name", "description"]
+              for field in required_fields:
+                  if field not in frontmatter:
+                      errors.append(f"{agent_file.name}: Missing required field '{field}'")
+                  elif not frontmatter[field]:
+                      errors.append(f"{agent_file.name}: Field '{field}' is empty")
+
+              # Validate optional fields
+              if "model" in frontmatter:
+                  valid_models = ["opus", "sonnet", "haiku"]
+                  if frontmatter["model"] not in valid_models:
+                      errors.append(f"{agent_file.name}: Invalid model '{frontmatter['model']}'. Must be one of: {valid_models}")
+
+              # Check body content exists
+              body = parts[2].strip()
+              if not body:
+                  errors.append(f"{agent_file.name}: Agent file has no content after frontmatter")
+
+              if not errors or not any(agent_file.name in e for e in errors):
+                  print(f"  ✓ Valid")
+
+          if errors:
+              print("\n" + "=" * 50)
+              print("ERRORS:")
+              for error in errors:
+                  print(f"  ✗ {error}")
+              sys.exit(1)
+
+          print("\n" + "=" * 50)
+          print(f"All {len(agent_files)} agent file(s) are valid!")
+          EOF
