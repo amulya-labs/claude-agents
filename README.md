@@ -2,22 +2,45 @@
 
 [![CI](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents](https://img.shields.io/badge/agents-9-blue.svg)](.claude/agents/)
+[![Agents](https://img.shields.io/badge/agents-10-blue.svg)](.claude/agents/)
 
 A collection of reusable Claude Code agents for common software development tasks.
 
 ## Installation
 
-### Option 1: Clone the entire collection
+### For Git Repos (Recommended)
+
+Use git subtree to add agents to your project. This keeps agents updatable while committing them to your repo.
+
+**First-time setup:**
+
+```bash
+# Download the helper script
+curl -o scripts/manage-agents.sh https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/manage-agents.sh
+chmod +x scripts/manage-agents.sh
+
+# Install agents
+./scripts/manage-agents.sh install
+git push
+```
+
+**Update agents later:**
+
+```bash
+./scripts/manage-agents.sh update
+git push
+```
+
+**For collaborators:** Just `git clone` and `git pull` as normal - agents are included in the repo.
+
+### Quick Copy (Non-git or One-time Use)
 
 ```bash
 git clone https://github.com/rrlamichhane/claude-agents.git
 cp -r claude-agents/.claude/agents/ /path/to/your/project/.claude/agents/
 ```
 
-### Option 2: Download specific agents
-
-Copy individual agent files from [`.claude/agents/`](.claude/agents/) to your project's `.claude/agents/` directory.
+Or copy individual agent files from [`.claude/agents/`](.claude/agents/).
 
 ## Available Agents
 
@@ -31,6 +54,7 @@ Copy individual agent files from [`.claude/agents/`](.claude/agents/) to your pr
 | [security-auditor](#security-auditor) | Security assessments and vulnerability identification | opus |
 | [senior-dev](#senior-dev) | Feature implementation with best practices | default |
 | [systems-architect](#systems-architect) | High-level architecture guidance | opus |
+| [tech-lead](#tech-lead) | Plan implementation approaches, break down tasks | opus |
 | [test-engineer](#test-engineer) | Comprehensive test suite design | default |
 
 ## Agent Details
@@ -113,7 +137,17 @@ Provides architectural guidance on:
 - Change impact analysis
 - Delegation and project scoping
 
-Use for architecture questions (not implementation details).
+Use for understanding how systems work and analyzing impact of changes.
+
+### tech-lead
+
+Plans implementation approaches by:
+- Breaking down complex tasks into actionable steps
+- Creating implementation plans with milestones
+- Identifying risks, dependencies, and blockers
+- Making high-level technical decisions
+
+Use for scoping work and planning how to build something. Does not write code.
 
 ### test-engineer
 
@@ -150,14 +184,15 @@ Once installed, agents are available in your Claude Code sessions.
 
 | Task | Command |
 |------|---------|
-| Security review | `@security-auditor review the auth module` |
-| Debug an issue | `@debugger the API returns 500 on POST` |
-| Implement feature | `@senior-dev add pagination to the users endpoint` |
+| Plan a feature | `@tech-lead plan how to add user notifications` |
 | Architecture question | `@systems-architect how does caching work here?` |
-| Address PR feedback | `@pr-refiner address the review comments` |
+| Implement feature | `@senior-dev add pagination to the users endpoint` |
+| Debug an issue | `@debugger the API returns 500 on POST` |
+| Security review | `@security-auditor review the auth module` |
+| Review code | `@code-reviewer check my changes` |
 | Write tests | `@test-engineer add tests for the payment service` |
 | Refactor code | `@refactoring-expert clean up the legacy handlers` |
-| Review code | `@code-reviewer check my changes` |
+| Address PR feedback | `@pr-refiner address the review comments` |
 | Write docs | `@documentation-writer create API docs for this module` |
 
 ### Learn More
