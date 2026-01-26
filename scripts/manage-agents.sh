@@ -65,10 +65,10 @@ download_agents() {
 
         if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
             info "Downloaded $agent"
-            ((success++))
+            ((++success))
         else
             warn "Failed to download $agent"
-            ((failed++))
+            ((++failed))
         fi
     done <<< "$agents"
 
