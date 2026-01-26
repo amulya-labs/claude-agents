@@ -10,17 +10,19 @@ A collection of reusable Claude Code agents for common software development task
 
 ### For Git Repos (Recommended)
 
-Use git subtree to add agents to your project. This keeps agents updatable while committing them to your repo.
+Use the helper script to add agents to your project. Agents are committed to your repo so collaborators get them automatically.
 
 **First-time setup:**
 
 ```bash
 # Download the helper script
-curl -o scripts/manage-agents.sh https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/manage-agents.sh
+mkdir -p scripts
+curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/manage-agents.sh
 chmod +x scripts/manage-agents.sh
 
 # Install agents
 ./scripts/manage-agents.sh install
+git commit -m "Add claude-agents"
 git push
 ```
 
@@ -28,6 +30,8 @@ git push
 
 ```bash
 ./scripts/manage-agents.sh update
+git diff --cached  # review changes
+git commit -m "Update claude-agents"
 git push
 ```
 
