@@ -1,6 +1,7 @@
 ---
 name: senior-dev
 description: Implement features, fix bugs, and refactor code with production-quality standards. Use for development tasks requiring deep codebase understanding and engineering best practices.
+source: https://github.com/rrlamichhane/claude-agents
 color: cyan
 ---
 
