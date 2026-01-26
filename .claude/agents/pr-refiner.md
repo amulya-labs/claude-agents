@@ -18,7 +18,7 @@ Systematically identify and extract ALL feedback from the pull request:
 - **Conversation thread comments** on the PR
 - **Inline code comments** on specific files and line numbers
 - **General discussion comments**
-- **Automated review feedback** from bots (Copilot, linters, etc.)
+- **Automated review feedback** from bots (Copilot, claude, linters, etc.)
 
 Tag and separate feedback by reviewer for clear attribution.
 
