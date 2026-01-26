@@ -11,21 +11,8 @@ set -e
 REPO="rrlamichhane/claude-agents"
 BRANCH="main"
 AGENTS_DIR=".claude/agents"
+API_URL="https://api.github.com/repos/$REPO/contents/.claude/agents?ref=$BRANCH"
 RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH/.claude/agents"
-
-# Agent files to download
-AGENTS=(
-    "code-reviewer.md"
-    "debugger.md"
-    "documentation-writer.md"
-    "pr-refiner.md"
-    "refactoring-expert.md"
-    "security-auditor.md"
-    "senior-dev.md"
-    "systems-architect.md"
-    "tech-lead.md"
-    "test-engineer.md"
-)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -46,15 +33,33 @@ check_git() {
     cd "$(git rev-parse --show-toplevel)"
 }
 
-download_agents() {
-    local is_update="$1"
+# Fetch list of agent files from GitHub API
+get_agent_files() {
+    local response
+    response=$(curl -fsSL "$API_URL" 2>/dev/null) || {
+        error "Failed to fetch agent list from GitHub API"
+    }
 
+    # Extract .md filenames from JSON response
+    # Works without jq by using grep and sed
+    echo "$response" | grep -o '"name": *"[^"]*\.md"' | sed 's/"name": *"\([^"]*\)"/\1/'
+}
+
+download_agents() {
     mkdir -p "$AGENTS_DIR"
+
+    info "Fetching agent list from GitHub..."
+    local agents
+    agents=$(get_agent_files)
+
+    if [ -z "$agents" ]; then
+        error "No agent files found"
+    fi
 
     local success=0
     local failed=0
 
-    for agent in "${AGENTS[@]}"; do
+    while IFS= read -r agent; do
         local url="$RAW_BASE/$agent"
         local dest="$AGENTS_DIR/$agent"
 
@@ -65,7 +70,7 @@ download_agents() {
             warn "Failed to download $agent"
             ((failed++))
         fi
-    done
+    done <<< "$agents"
 
     echo ""
     info "Downloaded $success agents"
@@ -83,7 +88,7 @@ install_agents() {
     fi
 
     info "Installing claude-agents to $AGENTS_DIR..."
-    download_agents false
+    download_agents
 
     git add "$AGENTS_DIR"
 
@@ -102,7 +107,7 @@ update_agents() {
     fi
 
     info "Updating claude-agents..."
-    download_agents true
+    download_agents
 
     git add "$AGENTS_DIR"
 
