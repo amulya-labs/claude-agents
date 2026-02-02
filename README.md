@@ -295,8 +295,10 @@ git-subtree-mgr list
 **Features:**
 - Stores subtree config in `.github/.gitsubtrees`
 - Supports GitHub shorthand (`owner/repo`) or full URLs
+- **Supports extracting subdirectories** with `--path` (not just entire repos)
 - Uses `--squash` by default (use `--no-squash` for full history)
 - Works from any directory within a git repo
+- Caches cloned repos in `~/.cache/git-subtree-mgr` for faster updates
 
 Run `git-subtree-mgr --help` for full options.
 

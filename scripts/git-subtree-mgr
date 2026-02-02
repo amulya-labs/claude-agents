@@ -3,6 +3,7 @@ set -e
 
 # Git Subtree Manager
 # A generic script to manage git subtrees across any repository
+# Supports pulling subdirectories from remote repos (not just entire repos)
 #
 # Place this in your ~/bin and use it from any git repo
 #
@@ -12,6 +13,7 @@ set -e
 #   git-subtree-mgr list
 
 CONFIG_FILE=".github/.gitsubtrees"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/git-subtree-mgr"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -39,7 +41,7 @@ Add Options:
   --prefix=PATH      Local directory to place the subtree (required)
   --repo=OWNER/REPO  GitHub repository (or full URL) (required)
   --branch=BRANCH    Remote branch (default: main)
-  --path=PATH        Path within remote repo (default: root)
+  --path=PATH        Path within remote repo to extract (default: entire repo)
   --no-squash        Preserve full history (default: squash)
 
 Pull Options:
@@ -47,11 +49,27 @@ Pull Options:
   --no-squash        Preserve full history (default: squash)
 
 Examples:
+  # Add entire repo as subtree
+  $(basename "$0") add --prefix=vendor/lib --repo=someone/lib
+
+  # Add only a subdirectory from the repo
   $(basename "$0") add --prefix=.claude/agents --repo=rrlamichhane/claude-agents --path=.claude/agents
+
+  # Pull updates
   $(basename "$0") pull
   $(basename "$0") pull .claude/agents
 EOF
     exit 1
+}
+
+# Check if git subtree is available
+check_subtree() {
+    if ! git subtree --help > /dev/null 2>&1; then
+        error "git subtree is not installed. Install it with:
+  Ubuntu/Debian: sudo apt install git-subtree
+  Fedora/RHEL:   sudo dnf install git-subtree
+  macOS:         brew reinstall git"
+    fi
 }
 
 # Ensure we're in a git repo and cd to root
@@ -70,6 +88,57 @@ expand_repo_url() {
     else
         echo "https://github.com/$repo"
     fi
+}
+
+# Generate a cache key from repo URL
+repo_cache_key() {
+    local repo="$1"
+    echo "$repo" | sed 's/[^a-zA-Z0-9]/_/g'
+}
+
+# Clone or update a repo in the cache directory
+# Returns the path to the cached repo
+cache_repo() {
+    local remote_url="$1"
+    local branch="$2"
+    local cache_key
+    cache_key=$(repo_cache_key "$remote_url")
+    local cache_path="$CACHE_DIR/$cache_key"
+
+    mkdir -p "$CACHE_DIR"
+
+    if [[ -d "$cache_path/.git" ]]; then
+        # Update existing cache
+        info "Updating cached repo..."
+        (cd "$cache_path" && git fetch origin "$branch" && git checkout -f "origin/$branch") > /dev/null 2>&1
+    else
+        # Clone fresh
+        info "Cloning repository..."
+        rm -rf "$cache_path"
+        git clone --single-branch --branch "$branch" "$remote_url" "$cache_path" 2>&1 | grep -v "^remote:" || true
+    fi
+
+    echo "$cache_path"
+}
+
+# Split a subdirectory from a repo into a branch
+# This creates a branch containing only the history of that subdirectory
+split_subdir() {
+    local repo_path="$1"
+    local subdir="$2"
+    local split_branch="split-$$"
+
+    (
+        cd "$repo_path"
+        # Check if the path exists
+        if [[ ! -d "$subdir" ]]; then
+            echo "ERROR: Path '$subdir' does not exist in the repository" >&2
+            exit 1
+        fi
+        # Create split branch with only the subdirectory
+        git subtree split --prefix="$subdir" -b "$split_branch" > /dev/null 2>&1
+        echo "$split_branch"
+    )
 }
 
 # Read config file into arrays
@@ -147,11 +216,20 @@ find_prefix_index() {
     return 1
 }
 
+# Clean up split branches from cached repo
+cleanup_split() {
+    local repo_path="$1"
+    local split_branch="$2"
+    if [[ -n "$split_branch" ]] && [[ -d "$repo_path/.git" ]]; then
+        (cd "$repo_path" && git branch -D "$split_branch" 2>/dev/null) || true
+    fi
+}
+
 cmd_add() {
     local prefix=""
     local repo=""
     local branch="main"
-    local path=""
+    local path="."
     local squash="--squash"
 
     # Parse arguments
@@ -170,10 +248,12 @@ cmd_add() {
     [[ -z "$prefix" ]] && error "Missing required option: --prefix"
     [[ -z "$repo" ]] && error "Missing required option: --repo"
 
-    # Default path to root if not specified
-    [[ -z "$path" ]] && path="."
-
     check_git
+    check_subtree
+
+    # Save original directory
+    local orig_dir
+    orig_dir=$(pwd)
 
     # Check if already configured
     if prefix_exists "$prefix"; then
@@ -194,25 +274,32 @@ cmd_add() {
     dim "  Path:   $path"
     echo ""
 
-    # For subtree split from remote, we need to fetch and filter
+    local split_branch=""
+    local cache_path=""
+
     if [[ "$path" != "." ]]; then
-        # Create a temporary remote
-        local temp_remote="subtree-temp-$$"
-        git remote add "$temp_remote" "$remote_url" 2>/dev/null || true
-        git fetch "$temp_remote" "$branch"
+        # Need to extract a subdirectory
+        cache_path=$(cache_repo "$remote_url" "$branch")
 
-        # Use subtree add with the fetched ref
-        # shellcheck disable=SC2086
-        git subtree add --prefix="$prefix" $squash "$temp_remote/$branch"
+        info "Extracting subdirectory: $path"
+        split_branch=$(split_subdir "$cache_path" "$path")
 
-        # If we only want a subpath, we need a different approach
-        # git subtree doesn't support remote subpaths directly
-        # We'll note this limitation and pull the whole thing
-        if [[ "$path" != "." ]]; then
-            warn "Note: git subtree pulls entire repo. Path '$path' stored for reference."
+        if [[ -z "$split_branch" ]]; then
+            error "Failed to split subdirectory '$path'"
         fi
 
-        git remote remove "$temp_remote"
+        # Add the cached repo as a temporary remote
+        local temp_remote="subtree-temp-$$"
+        git remote add "$temp_remote" "$cache_path" 2>/dev/null || true
+        git fetch "$temp_remote" "$split_branch" > /dev/null 2>&1
+
+        # Add the subtree from the split branch
+        # shellcheck disable=SC2086
+        git subtree add --prefix="$prefix" $squash "$temp_remote/$split_branch"
+
+        # Cleanup
+        git remote remove "$temp_remote" 2>/dev/null || true
+        cleanup_split "$cache_path" "$split_branch"
     else
         # Simple case: add entire repo
         # shellcheck disable=SC2086
@@ -244,6 +331,7 @@ cmd_pull() {
     done
 
     check_git
+    check_subtree
     read_config
 
     if [[ ${#PREFIXES[@]} -eq 0 ]]; then
@@ -264,6 +352,7 @@ cmd_pull() {
         local prefix="${PREFIXES[$i]}"
         local repo="${REMOTES[$i]}"
         local branch="${BRANCHES[$i]}"
+        local path="${PATHS[$i]}"
 
         # Skip if targeting specific prefix
         if [[ -n "$target_prefix" ]] && [[ "$prefix" != "$target_prefix" ]]; then
@@ -275,9 +364,47 @@ cmd_pull() {
 
         info "Pulling: $prefix"
         dim "  From: $remote_url ($branch)"
+        if [[ "$path" != "." ]]; then
+            dim "  Path: $path"
+        fi
 
-        # shellcheck disable=SC2086
-        if git subtree pull --prefix="$prefix" $squash "$remote_url" "$branch" -m "Update $prefix subtree"; then
+        local split_branch=""
+        local cache_path=""
+        local pull_success=false
+
+        if [[ "$path" != "." ]]; then
+            # Need to extract subdirectory
+            cache_path=$(cache_repo "$remote_url" "$branch")
+            split_branch=$(split_subdir "$cache_path" "$path")
+
+            if [[ -z "$split_branch" ]]; then
+                warn "Failed to split subdirectory '$path'"
+                ((++failed))
+                continue
+            fi
+
+            # Add temp remote and pull
+            local temp_remote="subtree-temp-$$"
+            git remote add "$temp_remote" "$cache_path" 2>/dev/null || true
+            git fetch "$temp_remote" "$split_branch" > /dev/null 2>&1
+
+            # shellcheck disable=SC2086
+            if git subtree pull --prefix="$prefix" $squash "$temp_remote" "$split_branch" -m "Update $prefix subtree"; then
+                pull_success=true
+            fi
+
+            # Cleanup
+            git remote remove "$temp_remote" 2>/dev/null || true
+            cleanup_split "$cache_path" "$split_branch"
+        else
+            # Simple case: pull entire repo
+            # shellcheck disable=SC2086
+            if git subtree pull --prefix="$prefix" $squash "$remote_url" "$branch" -m "Update $prefix subtree"; then
+                pull_success=true
+            fi
+        fi
+
+        if $pull_success; then
             ((++pulled))
         else
             warn "Failed to pull $prefix"
@@ -297,6 +424,7 @@ cmd_pull() {
 
 cmd_list() {
     check_git
+    check_subtree
     read_config
 
     if [[ ${#PREFIXES[@]} -eq 0 ]]; then
@@ -309,11 +437,13 @@ cmd_list() {
 
     echo "Configured subtrees:"
     echo ""
-    printf "  ${CYAN}%-30s${NC} %-40s %s\n" "PREFIX" "REPOSITORY" "BRANCH"
-    echo "  $(printf '%.0s-' {1..90})"
+    printf "  ${CYAN}%-25s${NC} %-35s %-10s %s\n" "PREFIX" "REPOSITORY" "BRANCH" "PATH"
+    echo "  $(printf '%.0s-' {1..95})"
 
     for i in "${!PREFIXES[@]}"; do
-        printf "  %-30s %-40s %s\n" "${PREFIXES[$i]}" "${REMOTES[$i]}" "${BRANCHES[$i]}"
+        local path_display="${PATHS[$i]}"
+        [[ "$path_display" == "." ]] && path_display="(entire repo)"
+        printf "  %-25s %-35s %-10s %s\n" "${PREFIXES[$i]}" "${REMOTES[$i]}" "${BRANCHES[$i]}" "$path_display"
     done
     echo ""
 }
