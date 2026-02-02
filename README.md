@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents](https://img.shields.io/badge/agents-10-blue.svg)](.claude/agents/)
+[![Agents](https://img.shields.io/badge/agents-14-blue.svg)](.claude/agents/)
 
 A collection of reusable Claude Code agents for common software development tasks.
 
@@ -54,18 +54,32 @@ Or copy individual agent files from [`.claude/agents/`](.claude/agents/).
 
 | Agent | Description | Model |
 |-------|-------------|-------|
+| [agent-specialist](#agent-specialist) | Design and optimize AI agents with strong contracts | opus |
 | [code-reviewer](#code-reviewer) | Thorough code reviews for quality and security | default |
 | [debugger](#debugger) | Systematic bug investigation and root cause analysis | opus |
 | [documentation-writer](#documentation-writer) | Clear, comprehensive documentation | default |
 | [pr-refiner](#pr-refiner) | Refine PRs based on review feedback | default |
+| [prod-engineer](#prod-engineer) | Production incident response and reliability engineering | opus |
+| [product-owner](#product-owner) | Product direction, prioritization, specs, and decisions | default |
 | [refactoring-expert](#refactoring-expert) | Improve code structure safely | default |
 | [security-auditor](#security-auditor) | Security assessments and vulnerability identification | opus |
 | [senior-dev](#senior-dev) | Feature implementation with best practices | default |
+| [solution-eng](#solution-eng) | Technical sales, discovery, POCs, and solution design | default |
 | [systems-architect](#systems-architect) | High-level architecture guidance | opus |
 | [tech-lead](#tech-lead) | Plan implementation approaches, break down tasks | opus |
 | [test-engineer](#test-engineer) | Comprehensive test suite design | default |
 
 ## Agent Details
+
+### agent-specialist
+
+Designs and optimizes AI agents:
+- Output contract design (structure, completion criteria, quality bar)
+- Guardrail engineering (behavioral constraints, safety gates)
+- Knowledge organization (principles, processes, patterns)
+- Agent review and improvement
+
+Use when creating new agents or improving existing ones.
 
 ### code-reviewer
 
@@ -107,6 +121,26 @@ Refines PRs based on review feedback by:
 
 Use when addressing code review comments to refine your PR.
 
+### prod-engineer
+
+Handles production incidents and reliability engineering:
+- Triage and stabilize (reduce blast radius, restore service)
+- Evidence-driven diagnosis (metrics, logs, traces)
+- Safe mitigations with rollback plans
+- System hardening (alerts, runbooks, tests)
+
+Use for outages, performance issues, infrastructure problems, and incident response.
+
+### product-owner
+
+Drives product direction and decisions:
+- Problem definition and customer validation
+- Prioritization (RICE, value vs effort, MoSCoW)
+- PRD-lite specs and user stories
+- Roadmap and stakeholder communication
+
+Use for feature planning, writing specs, prioritization decisions, and product strategy.
+
 ### refactoring-expert
 
 Improves code structure by:
@@ -136,6 +170,16 @@ Implements features with:
 - CI/CD integration
 
 Use for development tasks requiring best practices.
+
+### solution-eng
+
+Bridges product capabilities and customer needs:
+- Discovery (business goals, technical requirements, stakeholders)
+- Solution design and architecture
+- Demo and POC planning
+- Objection handling with technical integrity
+
+Use for technical sales support, customer discovery, and solution validation.
 
 ### systems-architect
 
@@ -192,10 +236,14 @@ Once installed, agents are available in your Claude Code sessions.
 
 | Task | Command |
 |------|---------|
+| Create an agent | `@agent-specialist design an agent for code migrations` |
 | Plan a feature | `@tech-lead plan how to add user notifications` |
 | Architecture question | `@systems-architect how does caching work here?` |
 | Implement feature | `@senior-dev add pagination to the users endpoint` |
+| Customer POC | `@solution-eng plan a POC for Acme Corp's integration needs` |
 | Debug an issue | `@debugger the API returns 500 on POST` |
+| Production incident | `@prod-engineer latency spiked after the last deploy` |
+| Write a PRD | `@product-owner write a spec for user notifications` |
 | Security review | `@security-auditor review the auth module` |
 | Review code | `@code-reviewer check my changes` |
 | Write tests | `@test-engineer add tests for the payment service` |
