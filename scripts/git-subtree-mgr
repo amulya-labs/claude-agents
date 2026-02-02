@@ -109,13 +109,13 @@ cache_repo() {
 
     if [[ -d "$cache_path/.git" ]]; then
         # Update existing cache
-        info "Updating cached repo..."
+        info "Updating cached repo..." >&2
         (cd "$cache_path" && git fetch origin "$branch" && git checkout -f "origin/$branch") > /dev/null 2>&1
     else
         # Clone fresh
-        info "Cloning repository..."
+        info "Cloning repository..." >&2
         rm -rf "$cache_path"
-        git clone --single-branch --branch "$branch" "$remote_url" "$cache_path" 2>&1 | grep -v "^remote:" || true
+        git clone --single-branch --branch "$branch" "$remote_url" "$cache_path" > /dev/null 2>&1
     fi
 
     echo "$cache_path"
