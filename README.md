@@ -8,11 +8,9 @@ A collection of reusable Claude Code agents for common software development task
 
 ## Installation
 
-### For Git Repos (Recommended)
+### Option 1: Curl-based Script (Simplest)
 
-Use the helper script to add agents to your project. Agents are committed to your repo so collaborators get them automatically.
-
-**First-time setup:**
+Use `manage-agents.sh` to download agents directly from GitHub. No git subtree knowledge needed.
 
 ```bash
 # Download the helper script
@@ -23,21 +21,27 @@ chmod +x scripts/manage-agents.sh
 # Install agents
 ./scripts/manage-agents.sh install
 git commit -m "Add claude-agents"
-git push
 ```
 
-**Update agents later:**
+Update later with `./scripts/manage-agents.sh update`.
+
+### Option 2: Git Subtree (Version-tracked)
+
+Use `git-subtree-mgr` for proper git subtree management with history tracking.
 
 ```bash
-./scripts/manage-agents.sh update
-git diff --cached  # review changes
-git commit -m "Update claude-agents"
-git push
+# One-time: install the script globally
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/git-subtree-mgr
+chmod +x ~/bin/git-subtree-mgr
+
+# Add agents as a subtree
+git-subtree-mgr add --prefix=.claude/agents --repo=rrlamichhane/claude-agents --path=.claude/agents
+git commit -m "Add claude-agents subtree"
 ```
 
-**For collaborators:** Just `git clone` and `git pull` as normal - agents are included in the repo.
+Update later with `git-subtree-mgr pull .claude/agents`.
 
-### Quick Copy (Non-git or One-time Use)
+### Option 3: Manual Copy
 
 ```bash
 git clone https://github.com/rrlamichhane/claude-agents.git
@@ -202,6 +206,63 @@ Once installed, agents are available in your Claude Code sessions.
 ### Learn More
 
 See the [Claude Code agents documentation](https://docs.anthropic.com/en/docs/claude-code/agents) for more details.
+
+## Scripts
+
+This repo includes two helper scripts for managing agents.
+
+### manage-agents.sh
+
+A simple curl-based script for installing and updating agents from this repo. Designed to be copied into your project.
+
+```bash
+./scripts/manage-agents.sh install   # First-time setup
+./scripts/manage-agents.sh update    # Pull latest agents
+```
+
+**How it works:** Downloads `.md` files directly from GitHub using the API, no git subtree complexity.
+
+### git-subtree-mgr
+
+A generic git subtree manager that works with any repository. Install it globally in `~/bin` and use it across all your projects.
+
+```bash
+# Install globally
+cp scripts/git-subtree-mgr ~/bin/
+chmod +x ~/bin/git-subtree-mgr
+
+# Or download directly
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/git-subtree-mgr
+chmod +x ~/bin/git-subtree-mgr
+```
+
+**Usage:**
+
+```bash
+git-subtree-mgr add --prefix=PATH --repo=OWNER/REPO [--branch=BRANCH]
+git-subtree-mgr pull [PREFIX]
+git-subtree-mgr list
+```
+
+**Features:**
+- Stores subtree config in `.github/.gitsubtrees`
+- Supports GitHub shorthand (`owner/repo`) or full URLs
+- Uses `--squash` by default (use `--no-squash` for full history)
+- Works from any directory within a git repo
+
+Run `git-subtree-mgr --help` for full options.
+
+<details>
+<summary>Which script should I use?</summary>
+
+| Use case | Recommended |
+|----------|-------------|
+| Just want the agents, minimal setup | `manage-agents.sh` |
+| Want git history of upstream changes | `git-subtree-mgr` |
+| Managing multiple subtrees in a project | `git-subtree-mgr` |
+| Non-technical team members | `manage-agents.sh` |
+
+</details>
 
 ## Contributing
 
