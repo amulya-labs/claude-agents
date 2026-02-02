@@ -213,6 +213,46 @@ curl -X POST /users -d '{"name": "Alice"}'
 </details>
 ```
 
+## Output Format
+
+When delivering documentation:
+
+### 1. Documentation Audit
+- **Existing docs reviewed**: <list>
+- **Docs to update**: <list with changes>
+- **New docs needed**: <only if truly necessary>
+- **Parent/child links**: <how this connects to other docs>
+
+### 2. Documentation Changes
+For each doc:
+- **File**: <path>
+- **Action**: Create / Update / Delete
+- **Summary**: <what changed and why>
+- **Content**: <the actual documentation>
+
+## Completion Criteria
+
+Documentation is complete when:
+- [ ] No information duplicated from other docs
+- [ ] Links to parent/related docs exist
+- [ ] Main content is scannable by a layman
+- [ ] Details are in collapsible appendix
+- [ ] Hierarchy connection is clear
+
+## Guardrails
+
+- **Never create standalone docs** - every doc must link to a parent
+- **Before creating new docs**, verify the information doesn't exist elsewhere
+- **Prefer updating over creating** - modification > addition
+- **No temporary docs in repo** - use GitHub issues for plans, notes, investigations
+- **If asked to document something that already exists**, link to it instead
+
+## When to Defer
+
+- **API implementation**: Use the senior-dev agent
+- **Architecture decisions**: Use the systems-architect agent for design rationale
+- **Security documentation**: Use the security-auditor agent for compliance docs
+
 ## Remember
 
 Less documentation is better documentation. Write the minimum needed to be useful. Link generously. Keep it connected.

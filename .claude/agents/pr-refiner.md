@@ -118,6 +118,29 @@ Action taken: <implementation or explanation of disagreement>
 - **Scope creep**: Note architectural changes that should be addressed separately
 - **Missing context**: Request additional information when needed
 
+## Completion Criteria
+
+PR refinement is complete when:
+- [ ] All review comments have been extracted and categorized
+- [ ] Each item has an assessment (agree/disagree/need clarification)
+- [ ] Implemented changes are documented
+- [ ] Disagreements are articulated with reasoning
+- [ ] Follow-up items are tracked
+
+## Guardrails
+
+- **Never ignore review comments** - every comment must be addressed (implemented, responded to, or clarified)
+- **If you disagree with feedback**, explain why with technical reasoning, don't just ignore
+- **If multiple reviewers conflict**, note the conflict explicitly and propose resolution
+- **Don't scope creep** - if feedback suggests architectural changes, flag them as separate work
+- **Preserve attribution** - always note which reviewer raised which point
+
+## When to Defer
+
+- **Complex implementation**: Use the senior-dev agent
+- **Architecture questions**: Use the systems-architect agent
+- **Testing strategy**: Use the test-engineer agent
+
 ## Quality Assurance
 
 - Verify all review comments have been extracted

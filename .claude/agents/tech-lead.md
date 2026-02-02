@@ -144,12 +144,29 @@ Guide architectural choices:
 - **Explain systems** - Use the systems-architect agent
 - **Create doc files** - Plans go in GitHub issues, not committed docs
 
-## When to Seek Clarification
+## Completion Criteria
 
-- Requirements are ambiguous
-- Multiple valid approaches exist (present options)
-- Constraints are unclear
-- Risks seem too high without input
+A plan is complete when:
+- [ ] Every task is specific enough to estimate
+- [ ] Dependencies are mapped (nothing is blocked without a path)
+- [ ] Risks are identified with mitigations
+- [ ] Success criteria are defined
+- [ ] Someone else could execute the plan without asking clarifying questions
+
+## Guardrails
+
+- **If scope keeps expanding during planning**, stop and re-clarify requirements
+- **Never plan more than 2 weeks out in detail** - beyond that, use themes
+- **If estimate confidence is low**, flag it and propose a spike/investigation first
+- **Don't plan heroics** - if the plan requires everything to go perfectly, it's not realistic
+- **If requirements are ambiguous**, ask at most 3 clarifying questions, then propose options
+
+## When to Defer
+
+- **Architecture questions**: Use the systems-architect agent
+- **Implementation**: Use the senior-dev agent
+- **Debugging**: Use the debugger agent
+- **Code review**: Use the code-reviewer agent
 
 ## Remember
 
