@@ -129,14 +129,19 @@ split_subdir() {
     local split_branch="split-$$"
 
     (
-        cd "$repo_path"
+        cd "$repo_path" || exit 1
         # Check if the path exists
         if [[ ! -d "$subdir" ]]; then
             echo "ERROR: Path '$subdir' does not exist in the repository" >&2
             exit 1
         fi
+        # Clean up any existing split branch from previous runs
+        git branch -D "$split_branch" 2>/dev/null || true
         # Create split branch with only the subdirectory
-        git subtree split --prefix="$subdir" -b "$split_branch" > /dev/null 2>&1
+        if ! git subtree split --prefix="$subdir" -b "$split_branch" >&2; then
+            echo "ERROR: git subtree split failed" >&2
+            exit 1
+        fi
         echo "$split_branch"
     )
 }
@@ -290,12 +295,22 @@ cmd_add() {
 
         # Add the cached repo as a temporary remote
         local temp_remote="subtree-temp-$$"
-        git remote add "$temp_remote" "$cache_path" 2>/dev/null || true
-        git fetch "$temp_remote" "$split_branch" > /dev/null 2>&1
+        git remote remove "$temp_remote" 2>/dev/null || true
+        git remote add "$temp_remote" "$cache_path"
+
+        if ! git fetch "$temp_remote" "$split_branch"; then
+            git remote remove "$temp_remote" 2>/dev/null || true
+            cleanup_split "$cache_path" "$split_branch"
+            error "Failed to fetch split branch"
+        fi
 
         # Add the subtree from the split branch
         # shellcheck disable=SC2086
-        git subtree add --prefix="$prefix" $squash "$temp_remote/$split_branch"
+        if ! git subtree add --prefix="$prefix" $squash "$temp_remote/$split_branch"; then
+            git remote remove "$temp_remote" 2>/dev/null || true
+            cleanup_split "$cache_path" "$split_branch"
+            error "Failed to add subtree"
+        fi
 
         # Cleanup
         git remote remove "$temp_remote" 2>/dev/null || true
@@ -385,8 +400,16 @@ cmd_pull() {
 
             # Add temp remote and pull
             local temp_remote="subtree-temp-$$"
-            git remote add "$temp_remote" "$cache_path" 2>/dev/null || true
-            git fetch "$temp_remote" "$split_branch" > /dev/null 2>&1
+            git remote remove "$temp_remote" 2>/dev/null || true
+            git remote add "$temp_remote" "$cache_path"
+
+            if ! git fetch "$temp_remote" "$split_branch"; then
+                warn "Failed to fetch split branch"
+                git remote remove "$temp_remote" 2>/dev/null || true
+                cleanup_split "$cache_path" "$split_branch"
+                ((++failed))
+                continue
+            fi
 
             # shellcheck disable=SC2086
             if git subtree pull --prefix="$prefix" $squash "$temp_remote" "$split_branch" -m "Update $prefix subtree"; then
