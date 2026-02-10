@@ -8,7 +8,7 @@ set -e
 #   ./scripts/manage-agents.sh install   # First-time setup
 #   ./scripts/manage-agents.sh update    # Pull latest agents
 
-REPO="rrlamichhane/claude-agents"
+REPO="amulya-labs/claude-agents"
 BRANCH="main"
 AGENTS_DIR=".claude/agents"
 API_URL="https://api.github.com/repos/$REPO/contents/.claude/agents?ref=$BRANCH"

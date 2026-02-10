@@ -1,6 +1,6 @@
 # Claude Agents
 
-[![CI](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/rrlamichhane/claude-agents/actions/workflows/ci.yml)
+[![CI](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents](https://img.shields.io/badge/agents-14-blue.svg)](.claude/agents/)
 
@@ -15,7 +15,7 @@ Use `manage-agents.sh` to download agents directly from GitHub. No git subtree k
 ```bash
 # Download the helper script
 mkdir -p scripts
-curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/manage-agents.sh
+curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh
 chmod +x scripts/manage-agents.sh
 
 # Install agents
@@ -31,11 +31,11 @@ Use `git-subtree-mgr` for proper git subtree management with history tracking.
 
 ```bash
 # One-time: install the script globally
-curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/git-subtree-mgr
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 
 # Add agents as a subtree
-git-subtree-mgr add --prefix=.claude/agents --repo=rrlamichhane/claude-agents --path=.claude/agents
+git-subtree-mgr add --prefix=.claude/agents --repo=amulya-labs/claude-agents --path=.claude/agents
 git commit -m "Add claude-agents subtree"
 ```
 
@@ -44,7 +44,7 @@ Update later with `git-subtree-mgr pull .claude/agents`.
 ### Option 3: Manual Copy
 
 ```bash
-git clone https://github.com/rrlamichhane/claude-agents.git
+git clone https://github.com/amulya-labs/claude-agents.git
 cp -r claude-agents/.claude/agents/ /path/to/your/project/.claude/agents/
 ```
 
@@ -280,7 +280,7 @@ cp scripts/git-subtree-mgr ~/bin/
 chmod +x ~/bin/git-subtree-mgr
 
 # Or download directly
-curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/rrlamichhane/claude-agents/main/scripts/git-subtree-mgr
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 ```
 

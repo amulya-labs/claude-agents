@@ -53,7 +53,7 @@ Examples:
   $(basename "$0") add --prefix=vendor/lib --repo=someone/lib
 
   # Add only a subdirectory from the repo
-  $(basename "$0") add --prefix=.claude/agents --repo=rrlamichhane/claude-agents --path=.claude/agents
+  $(basename "$0") add --prefix=.claude/agents --repo=amulya-labs/claude-agents --path=.claude/agents
 
   # Pull updates
   $(basename "$0") pull
