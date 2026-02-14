@@ -83,43 +83,80 @@ ACTUAL_CMD=$(strip_env_vars "$COMMAND")
 # If stripping removed everything, use original
 [[ -z "$ACTUAL_CMD" ]] && ACTUAL_CMD="$COMMAND"
 
-# === DENY PATTERNS (checked first - blocks even if allowed) ===
+# === DENY PATTERNS (truly catastrophic - never allow) ===
 DENY_PATTERNS=(
     # Privilege escalation
     "^sudo "
     "^su "
     "^doas "
 
-    # Destructive file operations
+    # Catastrophic file deletion
     "^rm -rf /$"
     "^rm -rf /\*"
     "^rm -rf ~"
-    "^rm -rf \.$"
+    "^rm -rf \.\$"
     "^rm -rf \*$"
-    "^chmod 777 "
-    "^chmod -R 777 "
-    "^chown "
-    "^chgrp "
+    " rm -rf /$"
+    " rm -rf /\*"
 
-    # Dangerous git operations
+    # Disk/partition destruction
+    "^dd if=.*/dev/"
+    "^dd of=/dev/"
+    "^mkfs\."
+    "^fdisk "
+    "^parted "
+
+    # System shutdown
+    "^reboot"
+    "^shutdown"
+    "^poweroff"
+    "^halt$"
+    "^init 0"
+    "^init 6"
+)
+
+# === ASK PATTERNS (risky but useful - prompt user for confirmation) ===
+ASK_PATTERNS=(
+    # Git destructive operations
     "^git push --force"
     "^git push -f "
     "^git reset --hard"
     "^git clean -fd"
+    "^git rebase"
+    "^git merge"
+    "^git cherry-pick"
+    "^git revert"
+    "^git stash drop"
+    "^git stash clear"
+    "^git branch -[dD]"
 
-    # GitHub destructive
+    # GitHub operations that modify state
     "^gh pr merge"
+    "^gh pr close"
+    "^gh pr ready"
     "^gh repo delete"
+    "^gh repo archive"
+    "^gh issue close"
+    "^gh release delete"
+    "^gh run cancel"
 
-    # Docker destructive
+    # File permission changes
+    "^chmod 777"
+    "^chmod -R 777"
+    "^chown "
+    "^chgrp "
+
+    # Docker cleanup/control
     "^docker system prune"
     "^docker volume prune"
     "^docker network prune"
     "^docker image prune"
-    "^docker rmi -f"
-    "^docker rm -f"
-    "^docker stop "
-    "^docker kill "
+    "^docker rmi"
+    "^docker rm "
+    "^docker stop"
+    "^docker kill"
+    "^docker container rm"
+    "^docker container stop"
 
     # Kubernetes mutations
     "^kubectl apply"
@@ -169,23 +206,22 @@ DENY_PATTERNS=(
     "^pulumi refresh"
     "^ansible-playbook"
 
-    # Cloud destructive
+    # Cloud mutations
     "aws .* delete"
     "aws .* remove"
     "aws .* terminate"
+    "aws .* create"
+    "aws .* put"
+    "aws .* update"
     "gcloud .* delete"
+    "gcloud .* create"
     "az .* delete"
+    "az .* create"
 
-    # Process/system control
-    "^kill -9"
-    "^killall "
-    "^pkill -9"
-    "^reboot"
-    "^shutdown"
-    "^poweroff"
-    "^halt"
-    "^init 0"
-    "^init 6"
+    # Process control
+    "^kill "
+    "^killall"
+    "^pkill"
 
     # Service management
     "^systemctl start"
@@ -198,12 +234,6 @@ DENY_PATTERNS=(
     "^service .* stop"
     "^service .* restart"
 
-    # Disk/partition
-    "^dd "
-    "^mkfs"
-    "^fdisk"
-    "^parted"
-
     # Firewall
     "^iptables"
     "^ip6tables"
@@ -212,8 +242,7 @@ DENY_PATTERNS=(
     "^nft "
 
     # User/cron management
-    "^crontab -r"
-    "^crontab -e"
+    "^crontab"
     "^visudo"
     "^passwd"
     "^useradd"
@@ -222,7 +251,7 @@ DENY_PATTERNS=(
     "^groupadd"
     "^groupdel"
 
-    # Secrets encryption (allow decrypt only)
+    # Secrets encryption
     "^sops -e"
     "^sops --encrypt"
 
@@ -234,6 +263,10 @@ DENY_PATTERNS=(
     "^ftp "
     "^telnet "
     "^nc -l"
+
+    # Potentially destructive rm
+    "^rm -r"
+    "^rm -f"
 )
 
 # === ALLOW PATTERNS (auto-approve if matched and not denied) ===
@@ -516,7 +549,7 @@ ALLOW_PATTERNS=(
     "^ionice "
 )
 
-# Check deny patterns first
+# Check deny patterns first (truly dangerous - never allow)
 for pattern in "${DENY_PATTERNS[@]}"; do
     if echo "$ACTUAL_CMD" | grep -qE "$pattern"; then
         jq -n --arg reason "Blocked: matches deny pattern '$pattern'" '{
@@ -530,7 +563,21 @@ for pattern in "${DENY_PATTERNS[@]}"; do
     fi
 done
 
-# Check allow patterns
+# Check ask patterns (risky but sometimes needed - prompt user)
+for pattern in "${ASK_PATTERNS[@]}"; do
+    if echo "$ACTUAL_CMD" | grep -qE "$pattern"; then
+        jq -n --arg reason "Requires confirmation: matches pattern '$pattern'" '{
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "ask",
+                "permissionDecisionReason": $reason
+            }
+        }'
+        exit 0
+    fi
+done
+
+# Check allow patterns (safe - auto-approve)
 for pattern in "${ALLOW_PATTERNS[@]}"; do
     if echo "$ACTUAL_CMD" | grep -qE "$pattern"; then
         # Allowed - exit with success (no output = allow)
@@ -538,7 +585,7 @@ for pattern in "${ALLOW_PATTERNS[@]}"; do
     fi
 done
 
-# Not in allow list - ask user
+# Not in any list - ask user
 jq -n --arg cmd "$ACTUAL_CMD" '{
     "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
