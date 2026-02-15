@@ -307,6 +307,68 @@ git-subtree-mgr list
 
 Run `git-subtree-mgr --help` for full options.
 
+## Hooks
+
+The `.claude/hooks/` directory contains PreToolUse hooks that validate tool calls before execution.
+
+### Bash Command Validation
+
+The `validate-bash.sh` hook validates Bash commands against pattern lists, providing automatic approval for safe commands and blocking dangerous ones.
+
+**How it works:**
+
+1. Claude Code calls the hook before executing any Bash command
+2. The hook checks the command against pattern lists (in order: deny → ask → allow)
+3. Returns a decision: `allow` (auto-approve), `ask` (prompt user), or `deny` (block)
+
+**Pattern categories** (defined in `bash-patterns.toml`):
+
+| Category | Behavior | Examples |
+|----------|----------|----------|
+| `[deny.*]` | Always block, no override | `sudo`, `rm -rf /`, `dd of=/dev/` |
+| `[ask.*]` | Prompt user for confirmation | `git push --force`, `docker stop`, `kubectl delete` |
+| `[allow.*]` | Auto-approve silently | `git status`, `ls`, `npm test`, `kubectl get` |
+
+**Customizing patterns:**
+
+Edit `.claude/hooks/bash-patterns.toml` to add or modify patterns:
+
+```toml
+[allow.my_tools]
+description = "My custom tools"
+patterns = [
+    "^mytool ",
+    "^another-tool ",
+]
+
+[ask.my_dangerous_ops]
+description = "Operations I want to confirm"
+patterns = [
+    "^deploy ",
+]
+```
+
+Patterns are regular expressions. Use `^` to anchor to the start of the command.
+
+**Logging:**
+
+The hook logs `ask` and `deny` decisions (not `allow`) to reduce disk I/O:
+
+- **Location:** `/tmp/claude-hook-logs/`
+- **Format:** `YYYY-MM-DD-Day-<project>.log` (e.g., `2026-02-15-Sun-claude-agents.log`)
+- **Retention:** 15 days (auto-cleanup)
+
+Example log entry:
+
+```
+========================================
+TIME:   2026-02-15 04:43:42
+ACTION: ASK
+REASON: 'git rebase' matches ask.git_destructive
+CMD:    git rebase main
+========================================
+```
+
 <details>
 <summary>Which script should I use?</summary>
 
