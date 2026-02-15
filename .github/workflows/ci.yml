@@ -101,3 +101,22 @@ jobs:
           print("\n" + "=" * 50)
           print(f"All {len(agent_files)} agent file(s) are valid!")
           EOF
+
+  validate-hooks:
+    name: Validate Hook Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint hook scripts
+        run: |
+          echo "Running shellcheck on hook scripts..."
+          find .claude/hooks -name "*.sh" ! -name "test-*.sh" -exec shellcheck {} \;
+
+      - name: Run hook tests
+        run: |
+          echo "Running bash hook tests..."
+          .claude/hooks/test-validate-bash.sh
