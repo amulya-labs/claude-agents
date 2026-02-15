@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-# Claude Agents Manager
-# Copy this script to your project and use it to install/update agents
+# Claude Code Config Manager
+# Copy this script to your project and use it to install/update .claude config
 #
 # Usage:
 #   ./scripts/manage-agents.sh install   # First-time setup
-#   ./scripts/manage-agents.sh update    # Pull latest agents
+#   ./scripts/manage-agents.sh update    # Pull latest config
 
 REPO="amulya-labs/claude-agents"
 BRANCH="main"
-AGENTS_DIR=".claude/agents"
-API_URL="https://api.github.com/repos/$REPO/contents/.claude/agents?ref=$BRANCH"
-RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH/.claude/agents"
+CLAUDE_DIR=".claude"
+API_BASE="https://api.github.com/repos/$REPO/contents"
+RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,107 +33,144 @@ check_git() {
     cd "$(git rev-parse --show-toplevel)"
 }
 
-# Fetch list of agent files from GitHub API
-get_agent_files() {
+# Fetch list of files from a GitHub directory
+get_files_in_dir() {
+    local dir="$1"
     local response
-    response=$(curl -fsSL "$API_URL" 2>/dev/null) || {
-        error "Failed to fetch agent list from GitHub API"
+    response=$(curl -fsSL "$API_BASE/$dir?ref=$BRANCH" 2>/dev/null) || {
+        warn "Failed to fetch file list from $dir"
+        return 1
     }
 
-    # Extract .md filenames from JSON response
-    # Works without jq by using grep and sed
-    echo "$response" | grep -o '"name": *"[^"]*\.md"' | sed 's/"name": *"\([^"]*\)"/\1/'
+    # Extract filenames from JSON response (works without jq)
+    echo "$response" | grep -o '"name": *"[^"]*"' | sed 's/"name": *"\([^"]*\)"/\1/'
 }
 
-download_agents() {
-    mkdir -p "$AGENTS_DIR"
+# Download files from a directory
+download_dir() {
+    local remote_dir="$1"
+    local local_dir="$2"
 
-    info "Fetching agent list from GitHub..."
-    local agents
-    agents=$(get_agent_files)
+    mkdir -p "$local_dir"
 
-    if [ -z "$agents" ]; then
-        error "No agent files found"
+    info "Fetching $remote_dir..."
+    local files
+    files=$(get_files_in_dir "$remote_dir") || return 1
+
+    if [ -z "$files" ]; then
+        warn "No files found in $remote_dir"
+        return 0
     fi
 
     local success=0
     local failed=0
 
-    while IFS= read -r agent; do
-        local url="$RAW_BASE/$agent"
-        local dest="$AGENTS_DIR/$agent"
+    while IFS= read -r file; do
+        local url="$RAW_BASE/$remote_dir/$file"
+        local dest="$local_dir/$file"
 
         if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
-            info "Downloaded $agent"
+            info "  Downloaded $file"
             ((++success))
         else
-            warn "Failed to download $agent"
+            warn "  Failed to download $file"
             ((++failed))
         fi
-    done <<< "$agents"
+    done <<< "$files"
 
-    echo ""
-    info "Downloaded $success agents"
-
+    echo "  $success files downloaded"
     if [ $failed -gt 0 ]; then
-        warn "$failed agents failed to download"
+        warn "  $failed files failed"
     fi
 }
 
-install_agents() {
-    check_git
+download_all() {
+    mkdir -p "$CLAUDE_DIR"
 
-    if [ -d "$AGENTS_DIR" ] && [ "$(ls -A "$AGENTS_DIR" 2>/dev/null)" ]; then
-        error "Directory $AGENTS_DIR already exists and is not empty. Use 'update' instead."
+    # Download agents
+    download_dir ".claude/agents" "$CLAUDE_DIR/agents"
+
+    # Download hooks
+    download_dir ".claude/hooks" "$CLAUDE_DIR/hooks"
+
+    # Make hook scripts executable
+    if [ -d "$CLAUDE_DIR/hooks" ]; then
+        chmod +x "$CLAUDE_DIR/hooks/"*.sh 2>/dev/null || true
+        chmod +x "$CLAUDE_DIR/hooks/"*.py 2>/dev/null || true
     fi
 
-    info "Installing claude-agents to $AGENTS_DIR..."
-    download_agents
+    # Download settings.json
+    info "Fetching settings.json..."
+    if curl -fsSL "$RAW_BASE/.claude/settings.json" -o "$CLAUDE_DIR/settings.json" 2>/dev/null; then
+        info "  Downloaded settings.json"
+    else
+        warn "  settings.json not found (optional)"
+    fi
+}
 
-    git add "$AGENTS_DIR"
+install_config() {
+    check_git
 
-    info "Done! Agents installed to $AGENTS_DIR"
+    if [ -d "$CLAUDE_DIR" ] && [ "$(ls -A "$CLAUDE_DIR" 2>/dev/null)" ]; then
+        error "Directory $CLAUDE_DIR already exists and is not empty. Use 'update' instead."
+    fi
+
+    info "Installing claude-code config to $CLAUDE_DIR..."
+    echo ""
+    download_all
+
+    git add "$CLAUDE_DIR"
+
+    echo ""
+    info "Done! Config installed to $CLAUDE_DIR"
     echo ""
     echo "Next steps:"
-    echo "  git commit -m 'Add claude-agents'"
+    echo "  git commit -m 'Add claude-code config'"
     echo "  git push"
 }
 
-update_agents() {
+update_config() {
     check_git
 
-    if [ ! -d "$AGENTS_DIR" ]; then
-        error "Directory $AGENTS_DIR not found. Use 'install' first."
+    if [ ! -d "$CLAUDE_DIR" ]; then
+        error "Directory $CLAUDE_DIR not found. Use 'install' first."
     fi
 
-    info "Updating claude-agents..."
-    download_agents
+    info "Updating claude-code config..."
+    echo ""
+    download_all
 
-    git add "$AGENTS_DIR"
+    git add "$CLAUDE_DIR"
 
-    info "Done! Agents updated."
+    echo ""
+    info "Done! Config updated."
     echo ""
     echo "Next steps:"
     echo "  git diff --cached  # review changes"
-    echo "  git commit -m 'Update claude-agents'"
+    echo "  git commit -m 'Update claude-code config'"
     echo "  git push"
 }
 
 case "${1:-}" in
     install)
-        install_agents
+        install_config
         ;;
     update)
-        update_agents
+        update_config
         ;;
     *)
-        echo "Claude Agents Manager"
+        echo "Claude Code Config Manager"
         echo ""
         echo "Usage: $0 <command>"
         echo ""
         echo "Commands:"
-        echo "  install   Add claude-agents to your project (first-time setup)"
-        echo "  update    Pull the latest agents"
+        echo "  install   Add .claude config to your project (first-time setup)"
+        echo "  update    Pull the latest config (agents, hooks, settings)"
+        echo ""
+        echo "This downloads:"
+        echo "  .claude/agents/   - Reusable Claude Code agents"
+        echo "  .claude/hooks/    - PreToolUse hooks (e.g., bash validation)"
+        echo "  .claude/settings.json - Hook configuration"
         exit 1
         ;;
 esac

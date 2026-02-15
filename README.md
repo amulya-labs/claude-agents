@@ -10,7 +10,7 @@ A collection of reusable Claude Code agents for common software development task
 
 ### Option 1: Curl-based Script (Simplest)
 
-Use `manage-agents.sh` to download agents directly from GitHub. No git subtree knowledge needed.
+Use `manage-agents.sh` to download the `.claude` config directly from GitHub. No git subtree knowledge needed.
 
 ```bash
 # Download the helper script
@@ -18,9 +18,9 @@ mkdir -p scripts
 curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh
 chmod +x scripts/manage-agents.sh
 
-# Install agents
+# Install .claude config (agents, hooks, settings)
 ./scripts/manage-agents.sh install
-git commit -m "Add claude-agents"
+git commit -m "Add claude-code config"
 ```
 
 Update later with `./scripts/manage-agents.sh update`.
@@ -34,21 +34,21 @@ Use `git-subtree-mgr` for proper git subtree management with history tracking.
 curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 
-# Add agents as a subtree
-git-subtree-mgr add --prefix=.claude/agents --repo=amulya-labs/claude-agents --path=.claude/agents
-git commit -m "Add claude-agents subtree"
+# Add .claude as a subtree
+git-subtree-mgr add --prefix=.claude --repo=amulya-labs/claude-agents --path=.claude
+git commit -m "Add claude-code config subtree"
 ```
 
-Update later with `git-subtree-mgr pull .claude/agents`.
+Update later with `git-subtree-mgr pull .claude`.
 
 ### Option 3: Manual Copy
 
 ```bash
 git clone https://github.com/amulya-labs/claude-agents.git
-cp -r claude-agents/.claude/agents/ /path/to/your/project/.claude/agents/
+cp -r claude-agents/.claude/ /path/to/your/project/.claude/
 ```
 
-Or copy individual agent files from [`.claude/agents/`](.claude/agents/).
+Or copy individual files from [`.claude/`](.claude/).
 
 ## Available Agents
 
@@ -261,14 +261,19 @@ This repo includes two helper scripts for managing agents.
 
 ### manage-agents.sh
 
-A simple curl-based script for installing and updating agents from this repo. Designed to be copied into your project.
+A simple curl-based script for installing and updating the `.claude` config from this repo. Designed to be copied into your project.
 
 ```bash
 ./scripts/manage-agents.sh install   # First-time setup
-./scripts/manage-agents.sh update    # Pull latest agents
+./scripts/manage-agents.sh update    # Pull latest config
 ```
 
-**How it works:** Downloads `.md` files directly from GitHub using the API, no git subtree complexity.
+**What it downloads:**
+- `.claude/agents/` — Reusable Claude Code agents
+- `.claude/hooks/` — PreToolUse hooks (e.g., bash command validation)
+- `.claude/settings.json` — Hook configuration
+
+**How it works:** Downloads files directly from GitHub using the API, no git subtree complexity.
 
 ### git-subtree-mgr
 
