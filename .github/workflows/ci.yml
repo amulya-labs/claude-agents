@@ -119,4 +119,4 @@ jobs:
       - name: Run hook tests
         run: |
           echo "Running bash hook tests..."
-          .claude/hooks/test-validate-bash.sh
+          tests/test-validate-bash.sh

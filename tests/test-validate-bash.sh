@@ -5,7 +5,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOK="$SCRIPT_DIR/validate-bash.sh"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+HOOK="$REPO_ROOT/.claude/hooks/validate-bash.sh"
 
 PASS=0
 FAIL=0
