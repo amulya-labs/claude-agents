@@ -52,7 +52,6 @@ def extract_patterns(config: dict, category: str) -> list[tuple[str, str]]:
 
 def strip_env_vars(cmd: str) -> str:
     """Strip environment variable assignments from command start."""
-    original = cmd
     while True:
         cmd = cmd.lstrip()
         # Match: VAR=value, VAR="value", VAR='value', VAR=$(cmd), VAR=$VAR
@@ -113,14 +112,21 @@ def split_commands(cmd: str) -> list[str]:
 
     while i < len(cmd):
         char = cmd[i]
-        prev = cmd[i - 1] if i > 0 else ""
 
-        # Track quotes (ignore escaped)
-        if char in ('"', "'") and prev != '\\':
-            if quote is None:
-                quote = char
-            elif quote == char:
-                quote = None
+        # Track quotes (ignore escaped by odd number of backslashes)
+        if char in ('"', "'"):
+            # Count consecutive backslashes before this character
+            backslash_count = 0
+            j = i - 1
+            while j >= 0 and cmd[j] == '\\':
+                backslash_count += 1
+                j -= 1
+            # Only treat as real quote if preceded by even number of backslashes
+            if backslash_count % 2 == 0:
+                if quote is None:
+                    quote = char
+                elif quote == char:
+                    quote = None
 
         # Split on && || ; outside quotes
         if quote is None:

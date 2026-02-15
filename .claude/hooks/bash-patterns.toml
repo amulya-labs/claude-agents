@@ -26,7 +26,7 @@ patterns = [
     "^rm -rf /$",
     "^rm -rf /\\*",
     "^rm -rf ~",
-    "^rm -rf \\.\\$",
+    "^rm -rf \\.$",
     "^rm -rf \\*$",
     " rm -rf /$",
     " rm -rf /\\*",
@@ -69,7 +69,7 @@ patterns = [
 description = "Git operations that rewrite history or are hard to undo"
 patterns = [
     "^git push --force",
-    "^git push -f ",
+    "^git push -f",
     "^git reset --hard",
     "^git clean -fd",
     "^git rebase",
@@ -207,16 +207,16 @@ patterns = [
 [ask.cloud_mutations]
 description = "Cloud CLI operations that create/modify/delete resources"
 patterns = [
-    "aws .* delete",
-    "aws .* remove",
-    "aws .* terminate",
-    "aws .* create",
-    "aws .* put",
-    "aws .* update",
-    "gcloud .* delete",
-    "gcloud .* create",
-    "az .* delete",
-    "az .* create",
+    "aws .* delete(\\s|$)",
+    "aws .* remove(\\s|$)",
+    "aws .* terminate(\\s|$)",
+    "aws .* create(\\s|$)",
+    "aws .* put(\\s|$)",
+    "aws .* update(\\s|$)",
+    "gcloud .* delete(\\s|$)",
+    "gcloud .* create(\\s|$)",
+    "az .* delete(\\s|$)",
+    "az .* create(\\s|$)",
 ]
 
 [ask.process_control]
@@ -634,7 +634,7 @@ patterns = [
     "^javac",
     "^mvn ",
     "^gradle",
-    "^\\.\\./gradlew",
+    "^\\./gradlew",
     "^scala",
     "^sbt ",
     "^kotlin",
@@ -803,7 +803,6 @@ description = "Process inspection (not control)"
 patterns = [
     "^lsof",
     "^pgrep",
-    "^pkill ",
     "^ps ",
     "^top",
     "^htop",

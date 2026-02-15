@@ -109,6 +109,13 @@ test_command 'echo "test; command"' "allow" "Quoted ; should not split"
 test_command "git commit -m 'fix && improve'" "allow" "Git commit with && in message"
 echo
 
+# Phase 7: Kubectl commands (from PR description)
+echo "Phase 7: Kubectl Commands"
+test_command "kubectl get pods" "allow" "kubectl get pods"
+test_command "KUBECONFIG=/tmp/config kubectl get pods" "allow" "KUBECONFIG env + kubectl get pods"
+test_command "kubectl delete pod foo" "ask" "kubectl delete pod foo"
+echo
+
 # Summary
 echo "=== Summary ==="
 echo "Passed: $PASS"
