@@ -309,7 +309,12 @@ Run `git-subtree-mgr --help` for full options.
 
 ## Hooks
 
-The `.claude/hooks/` directory contains PreToolUse hooks that validate tool calls before execution.
+The `.claude/hooks/` directory contains hooks that validate and log Bash commands.
+
+| Hook | File | Purpose |
+|------|------|---------|
+| PreToolUse | `validate-bash.sh` | Validates commands before execution (allow/ask/deny) |
+| PostToolUse | `post-bash.sh` | Logs outcomes of approved ASK commands |
 
 ### Bash Command Validation
 
@@ -317,9 +322,10 @@ The `validate-bash.sh` hook validates Bash commands against pattern lists, provi
 
 **How it works:**
 
-1. Claude Code calls the hook before executing any Bash command
+1. Claude Code calls PreToolUse before executing any Bash command
 2. The hook checks the command against pattern lists (in order: deny → ask → allow)
 3. Returns a decision: `allow` (auto-approve), `ask` (prompt user), or `deny` (block)
+4. If user approves an ASK command, PostToolUse logs the approval
 
 **Pattern categories** (defined in `bash-patterns.toml`):
 
@@ -350,21 +356,36 @@ patterns = [
 
 Patterns are regular expressions. Use `^` to anchor to the start of the command.
 
-**Logging:**
+### Logging
 
-The hook logs `ask` and `deny` decisions (not `allow`) to reduce disk I/O:
+Hooks log `ASK` and `DENY` decisions (not `ALLOW`) to reduce disk I/O:
 
 - **Location:** `/tmp/claude-hook-logs/`
 - **Format:** `YYYY-MM-DD-Day-<project>.log` (e.g., `2026-02-15-Sun-claude-agents.log`)
 - **Retention:** 15 days (auto-cleanup)
 
-Example log entry:
+**Log actions:**
+
+| Action | Meaning |
+|--------|---------|
+| `ASK` | User was prompted for permission |
+| `ASK → APPROVED` | User approved the prompt |
+| `DENY` | Command was blocked |
+
+If you see `ASK` without a following `ASK → APPROVED`, the user denied the command.
+
+**Example log:**
 
 ```
 ========================================
 TIME:   2026-02-15 04:43:42
 ACTION: ASK
-REASON: 'git rebase' matches ask.git_destructive
+REASON: 'git rebase main' matches ask.git_destructive
+CMD:    git rebase main
+========================================
+========================================
+TIME:   2026-02-15 04:43:45
+ACTION: ASK → APPROVED
 CMD:    git rebase main
 ========================================
 ```
