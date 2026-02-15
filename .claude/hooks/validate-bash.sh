@@ -10,13 +10,12 @@ CONFIG_FILE="$SCRIPT_DIR/bash-patterns.toml"
 
 # Logging setup (only logs ask/deny decisions to reduce disk I/O)
 LOG_DIR="/tmp/claude-hook-logs"
-LOG_FILE="$LOG_DIR/bash-hook-$(date '+%Y-%m-%d').log"
 LOG_RETENTION_DAYS=15
 
 mkdir -p "$LOG_DIR"
 
 cleanup_old_logs() {
-    find "$LOG_DIR" -name "bash-hook-*.log" -type f -mtime +$LOG_RETENTION_DAYS -delete 2>/dev/null || true
+    find "$LOG_DIR" -name "*.log" -type f -mtime +$LOG_RETENTION_DAYS -delete 2>/dev/null || true
 }
 
 # Cleanup old logs (run in background to not slow down hook)
@@ -24,6 +23,8 @@ cleanup_old_logs &
 
 # Check config file exists
 if [[ ! -f "$CONFIG_FILE" ]]; then
+    # Use fallback log file for config errors
+    LOG_FILE="$LOG_DIR/$(date '+%Y-%m-%d')-error.log"
     {
         echo "========================================"
         echo "TIME:   $(date '+%Y-%m-%d %H:%M:%S')"
@@ -37,6 +38,20 @@ fi
 
 # Capture stdin
 INPUT=$(cat)
+
+# Extract project name from cwd for log filename
+PROJECT=$(echo "$INPUT" | python3 -c "
+import sys, json, os
+try:
+    data = json.load(sys.stdin)
+    cwd = data.get('cwd', '')
+    print(os.path.basename(cwd) if cwd else 'unknown')
+except:
+    print('unknown')
+" 2>/dev/null)
+
+# Log filename: YYYY-MM-DD-Day-project.log (sorts chronologically)
+LOG_FILE="$LOG_DIR/$(date '+%Y-%m-%d-%a')-${PROJECT}.log"
 
 # Use Python for TOML parsing and validation
 OUTPUT=$(echo "$INPUT" | python3 "$SCRIPT_DIR/validate-bash.py" "$CONFIG_FILE" 2>&1) || {
