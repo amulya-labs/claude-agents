@@ -64,6 +64,19 @@ patterns = [
     "^history -w /dev/null",
 ]
 
+[deny.dangerous_chaining]
+description = "Dangerous command combinations via chaining operators"
+patterns = [
+    ";\\s*rm -rf",
+    "&&\\s*rm -rf",
+    "\\|\\|\\s*rm -rf",
+    ";\\s*sudo ",
+    "&&\\s*sudo ",
+    "\\|\\|\\s*sudo ",
+    ";\\s*rm -rf /",
+    "&&\\s*rm -rf /",
+]
+
 # =============================================================================
 # ASK PATTERNS - Risky but useful, prompt for confirmation
 # =============================================================================
@@ -170,12 +183,16 @@ patterns = [
     "^kubectl uncordon",
     "^kubectl drain",
     "^kubectl exec",
+    "^kubectl run ",
+    "^kubectl cp ",
     "^k3s kubectl apply",
     "^k3s kubectl create",
     "^k3s kubectl delete",
     "^k3s kubectl edit",
     "^k3s kubectl patch",
     "^k3s kubectl exec",
+    "^k3s kubectl run ",
+    "^k3s kubectl cp ",
 ]
 
 [ask.helm_mutations]
@@ -316,6 +333,37 @@ patterns = [
     "source /var/tmp/",
     "\\. /tmp/",
     "\\. /var/tmp/",
+]
+
+[ask.github_api_mutations]
+description = "GitHub API calls that modify state"
+patterns = [
+    "gh api .* -X POST",
+    "gh api .* -X PUT",
+    "gh api .* -X PATCH",
+    "gh api .* -X DELETE",
+    "gh api .* --method POST",
+    "gh api .* --method PUT",
+    "gh api .* --method PATCH",
+    "gh api .* --method DELETE",
+]
+
+[ask.terminal_multiplexer_mutations]
+description = "Terminal multiplexer operations that affect sessions"
+patterns = [
+    "^tmux kill",
+    "^tmux send-keys",
+    "^tmux send-prefix",
+    "^tmux respawn",
+    "^screen -X ",
+    "^screen -S .* -X",
+]
+
+[ask.group_switching]
+description = "Commands executed with different group permissions"
+patterns = [
+    "^sg ",
+    "^newgrp ",
 ]
 
 # =============================================================================
@@ -921,6 +969,17 @@ patterns = [
     "^systemctl list",
     "^systemctl is-",
     "^service .* status",
+    "^getent ",
+    "^locale",
+    "^timedatectl",
+    "^loginctl",
+]
+
+[allow.terminal_multiplexers]
+description = "Terminal multiplexer tools (mutations blocked by ask patterns)"
+patterns = [
+    "^tmux ",
+    "^screen ",
 ]
 
 [allow.command_utilities]
