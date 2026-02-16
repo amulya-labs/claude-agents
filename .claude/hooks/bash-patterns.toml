@@ -67,14 +67,20 @@ patterns = [
 [deny.dangerous_chaining]
 description = "Dangerous command combinations via chaining operators"
 patterns = [
-    ";\\s*rm -rf",
-    "&&\\s*rm -rf",
-    "\\|\\|\\s*rm -rf",
+    # Chained catastrophic rm -rf (root, home, all)
+    ";\\s*rm -rf /$",
+    "&&\\s*rm -rf /$",
+    "\\|\\|\\s*rm -rf /$",
+    ";\\s*rm -rf ~",
+    "&&\\s*rm -rf ~",
+    "\\|\\|\\s*rm -rf ~",
+    ";\\s*rm -rf /\\*",
+    "&&\\s*rm -rf /\\*",
+    "\\|\\|\\s*rm -rf /\\*",
+    # Chained privilege escalation
     ";\\s*sudo ",
     "&&\\s*sudo ",
     "\\|\\|\\s*sudo ",
-    ";\\s*rm -rf /",
-    "&&\\s*rm -rf /",
 ]
 
 # =============================================================================
@@ -338,14 +344,24 @@ patterns = [
 [ask.github_api_mutations]
 description = "GitHub API calls that modify state"
 patterns = [
-    "gh api .* -X POST",
-    "gh api .* -X PUT",
-    "gh api .* -X PATCH",
-    "gh api .* -X DELETE",
-    "gh api .* --method POST",
-    "gh api .* --method PUT",
-    "gh api .* --method PATCH",
-    "gh api .* --method DELETE",
+    # -X flag (short form)
+    "^gh api .* -X POST",
+    "^gh api .* -X PUT",
+    "^gh api .* -X PATCH",
+    "^gh api .* -X DELETE",
+    "^gh api -X POST",
+    "^gh api -X PUT",
+    "^gh api -X PATCH",
+    "^gh api -X DELETE",
+    # --method flag (long form)
+    "^gh api .* --method POST",
+    "^gh api .* --method PUT",
+    "^gh api .* --method PATCH",
+    "^gh api .* --method DELETE",
+    "^gh api --method POST",
+    "^gh api --method PUT",
+    "^gh api --method PATCH",
+    "^gh api --method DELETE",
 ]
 
 [ask.terminal_multiplexer_mutations]
