@@ -66,6 +66,9 @@ patterns = [
 
 [deny.dangerous_chaining]
 description = "Dangerous command combinations via chaining operators"
+# NOTE: These patterns are checked against the FULL command before splitting.
+# The validator first checks deny patterns on raw input, then splits on ;/&&/||.
+# Some rm patterns overlap with catastrophic_deletion for defense-in-depth.
 patterns = [
     # Chained catastrophic rm -rf (root, home, all)
     ";\\s*rm -rf /$",
@@ -77,7 +80,7 @@ patterns = [
     ";\\s*rm -rf /\\*",
     "&&\\s*rm -rf /\\*",
     "\\|\\|\\s*rm -rf /\\*",
-    # Chained privilege escalation
+    # Chained privilege escalation - catches "safe_cmd && sudo dangerous"
     ";\\s*sudo ",
     "&&\\s*sudo ",
     "\\|\\|\\s*sudo ",
@@ -365,14 +368,28 @@ patterns = [
 ]
 
 [ask.terminal_multiplexer_mutations]
-description = "Terminal multiplexer operations that affect sessions"
+description = "Terminal multiplexer operations that affect sessions or execute commands"
 patterns = [
+    # tmux session/window management
     "^tmux kill",
     "^tmux send-keys",
     "^tmux send-prefix",
     "^tmux respawn",
+    # tmux shell execution - can run arbitrary commands
+    "^tmux run-shell",
+    "^tmux run ",
+    "^tmux if-shell",
+    "^tmux pipe-pane",
+    # tmux new session/window (can specify commands)
+    "^tmux new-session",
+    "^tmux new-window",
+    "^tmux split-window",
+    "^tmux new ",
+    # screen command injection
     "^screen -X ",
     "^screen -S .* -X",
+    # screen can execute commands via -c or shell
+    "^screen .*-c ",
 ]
 
 [ask.group_switching]
@@ -986,16 +1003,44 @@ patterns = [
     "^systemctl is-",
     "^service .* status",
     "^getent ",
-    "^locale",
-    "^timedatectl",
-    "^loginctl",
+    # locale: add word boundary to avoid matching localectl
+    "^locale(\\s|$)",
+    # timedatectl: only read-only subcommands
+    "^timedatectl$",
+    "^timedatectl status",
+    "^timedatectl timesync-status",
+    "^timedatectl show-timesync",
+    "^timedatectl show$",
+    "^timedatectl show ",
+    # loginctl: only read-only subcommands
+    "^loginctl list-sessions",
+    "^loginctl session-status",
+    "^loginctl list-users",
+    "^loginctl user-status",
+    "^loginctl show-session",
+    "^loginctl show-user",
+    "^loginctl list-seats",
+    "^loginctl show-seat",
 ]
 
 [allow.terminal_multiplexers]
-description = "Terminal multiplexer tools (mutations blocked by ask patterns)"
+description = "Terminal multiplexer read-only operations"
 patterns = [
-    "^tmux ",
-    "^screen ",
+    # tmux read-only commands - list/show/display
+    "^tmux ls$",
+    "^tmux ls ",
+    "^tmux list-",
+    "^tmux show-",
+    "^tmux display-",
+    "^tmux capture-pane",
+    "^tmux has-session",
+    "^tmux info",
+    "^tmux server-info",
+    "^tmux wait-for",
+    # screen read-only commands
+    "^screen -ls",
+    "^screen -list",
+    "^screen -wipe",
 ]
 
 [allow.command_utilities]
