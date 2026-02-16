@@ -219,6 +219,13 @@ def main():
     if not command:
         sys.exit(0)
 
+    # First, check DENY patterns against the FULL command (before splitting)
+    # This catches dangerous chaining patterns like "; rm -rf" or "&& sudo"
+    matched, section = check_patterns(command, deny_patterns)
+    if matched:
+        output_decision("deny", f"Blocked: '{command[:100]}' matches {section}")
+        sys.exit(0)
+
     # Split into segments
     segments = split_commands(command)
 
