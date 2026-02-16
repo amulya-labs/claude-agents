@@ -5,39 +5,115 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents](https://img.shields.io/badge/agents-16-blue.svg)](.claude/agents/)
 
-A collection of reusable Claude Code agents for common software development tasks.
+**Plug-and-play AI teammates for Claude Code.** Drop specialized agents into any project and delegate planning, coding, debugging, reviews, and more.
 
-## Installation
-
-### Option 1: Curl-based Script (Simplest)
-
-Use `manage-agents.sh` to download the `.claude` config directly from GitHub. No git subtree knowledge needed.
+## Quick Install
 
 ```bash
-# Download the helper script
+mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh && chmod +x scripts/manage-agents.sh && ./scripts/manage-agents.sh install
+```
+
+## What You Get
+
+### Planning
+| Agent | What it does |
+|-------|--------------|
+| **tech-lead** | Breaks down work, creates implementation plans, makes technical decisions |
+| **systems-architect** | Explains architecture, analyzes change impact, maps data flows |
+| **product-owner** | Defines product direction, writes specs, prioritizes ruthlessly |
+
+### Building
+| Agent | What it does |
+|-------|--------------|
+| **senior-dev** | Implements features with production-quality code and tests |
+| **debugger** | Investigates bugs systematically with root cause analysis |
+| **refactoring-expert** | Improves code structure without changing behavior |
+| **prompt-engineer** | Crafts effective prompts for AI models |
+| **agent-specialist** | Designs and optimizes AI agents with strong contracts |
+
+### Quality
+| Agent | What it does |
+|-------|--------------|
+| **code-reviewer** | Reviews code for correctness, security, and maintainability |
+| **test-engineer** | Designs comprehensive test suites (unit, integration, e2e) |
+| **security-auditor** | Identifies vulnerabilities and recommends mitigations |
+
+### Operations
+| Agent | What it does |
+|-------|--------------|
+| **prod-engineer** | Triages incidents, diagnoses with evidence, hardens systems |
+| **pr-refiner** | Processes PR feedback and implements changes with critical thinking |
+| **documentation-writer** | Creates minimal, DRY documentation |
+
+### Sales / Solutions
+| Agent | What it does |
+|-------|--------------|
+| **solution-eng** | Runs discovery, designs solutions, manages POCs |
+
+### Creative
+| Agent | What it does |
+|-------|--------------|
+| **digital-designer** | Creates print-ready layouts (booklets, brochures, posters) |
+
+## Usage
+
+Invoke agents with `@agent-name` in Claude Code:
+
+```
+@tech-lead plan how to add user notifications
+@senior-dev add pagination to the users endpoint
+@debugger the API returns 500 on POST /users
+@security-auditor review the authentication module
+@systems-architect how does caching work in this service?
+@code-reviewer check my changes before I open a PR
+```
+
+Claude can also select agents automatically based on your request.
+
+## Available Agents
+
+| Agent | Description | Model |
+|-------|-------------|-------|
+| agent-specialist | Design and optimize AI agents with strong contracts | opus |
+| code-reviewer | Thorough code reviews for quality and security | default |
+| debugger | Systematic bug investigation and root cause analysis | opus |
+| digital-designer | Print-ready layouts for booklets, brochures, posters | opus |
+| documentation-writer | Clear, minimal documentation following DRY principles | default |
+| pr-refiner | Refine PRs based on review feedback | default |
+| prod-engineer | Production incident response and reliability engineering | opus |
+| product-owner | Product direction, prioritization, specs, and decisions | default |
+| prompt-engineer | Engineer effective prompts for AI models | opus |
+| refactoring-expert | Improve code structure safely | default |
+| security-auditor | Security assessments and vulnerability identification | opus |
+| senior-dev | Feature implementation with best practices | default |
+| solution-eng | Technical sales, discovery, POCs, and solution design | default |
+| systems-architect | High-level architecture guidance | opus |
+| tech-lead | Plan implementation approaches, break down tasks | opus |
+| test-engineer | Comprehensive test suite design | default |
+
+<details>
+<summary>Installation Options</summary>
+
+### Option 1: Curl-based Script (Recommended)
+
+```bash
 mkdir -p scripts
 curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh
 chmod +x scripts/manage-agents.sh
-
-# Install .claude config (agents, hooks, settings)
 ./scripts/manage-agents.sh install
-git commit -m "Add claude-code config"
 ```
 
 Update later with `./scripts/manage-agents.sh update`.
 
-### Option 2: Git Subtree (Version-tracked)
-
-Use `git-subtree-mgr` for proper git subtree management with history tracking.
+### Option 2: Git Subtree
 
 ```bash
-# One-time: install the script globally
+# Install the manager globally
 curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 
 # Add .claude as a subtree
 git-subtree-mgr add --prefix=.claude --repo=amulya-labs/claude-agents --path=.claude
-git commit -m "Add claude-code config subtree"
 ```
 
 Update later with `git-subtree-mgr pull .claude`.
@@ -49,383 +125,26 @@ git clone https://github.com/amulya-labs/claude-agents.git
 cp -r claude-agents/.claude/ /path/to/your/project/.claude/
 ```
 
-Or copy individual files from [`.claude/`](.claude/).
-
-## Available Agents
-
-| Agent | Description | Model |
-|-------|-------------|-------|
-| [agent-specialist](#agent-specialist) | Design and optimize AI agents with strong contracts | opus |
-| [code-reviewer](#code-reviewer) | Thorough code reviews for quality and security | default |
-| [debugger](#debugger) | Systematic bug investigation and root cause analysis | opus |
-| [documentation-writer](#documentation-writer) | Clear, comprehensive documentation | default |
-| [pr-refiner](#pr-refiner) | Refine PRs based on review feedback | default |
-| [prod-engineer](#prod-engineer) | Production incident response and reliability engineering | opus |
-| [product-owner](#product-owner) | Product direction, prioritization, specs, and decisions | default |
-| [refactoring-expert](#refactoring-expert) | Improve code structure safely | default |
-| [security-auditor](#security-auditor) | Security assessments and vulnerability identification | opus |
-| [senior-dev](#senior-dev) | Feature implementation with best practices | default |
-| [solution-eng](#solution-eng) | Technical sales, discovery, POCs, and solution design | default |
-| [systems-architect](#systems-architect) | High-level architecture guidance | opus |
-| [tech-lead](#tech-lead) | Plan implementation approaches, break down tasks | opus |
-| [test-engineer](#test-engineer) | Comprehensive test suite design | default |
-
-## Agent Details
-
-### agent-specialist
-
-Designs and optimizes AI agents:
-- Output contract design (structure, completion criteria, quality bar)
-- Guardrail engineering (behavioral constraints, safety gates)
-- Knowledge organization (principles, processes, patterns)
-- Agent review and improvement
-
-Use when creating new agents or improving existing ones.
-
-### code-reviewer
-
-Performs thorough code reviews focusing on:
-- Correctness and logic errors
-- Security vulnerabilities
-- Performance issues
-- Maintainability and best practices
-
-Use when you need a fresh perspective on code quality.
-
-### debugger
-
-Investigates bugs systematically using:
-- Root cause analysis
-- Hypothesis-driven investigation
-- Evidence collection
-- Comprehensive fix documentation
-
-Use when troubleshooting errors or unexpected behavior.
-
-### documentation-writer
-
-Creates clear documentation including:
-- README files
-- API documentation
-- Architecture docs
-- How-to guides and tutorials
-
-Use when documentation needs to be written or improved.
-
-### pr-refiner
-
-Refines PRs based on review feedback by:
-- Extracting all review comments
-- Creating prioritized todo lists
-- Critically evaluating suggestions
-- Implementing changes or pushing back with reasoning
-
-Use when addressing code review comments to refine your PR.
-
-### prod-engineer
-
-Handles production incidents and reliability engineering:
-- Triage and stabilize (reduce blast radius, restore service)
-- Evidence-driven diagnosis (metrics, logs, traces)
-- Safe mitigations with rollback plans
-- System hardening (alerts, runbooks, tests)
-
-Use for outages, performance issues, infrastructure problems, and incident response.
-
-### product-owner
-
-Drives product direction and decisions:
-- Problem definition and customer validation
-- Prioritization (RICE, value vs effort, MoSCoW)
-- PRD-lite specs and user stories
-- Roadmap and stakeholder communication
-
-Use for feature planning, writing specs, prioritization decisions, and product strategy.
-
-### refactoring-expert
-
-Improves code structure by:
-- Identifying code smells
-- Applying safe refactoring patterns
-- Preserving behavior through testing
-- Making incremental improvements
-
-Use for cleaning up technical debt.
-
-### security-auditor
-
-Performs security assessments covering:
-- Authentication and authorization
-- Input validation (injection attacks)
-- Data protection
-- API and configuration security
-
-Use for security reviews and threat modeling.
-
-### senior-dev
-
-Implements features with:
-- Production-quality code
-- Comprehensive testing
-- Proper error handling
-- CI/CD integration
-
-Use for development tasks requiring best practices.
-
-### solution-eng
-
-Bridges product capabilities and customer needs:
-- Discovery (business goals, technical requirements, stakeholders)
-- Solution design and architecture
-- Demo and POC planning
-- Objection handling with technical integrity
-
-Use for technical sales support, customer discovery, and solution validation.
-
-### systems-architect
-
-Provides architectural guidance on:
-- System design and component interactions
-- Data flows and workflows
-- Change impact analysis
-- Delegation and project scoping
-
-Use for understanding how systems work and analyzing impact of changes.
-
-### tech-lead
-
-Plans implementation approaches by:
-- Breaking down complex tasks into actionable steps
-- Creating implementation plans with milestones
-- Identifying risks, dependencies, and blockers
-- Making high-level technical decisions
-
-Use for scoping work and planning how to build something. Does not write code.
-
-### test-engineer
-
-Designs test suites including:
-- Unit, integration, and e2e tests
-- Edge case coverage
-- Test patterns and anti-patterns
-- Quality and maintainability
-
-Use when you need thorough test coverage.
-
-## Usage
-
-### Quick Start
-
-Once installed, agents are available in your Claude Code sessions.
-
-**Automatic invocation** — Claude selects the appropriate agent based on your request:
-
-```
-> Review this PR for security issues
-# Claude automatically uses security-auditor agent
-```
-
-**Explicit invocation** — Use `@agent-name` to invoke a specific agent:
-
-```
-> @systems-architect analyze the data flow in this service
-> @debugger help me find why this test is failing
-> @security-auditor review the authentication module
-```
-
-### Examples
-
-| Task | Command |
-|------|---------|
-| Create an agent | `@agent-specialist design an agent for code migrations` |
-| Plan a feature | `@tech-lead plan how to add user notifications` |
-| Architecture question | `@systems-architect how does caching work here?` |
-| Implement feature | `@senior-dev add pagination to the users endpoint` |
-| Customer POC | `@solution-eng plan a POC for Acme Corp's integration needs` |
-| Debug an issue | `@debugger the API returns 500 on POST` |
-| Production incident | `@prod-engineer latency spiked after the last deploy` |
-| Write a PRD | `@product-owner write a spec for user notifications` |
-| Security review | `@security-auditor review the auth module` |
-| Review code | `@code-reviewer check my changes` |
-| Write tests | `@test-engineer add tests for the payment service` |
-| Refactor code | `@refactoring-expert clean up the legacy handlers` |
-| Address PR feedback | `@pr-refiner address the review comments` |
-| Write docs | `@documentation-writer create API docs for this module` |
-
-### Learn More
-
-See the [Claude Code agents documentation](https://docs.anthropic.com/en/docs/claude-code/agents) for more details.
-
-## Scripts
-
-This repo includes two helper scripts for managing agents.
-
-### manage-agents.sh
-
-A simple curl-based script for installing and updating the `.claude` config from this repo. Designed to be copied into your project.
-
-```bash
-./scripts/manage-agents.sh install   # First-time setup
-./scripts/manage-agents.sh update    # Pull latest config
-```
-
-**What it downloads:**
-- `.claude/agents/` — Reusable Claude Code agents
-- `.claude/hooks/` — PreToolUse hooks (e.g., bash command validation)
-- `.claude/settings.json` — Hook configuration
-
-**How it works:** Downloads files directly from GitHub using the API, no git subtree complexity.
-
-### git-subtree-mgr
-
-A generic git subtree manager that works with any repository. Install it globally in `~/bin` and use it across all your projects.
-
-```bash
-# Install globally
-cp scripts/git-subtree-mgr ~/bin/
-chmod +x ~/bin/git-subtree-mgr
-
-# Or download directly
-curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
-chmod +x ~/bin/git-subtree-mgr
-```
-
-**Usage:**
-
-```bash
-git-subtree-mgr add --prefix=PATH --repo=OWNER/REPO [--branch=BRANCH]
-git-subtree-mgr pull [PREFIX]
-git-subtree-mgr list
-```
-
-**Features:**
-- Stores subtree config in `.github/.gitsubtrees`
-- Supports GitHub shorthand (`owner/repo`) or full URLs
-- **Supports extracting subdirectories** with `--path` (not just entire repos)
-- Uses `--squash` by default (use `--no-squash` for full history)
-- Works from any directory within a git repo
-- Caches cloned repos in `~/.cache/git-subtree-mgr` for faster updates
-
-Run `git-subtree-mgr --help` for full options.
+</details>
 
 ## Hooks
 
-The `.claude/hooks/` directory contains hooks that validate and log Bash commands.
+The `.claude/hooks/` directory includes Bash command validation hooks that auto-approve safe commands and block dangerous ones. Patterns are defined in `bash-patterns.toml`.
 
-| Hook | File | Purpose |
-|------|------|---------|
-| PreToolUse | `validate-bash.sh` | Validates commands before execution (allow/ask/deny) |
-| PostToolUse | `post-bash.sh` | Logs outcomes of approved ASK commands |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for hook configuration details.
 
-### Bash Command Validation
+## Scripts
 
-The `validate-bash.sh` hook validates Bash commands against pattern lists, providing automatic approval for safe commands and blocking dangerous ones.
-
-**How it works:**
-
-1. Claude Code calls PreToolUse before executing any Bash command
-2. The hook checks the command against pattern lists (in order: deny → ask → allow)
-3. Returns a decision: `allow` (auto-approve), `ask` (prompt user), or `deny` (block)
-4. If user approves an ASK command, PostToolUse logs the approval
-
-**Pattern categories** (defined in `bash-patterns.toml`):
-
-| Category | Behavior | Examples |
-|----------|----------|----------|
-| `[deny.*]` | Always block, no override | `sudo`, `rm -rf /`, `dd of=/dev/` |
-| `[ask.*]` | Prompt user for confirmation | `git push --force`, `docker stop`, `kubectl delete` |
-| `[allow.*]` | Auto-approve silently | `git status`, `ls`, `npm test`, `kubectl get` |
-
-**Customizing patterns:**
-
-Edit `.claude/hooks/bash-patterns.toml` to add or modify patterns:
-
-```toml
-[allow.my_tools]
-description = "My custom tools"
-patterns = [
-    "^mytool ",
-    "^another-tool ",
-]
-
-[ask.my_dangerous_ops]
-description = "Operations I want to confirm"
-patterns = [
-    "^deploy ",
-]
-```
-
-Patterns are regular expressions. Use `^` to anchor to the start of the command.
-
-### Logging
-
-Hooks log `ASK` and `DENY` decisions (not `ALLOW`) to reduce disk I/O:
-
-- **Location:** `/tmp/claude-hook-logs/`
-- **Format:** `YYYY-MM-DD-Day-<project>.log` (e.g., `2026-02-15-Sun-claude-agents.log`)
-- **Retention:** 15 days (auto-cleanup)
-
-**Log actions:**
-
-| Action | Meaning |
+| Script | Purpose |
 |--------|---------|
-| `ASK` | User was prompted for permission |
-| `ASK → APPROVED` | User approved the prompt |
-| `DENY` | Command was blocked |
+| `manage-agents.sh` | Install and update `.claude` config via curl (no git knowledge needed) |
+| `git-subtree-mgr` | Manage git subtrees with history tracking (install globally in `~/bin`) |
 
-If you see `ASK` without a following `ASK → APPROVED`, the user denied the command.
-
-**Example log:**
-
-```
-========================================
-TIME:   2026-02-15 04:43:42
-ACTION: ASK
-REASON: 'git rebase main' matches ask.git_destructive
-CMD:    git rebase main
-========================================
-========================================
-TIME:   2026-02-15 04:43:45
-ACTION: ASK → APPROVED
-CMD:    git rebase main
-========================================
-```
-
-<details>
-<summary>Which script should I use?</summary>
-
-| Use case | Recommended |
-|----------|-------------|
-| Just want the agents, minimal setup | `manage-agents.sh` |
-| Want git history of upstream changes | `git-subtree-mgr` |
-| Managing multiple subtrees in a project | `git-subtree-mgr` |
-| Non-technical team members | `manage-agents.sh` |
-
-</details>
+Run `./scripts/manage-agents.sh --help` or `git-subtree-mgr --help` for usage.
 
 ## Contributing
 
-PRs welcome! When adding or improving agents:
-
-- **Generalized** — No project-specific references
-- **Well-structured** — Use clear sections with headers and bullets
-- **Focused** — One domain or task per agent
-- **Tested** — Ensure CI passes (validates frontmatter syntax)
-
-### Agent File Format
-
-```yaml
----
-name: agent-name
-description: Brief description of when to use this agent.
-model: opus  # optional: opus, sonnet, haiku (omit for default)
-color: blue  # optional: terminal color
----
-
-# Agent Title
-
-Agent instructions in markdown...
-```
+PRs welcome. Agents should be generalized (no project-specific references), focused (one domain per agent), and well-structured. See [CONTRIBUTING.md](CONTRIBUTING.md) for the agent file format and guidelines.
 
 ## License
 
