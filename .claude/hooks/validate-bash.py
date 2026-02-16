@@ -254,10 +254,11 @@ def main():
             final_reason = f"'{cleaned}' not in auto-approve list"
             final_segment = cleaned
 
-    # Output final decision
+    # Output final decision (always output explicitly)
     if final_decision == "ask":
         output_decision("ask", final_reason)
-    # else: allow (no output)
+    else:
+        output_decision("allow", "Command matches allow patterns")
 
 
 if __name__ == "__main__":
