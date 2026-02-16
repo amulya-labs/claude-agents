@@ -70,7 +70,7 @@ jobs:
                   continue
 
               # Check required fields
-              required_fields = ["name", "description"]
+              required_fields = ["name", "description", "source", "license"]
               for field in required_fields:
                   if field not in frontmatter:
                       errors.append(f"{agent_file.name}: Missing required field '{field}'")
@@ -152,3 +152,83 @@ jobs:
         run: |
           echo "Running bash hook tests..."
           tests/test-validate-bash.sh
+
+  validate-attributions:
+    name: Validate Attributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check LICENSE file exists
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "ERROR: LICENSE file not found in repository root"
+            exit 1
+          fi
+          echo "✓ LICENSE file exists"
+
+      - name: Validate script attributions
+        run: |
+          errors=0
+
+          echo "=== Checking shell scripts ==="
+          for script in .claude/hooks/*.sh scripts/*.sh scripts/git-subtree-mgr; do
+            if [ -f "$script" ]; then
+              echo -n "Checking $script... "
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$script"; then
+                echo "MISSING source attribution"
+                errors=$((errors + 1))
+              elif ! grep -qi "License:.*MIT" "$script"; then
+                echo "MISSING license attribution"
+                errors=$((errors + 1))
+              else
+                echo "✓"
+              fi
+            fi
+          done
+
+          echo ""
+          echo "=== Checking Python scripts ==="
+          for script in .claude/hooks/*.py; do
+            if [ -f "$script" ]; then
+              echo -n "Checking $script... "
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$script"; then
+                echo "MISSING source attribution"
+                errors=$((errors + 1))
+              elif ! grep -qi "License:.*MIT" "$script"; then
+                echo "MISSING license attribution"
+                errors=$((errors + 1))
+              else
+                echo "✓"
+              fi
+            fi
+          done
+
+          echo ""
+          echo "=== Checking TOML configs ==="
+          for config in .claude/hooks/*.toml; do
+            if [ -f "$config" ]; then
+              echo -n "Checking $config... "
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$config"; then
+                echo "MISSING source attribution"
+                errors=$((errors + 1))
+              elif ! grep -qi "License:.*MIT" "$config"; then
+                echo "MISSING license attribution"
+                errors=$((errors + 1))
+              else
+                echo "✓"
+              fi
+            fi
+          done
+
+          echo ""
+          if [ $errors -gt 0 ]; then
+            echo "ERROR: $errors file(s) missing proper attributions"
+            echo ""
+            echo "Required format for scripts:"
+            echo "  # Source: https://github.com/amulya-labs/claude-agents"
+            echo "  # License: MIT (https://opensource.org/licenses/MIT)"
+            exit 1
+          fi
+
+          echo "All scripts have proper attributions!"
