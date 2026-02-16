@@ -5,6 +5,9 @@ set -e
 # A generic script to manage git subtrees across any repository
 # Supports pulling subdirectories from remote repos (not just entire repos)
 #
+# Source: https://github.com/amulya-labs/claude-agents
+# License: MIT (https://opensource.org/licenses/MIT)
+#
 # Place this in your ~/bin and use it from any git repo
 #
 # Usage:
