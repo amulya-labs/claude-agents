@@ -1,8 +1,9 @@
 # Claude Agents
 
 [![CI](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-agents/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-agents)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents](https://img.shields.io/badge/agents-14-blue.svg)](.claude/agents/)
+[![Agents](https://img.shields.io/badge/agents-16-blue.svg)](.claude/agents/)
 
 A collection of reusable Claude Code agents for common software development tasks.
 
