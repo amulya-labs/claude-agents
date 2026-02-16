@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/rrl/github/claude-agents/.claude/hooks/validate-bash.sh",
+            "command": ".claude/hooks/validate-bash.sh",
             "timeout": 5
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/rrl/github/claude-agents/.claude/hooks/post-bash.sh",
+            "command": ".claude/hooks/post-bash.sh",
             "timeout": 5
           }
         ]

@@ -6,7 +6,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/bash-patterns.toml"
 LOG_DIR="/tmp/claude-hook-logs"
 
+# Create log directory with restrictive permissions
+OLD_UMASK=$(umask)
+umask 077
 mkdir -p "$LOG_DIR" 2>/dev/null
+umask "$OLD_UMASK"
+
+# Verify log directory is safe (not a symlink, owned by us)
+if [[ -L "$LOG_DIR" ]] || [[ ! -d "$LOG_DIR" ]] || [[ ! -O "$LOG_DIR" ]]; then
+    # Unsafe log directory; skip logging
+    exit 0
+fi
 
 # Capture stdin
 INPUT=$(cat)
@@ -31,7 +41,7 @@ COMMAND=$(echo "$PARSED" | sed -n '2p')
 
 [[ -z "$COMMAND" ]] && exit 0
 
-LOG_FILE="$LOG_DIR/$(date '+%Y-%m-%d-%a')-${PROJECT}.log"
+LOG_FILE="$LOG_DIR/$(LC_ALL=C date '+%Y-%m-%d-%a')-${PROJECT}.log"
 
 # Check if this was an ASK pattern
 DECISION=$(echo "$INPUT" | python3 "$SCRIPT_DIR/validate-bash.py" "$CONFIG_FILE" 2>/dev/null | python3 -c "
@@ -47,8 +57,8 @@ except:
 if [[ "$DECISION" == "ask" ]]; then
     {
         echo "========================================"
-        echo "TIME:   $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "ACTION: ASK → APPROVED"
+        echo "TIME:   $(LC_ALL=C date '+%Y-%m-%d %H:%M:%S')"
+        echo "ACTION: ASK -> APPROVED"
         echo "CMD:    $COMMAND"
         echo "========================================"
     } >> "$LOG_FILE"
