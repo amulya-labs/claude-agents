@@ -138,12 +138,32 @@ command = "locale"
 description = "locale command"
 
 [[allow]]
+command = "locale -a"
+description = "locale list all"
+
+[[allow]]
 command = "timedatectl"
 description = "timedatectl command"
 
 [[allow]]
+command = "timedatectl status"
+description = "timedatectl status"
+
+[[allow]]
+command = "timedatectl show"
+description = "timedatectl show"
+
+[[allow]]
 command = "loginctl list-sessions"
-description = "loginctl command"
+description = "loginctl list-sessions"
+
+[[allow]]
+command = "loginctl list-users"
+description = "loginctl list-users"
+
+[[allow]]
+command = "loginctl show-session 1"
+description = "loginctl show-session"
 
 [[allow]]
 command = "docker ps"
@@ -256,6 +276,44 @@ description = "screen -X quit"
 [[ask]]
 command = "screen -S mysession -X kill"
 description = "screen -S -X"
+
+# tmux shell execution (security-critical)
+[[ask]]
+command = "tmux run-shell 'echo test'"
+description = "tmux run-shell"
+
+[[ask]]
+command = "tmux if-shell 'test -f /tmp/x' 'display yes'"
+description = "tmux if-shell"
+
+[[ask]]
+command = "tmux pipe-pane 'cat > /tmp/log'"
+description = "tmux pipe-pane"
+
+[[ask]]
+command = "tmux new-session -d -s test"
+description = "tmux new-session"
+
+[[ask]]
+command = "tmux new-window"
+description = "tmux new-window"
+
+# System mutations that look like read-only commands
+[[ask]]
+command = "timedatectl set-timezone UTC"
+description = "timedatectl mutation"
+
+[[ask]]
+command = "loginctl terminate-user 1000"
+description = "loginctl mutation"
+
+[[ask]]
+command = "loginctl kill-user 1000"
+description = "loginctl kill-user"
+
+[[ask]]
+command = "localectl set-locale LANG=en_US.UTF-8"
+description = "localectl mutation (should not match locale)"
 
 [[ask]]
 command = "gh api -X POST repos/owner/repo/issues -f title=test"
