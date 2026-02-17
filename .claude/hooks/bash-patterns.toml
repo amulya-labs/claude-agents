@@ -174,6 +174,8 @@ patterns = [
 
 [ask.kubernetes_mutations]
 description = "Kubernetes operations that modify cluster state"
+# NOTE: kubectl exec is NOT here - read-only exec commands are allowed,
+# and other exec commands fall through to ask-by-default
 patterns = [
     "^kubectl apply",
     "^kubectl create",
@@ -191,7 +193,6 @@ patterns = [
     "^kubectl cordon",
     "^kubectl uncordon",
     "^kubectl drain",
-    "^kubectl exec",
     "^kubectl run ",
     "^kubectl cp ",
     "^k3s kubectl apply",
@@ -199,7 +200,6 @@ patterns = [
     "^k3s kubectl delete",
     "^k3s kubectl edit",
     "^k3s kubectl patch",
-    "^k3s kubectl exec",
     "^k3s kubectl run ",
     "^k3s kubectl cp ",
 ]
@@ -420,6 +420,26 @@ patterns = [
     "^local ",
     "^test$",
     "^\\[$",
+    # Control flow keywords - only bare keywords are auto-allowed.
+    # Full constructs (e.g., 'if condition; then cmd; fi') are split by
+    # the validator, and the body commands are validated separately.
+    # NOTE: Patterns with trailing space removed to prevent bypass like
+    # 'then rm -rf /tmp/*' matching '^then '.
+    "^for ",
+    "^while ",
+    "^until ",
+    "^if ",
+    "^elif ",
+    "^else$",
+    "^then$",
+    "^fi$",
+    "^fi;",
+    "^do$",
+    "^done$",
+    "^done;",
+    "^case ",
+    "^esac$",
+    "^esac;",
 ]
 
 [allow.path_utilities]
@@ -680,6 +700,20 @@ patterns = [
     "^gh ",
 ]
 
+[allow.github_labels]
+description = "GitHub CLI label management (read and create operations)"
+patterns = [
+    "^gh label list",
+    "^gh label create ",
+    "^gh label edit ",
+]
+
+[ask.github_label_delete]
+description = "GitHub CLI label deletion"
+patterns = [
+    "^gh label delete ",
+]
+
 [allow.python]
 description = "Python ecosystem"
 patterns = [
@@ -796,6 +830,20 @@ patterns = [
     "^mocha",
     "^playwright",
     "^cypress",
+]
+
+[allow.local_scripts]
+description = "Local project test and utility scripts"
+patterns = [
+    # Test scripts in tests/ directory
+    "^\\./tests/",
+    "^tests/",
+    # Utility scripts in scripts/ directory
+    "^\\./scripts/",
+    "^scripts/",
+    # Common script patterns
+    "^\\./bin/",
+    "^bin/",
 ]
 
 [allow.databases]
@@ -950,9 +998,13 @@ patterns = [
 
 [allow.kubernetes]
 description = "Kubernetes (mutations blocked by ask patterns)"
+# NOTE: kubectl exec is excluded here - it's handled by allow.kubernetes_exec_readonly
+# for read-only commands, and falls through to ask for everything else
 patterns = [
-    "^kubectl ",
-    "^k3s kubectl",
+    # Negative lookahead to exclude 'exec' subcommand, with \S to ensure
+    # we check after consuming ALL whitespace (prevents double-space bypass)
+    "^kubectl\\s+(?!exec\\b)\\S",
+    "^k3s kubectl\\s+(?!exec\\b)\\S",
     "^k9s",
     "^helm ",
     "^helmfile ",
@@ -961,6 +1013,57 @@ patterns = [
     "^istioctl",
     "^argocd",
     "^flux",
+]
+
+[allow.kubernetes_exec_readonly]
+description = "kubectl exec with read-only commands (other exec falls through to ask)"
+# NOTE: Only truly read-only commands are allowed here. Commands that can execute
+# arbitrary code (env with args, awk, sed, find) are excluded for security.
+patterns = [
+    # Read file contents
+    "^kubectl exec .* -- cat ",
+    "^kubectl exec .* -- head ",
+    "^kubectl exec .* -- tail ",
+    "^kubectl exec .* -- less ",
+    "^kubectl exec .* -- more ",
+    # List/inspect files (note: find excluded due to -exec capability)
+    "^kubectl exec .* -- ls",
+    "^kubectl exec .* -- stat ",
+    "^kubectl exec .* -- file ",
+    "^kubectl exec .* -- wc ",
+    # Environment and process info
+    # NOTE: Only bare 'env' allowed - 'env VAR=x cmd' can run arbitrary commands
+    "^kubectl exec .* -- env$",
+    "^kubectl exec .* -- printenv",
+    "^kubectl exec .* -- ps ",
+    "^kubectl exec .* -- ps$",
+    "^kubectl exec .* -- top ",
+    "^kubectl exec .* -- whoami",
+    "^kubectl exec .* -- id$",
+    "^kubectl exec .* -- id ",
+    "^kubectl exec .* -- pwd$",
+    "^kubectl exec .* -- hostname",
+    "^kubectl exec .* -- uname",
+    # Search (note: awk/sed excluded - can execute commands or modify files)
+    "^kubectl exec .* -- grep ",
+    # Disk/network info (note: ip excluded - can modify network config)
+    "^kubectl exec .* -- df ",
+    "^kubectl exec .* -- df$",
+    "^kubectl exec .* -- du ",
+    "^kubectl exec .* -- free",
+    "^kubectl exec .* -- netstat",
+    "^kubectl exec .* -- ss ",
+    # Date/time
+    "^kubectl exec .* -- date",
+    "^kubectl exec .* -- uptime",
+    # Same patterns for k3s (only safe commands)
+    "^k3s kubectl exec .* -- cat ",
+    "^k3s kubectl exec .* -- ls",
+    "^k3s kubectl exec .* -- env$",
+    "^k3s kubectl exec .* -- ps",
+    "^k3s kubectl exec .* -- grep ",
+    "^k3s kubectl exec .* -- head ",
+    "^k3s kubectl exec .* -- tail ",
 ]
 
 [allow.secrets]
