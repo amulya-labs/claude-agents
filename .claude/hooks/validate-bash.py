@@ -11,9 +11,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 # Python 3.11+ has tomllib built-in
 try:
@@ -197,6 +195,46 @@ def split_commands(cmd: str) -> list[str]:
     return segments
 
 
+# Shell control flow keywords that may prefix body commands
+# These keywords introduce blocks but the body commands need separate validation
+CONTROL_FLOW_KEYWORDS = re.compile(
+    r'^(then|else|elif|do)\s+',
+    re.IGNORECASE
+)
+
+# Shell control flow terminators that may have redirections attached
+# These complete control structures and are safe on their own
+CONTROL_FLOW_TERMINATORS = re.compile(
+    r'^(done|fi|esac)(\s*[<>|&].*)?$',
+    re.IGNORECASE
+)
+
+
+def strip_control_flow_keyword(segment: str) -> str:
+    """Strip shell control flow keywords from segment start.
+
+    When commands like 'if condition; then body; fi' are split on ';',
+    we get segments like 'then body'. This function strips the 'then '
+    prefix so 'body' can be validated independently.
+
+    For terminators like 'done < file.txt', we return empty string since
+    the redirection is part of the loop construct, not a separate command.
+
+    Returns the segment with any leading control flow keyword removed,
+    or empty string for terminators (which are inherently safe).
+    """
+    # Check for terminators first (done, fi, esac) - possibly with redirection
+    if CONTROL_FLOW_TERMINATORS.match(segment):
+        return ""
+
+    # Check for body-introducing keywords (then, else, do, etc.)
+    match = CONTROL_FLOW_KEYWORDS.match(segment)
+    if match:
+        return segment[match.end():].lstrip()
+
+    return segment
+
+
 def clean_segment(segment: str) -> str:
     """Clean a command segment: strip whitespace, subshell chars, env vars, comments."""
     segment = segment.strip()
@@ -214,6 +252,10 @@ def clean_segment(segment: str) -> str:
 
     # Strip env vars
     segment = strip_env_vars(segment)
+
+    # Strip shell control flow keywords (then, else, do, etc.)
+    # This allows validation of the body command within control structures
+    segment = strip_control_flow_keyword(segment)
 
     return segment
 
