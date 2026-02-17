@@ -10,7 +10,10 @@ License: MIT (https://opensource.org/licenses/MIT)
 import json
 import re
 import sys
+from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 # Python 3.11+ has tomllib built-in
 try:
@@ -27,6 +30,14 @@ except ImportError:
         sys.exit(1)
 
 
+@dataclass
+class CompiledPattern:
+    """A pre-compiled regex pattern with metadata."""
+    regex: re.Pattern
+    section: str
+    original: str
+
+
 def load_config(config_path: str) -> dict:
     """Load and validate TOML configuration."""
     try:
@@ -40,24 +51,36 @@ def load_config(config_path: str) -> dict:
         sys.exit(1)
 
 
-def extract_patterns(config: dict, category: str) -> list[tuple[str, str]]:
-    """Extract patterns for a category (deny/ask/allow).
+def compile_patterns(config: dict, category: str) -> list[CompiledPattern]:
+    """Extract and compile patterns for a category (deny/ask/allow).
 
-    Returns list of (pattern, section_name) tuples.
+    Pre-compiling regex patterns improves performance significantly
+    when validating many commands.
     """
-    patterns = []
+    compiled = []
     for section_name, section in config.get(category, {}).items():
         if isinstance(section, dict) and "patterns" in section:
             for pattern in section["patterns"]:
-                patterns.append((pattern, f"{category}.{section_name}"))
-    return patterns
+                try:
+                    regex = re.compile(pattern)
+                    compiled.append(CompiledPattern(
+                        regex=regex,
+                        section=f"{category}.{section_name}",
+                        original=pattern
+                    ))
+                except re.error as e:
+                    print(f"Warning: Invalid regex '{pattern}' in {category}.{section_name}: {e}",
+                          file=sys.stderr)
+    return compiled
 
 
 def strip_env_vars(cmd: str) -> str:
-    """Strip environment variable assignments from command start."""
+    """Strip environment variable assignments from command start.
+
+    Handles: VAR=value, VAR="value", VAR='value', VAR=$(cmd), VAR=$VAR
+    """
     while True:
         cmd = cmd.lstrip()
-        # Match: VAR=value, VAR="value", VAR='value', VAR=$(cmd), VAR=$VAR
         match = re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', cmd)
         if not match:
             break
@@ -96,18 +119,34 @@ def strip_env_vars(cmd: str) -> str:
             cmd = rest[end + 1:] if end > 0 else ""
         elif rest.startswith('$') and len(rest) > 1 and re.match(r'[A-Za-z_]', rest[1]):
             # Variable reference $VAR
-            match = re.match(r'^\$[A-Za-z_][A-Za-z0-9_]*', rest)
-            cmd = rest[match.end():] if match else rest
+            var_match = re.match(r'^\$[A-Za-z_][A-Za-z0-9_]*', rest)
+            cmd = rest[var_match.end():] if var_match else rest
         else:
             # Unquoted value - ends at whitespace
-            match = re.match(r'^[^\s]*\s*', rest)
-            cmd = rest[match.end():] if match else ""
+            val_match = re.match(r'^[^\s]*\s*', rest)
+            cmd = rest[val_match.end():] if val_match else ""
 
     return cmd.lstrip()
 
 
+def strip_leading_comment(cmd: str) -> str:
+    """Strip shell comments from the start of a command.
+
+    Handles multi-line commands where the first line is a comment.
+    """
+    lines = cmd.split('\n')
+    while lines and lines[0].strip().startswith('#'):
+        lines.pop(0)
+    return '\n'.join(lines).lstrip()
+
+
 def split_commands(cmd: str) -> list[str]:
-    """Split command on &&, ||, ; (respecting quotes)."""
+    """Split command on &&, ||, ; (respecting quotes, comments, and shell syntax).
+
+    Special handling for:
+    - ;; (case statement terminator) - not a split point
+    - Quoted strings
+    """
     segments = []
     current = ""
     quote = None
@@ -118,13 +157,11 @@ def split_commands(cmd: str) -> list[str]:
 
         # Track quotes (ignore escaped by odd number of backslashes)
         if char in ('"', "'"):
-            # Count consecutive backslashes before this character
             backslash_count = 0
             j = i - 1
             while j >= 0 and cmd[j] == '\\':
                 backslash_count += 1
                 j -= 1
-            # Only treat as real quote if preceded by even number of backslashes
             if backslash_count % 2 == 0:
                 if quote is None:
                     quote = char
@@ -140,6 +177,11 @@ def split_commands(cmd: str) -> list[str]:
                 i += 2
                 continue
             elif char == ';':
+                # Don't split on ;; (case statement terminator)
+                if cmd[i:i+2] == ';;':
+                    current += ';;'
+                    i += 2
+                    continue
                 if current.strip():
                     segments.append(current)
                 current = ""
@@ -156,8 +198,11 @@ def split_commands(cmd: str) -> list[str]:
 
 
 def clean_segment(segment: str) -> str:
-    """Clean a command segment: strip whitespace, subshell chars, env vars."""
+    """Clean a command segment: strip whitespace, subshell chars, env vars, comments."""
     segment = segment.strip()
+
+    # Strip leading comments
+    segment = strip_leading_comment(segment)
 
     # Strip leading subshell/grouping: ( {
     while segment and segment[0] in '({':
@@ -173,14 +218,14 @@ def clean_segment(segment: str) -> str:
     return segment
 
 
-def check_patterns(segment: str, patterns: list[tuple[str, str]]) -> tuple[bool, str]:
-    """Check if segment matches any pattern. Returns (matched, section_name)."""
-    for pattern, section in patterns:
-        try:
-            if re.search(pattern, segment):
-                return True, section
-        except re.error as e:
-            print(f"Warning: Invalid regex '{pattern}' in {section}: {e}", file=sys.stderr)
+def check_patterns(segment: str, patterns: list[CompiledPattern]) -> tuple[bool, str]:
+    """Check if segment matches any compiled pattern.
+
+    Returns (matched, section_name).
+    """
+    for pattern in patterns:
+        if pattern.regex.search(segment):
+            return True, pattern.section
     return False, ""
 
 
@@ -195,6 +240,60 @@ def output_decision(decision: str, reason: str):
     }))
 
 
+def validate_command(
+    command: str,
+    deny_patterns: list[CompiledPattern],
+    ask_patterns: list[CompiledPattern],
+    allow_patterns: list[CompiledPattern]
+) -> tuple[str, str]:
+    """Validate a command against patterns.
+
+    Returns (decision, reason) tuple.
+    Decision is one of: "deny", "ask", "allow"
+    """
+    # First, check DENY patterns against the FULL command (before splitting)
+    # This catches dangerous chaining patterns like "; rm -rf /" or "&& sudo"
+    matched, section = check_patterns(command, deny_patterns)
+    if matched:
+        return "deny", f"Blocked: '{command[:100]}' matches {section}"
+
+    # Split into segments
+    segments = split_commands(command)
+
+    final_decision = "allow"
+    final_reason = "Command matches allow patterns"
+
+    for segment in segments:
+        cleaned = clean_segment(segment)
+        if not cleaned:
+            continue
+
+        # Check DENY first (per-segment)
+        matched, section = check_patterns(cleaned, deny_patterns)
+        if matched:
+            return "deny", f"Blocked: '{cleaned}' matches {section}"
+
+        # Check ASK
+        matched, section = check_patterns(cleaned, ask_patterns)
+        if matched:
+            if final_decision != "ask":
+                final_decision = "ask"
+                final_reason = f"'{cleaned}' matches {section}"
+            continue
+
+        # Check ALLOW
+        matched, _ = check_patterns(cleaned, allow_patterns)
+        if matched:
+            continue
+
+        # Not in any list - mark as ask (default behavior)
+        if final_decision != "ask":
+            final_decision = "ask"
+            final_reason = f"'{cleaned}' not in auto-approve list"
+
+    return final_decision, final_reason
+
+
 def main():
     if len(sys.argv) != 2:
         print("Usage: validate-bash.py <config.toml>", file=sys.stderr)
@@ -203,10 +302,10 @@ def main():
     config_path = sys.argv[1]
     config = load_config(config_path)
 
-    # Load patterns
-    deny_patterns = extract_patterns(config, "deny")
-    ask_patterns = extract_patterns(config, "ask")
-    allow_patterns = extract_patterns(config, "allow")
+    # Compile patterns once at startup (improves performance)
+    deny_patterns = compile_patterns(config, "deny")
+    ask_patterns = compile_patterns(config, "ask")
+    allow_patterns = compile_patterns(config, "allow")
 
     # Read JSON input from stdin
     try:
@@ -219,56 +318,11 @@ def main():
     if not command:
         sys.exit(0)
 
-    # First, check DENY patterns against the FULL command (before splitting)
-    # This catches dangerous chaining patterns like "; rm -rf" or "&& sudo"
-    matched, section = check_patterns(command, deny_patterns)
-    if matched:
-        output_decision("deny", f"Blocked: '{command[:100]}' matches {section}")
-        sys.exit(0)
+    decision, reason = validate_command(
+        command, deny_patterns, ask_patterns, allow_patterns
+    )
 
-    # Split into segments
-    segments = split_commands(command)
-
-    final_decision = "allow"
-    final_reason = ""
-    final_segment = ""
-
-    for segment in segments:
-        cleaned = clean_segment(segment)
-        if not cleaned:
-            continue
-
-        # Check DENY first
-        matched, section = check_patterns(cleaned, deny_patterns)
-        if matched:
-            output_decision("deny", f"Blocked: '{cleaned}' matches {section}")
-            sys.exit(0)
-
-        # Check ASK
-        matched, section = check_patterns(cleaned, ask_patterns)
-        if matched:
-            if final_decision != "ask":
-                final_decision = "ask"
-                final_reason = f"'{cleaned}' matches {section}"
-                final_segment = cleaned
-            continue
-
-        # Check ALLOW
-        matched, _ = check_patterns(cleaned, allow_patterns)
-        if matched:
-            continue
-
-        # Not in any list - mark as ask
-        if final_decision != "ask":
-            final_decision = "ask"
-            final_reason = f"'{cleaned}' not in auto-approve list"
-            final_segment = cleaned
-
-    # Output final decision (always output explicitly)
-    if final_decision == "ask":
-        output_decision("ask", final_reason)
-    else:
-        output_decision("allow", "Command matches allow patterns")
+    output_decision(decision, reason)
 
 
 if __name__ == "__main__":

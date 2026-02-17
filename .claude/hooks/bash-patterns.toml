@@ -174,6 +174,8 @@ patterns = [
 
 [ask.kubernetes_mutations]
 description = "Kubernetes operations that modify cluster state"
+# NOTE: kubectl exec is NOT here - read-only exec commands are allowed,
+# and other exec commands fall through to ask-by-default
 patterns = [
     "^kubectl apply",
     "^kubectl create",
@@ -191,7 +193,6 @@ patterns = [
     "^kubectl cordon",
     "^kubectl uncordon",
     "^kubectl drain",
-    "^kubectl exec",
     "^kubectl run ",
     "^kubectl cp ",
     "^k3s kubectl apply",
@@ -199,7 +200,6 @@ patterns = [
     "^k3s kubectl delete",
     "^k3s kubectl edit",
     "^k3s kubectl patch",
-    "^k3s kubectl exec",
     "^k3s kubectl run ",
     "^k3s kubectl cp ",
 ]
@@ -420,6 +420,27 @@ patterns = [
     "^local ",
     "^test$",
     "^\\[$",
+    # Control flow - the body is validated separately after splitting
+    "^for ",
+    "^while ",
+    "^until ",
+    "^if ",
+    "^elif ",
+    "^else$",
+    "^else ",
+    "^then$",
+    "^then ",
+    "^fi$",
+    "^fi;",
+    "^fi ",
+    "^do$",
+    "^do ",
+    "^done$",
+    "^done;",
+    "^done ",
+    "^case ",
+    "^esac$",
+    "^esac;",
 ]
 
 [allow.path_utilities]
@@ -680,6 +701,12 @@ patterns = [
     "^gh ",
 ]
 
+[allow.github_labels]
+description = "GitHub CLI label management (non-destructive)"
+patterns = [
+    "^gh label ",
+]
+
 [allow.python]
 description = "Python ecosystem"
 patterns = [
@@ -796,6 +823,20 @@ patterns = [
     "^mocha",
     "^playwright",
     "^cypress",
+]
+
+[allow.local_scripts]
+description = "Local project test and utility scripts"
+patterns = [
+    # Test scripts in tests/ directory
+    "^\\./tests/",
+    "^tests/",
+    # Utility scripts in scripts/ directory
+    "^\\./scripts/",
+    "^scripts/",
+    # Common script patterns
+    "^\\./bin/",
+    "^bin/",
 ]
 
 [allow.databases]
@@ -950,9 +991,11 @@ patterns = [
 
 [allow.kubernetes]
 description = "Kubernetes (mutations blocked by ask patterns)"
+# NOTE: kubectl exec is excluded here - it's handled by allow.kubernetes_exec_readonly
+# for read-only commands, and falls through to ask for everything else
 patterns = [
-    "^kubectl ",
-    "^k3s kubectl",
+    "^kubectl (?!exec)",
+    "^k3s kubectl (?!exec)",
     "^k9s",
     "^helm ",
     "^helmfile ",
@@ -961,6 +1004,59 @@ patterns = [
     "^istioctl",
     "^argocd",
     "^flux",
+]
+
+[allow.kubernetes_exec_readonly]
+description = "kubectl exec with read-only commands (other exec falls through to ask)"
+patterns = [
+    # Read file contents
+    "^kubectl exec .* -- cat ",
+    "^kubectl exec .* -- head ",
+    "^kubectl exec .* -- tail ",
+    "^kubectl exec .* -- less ",
+    "^kubectl exec .* -- more ",
+    # List/inspect files
+    "^kubectl exec .* -- ls",
+    "^kubectl exec .* -- find ",
+    "^kubectl exec .* -- stat ",
+    "^kubectl exec .* -- file ",
+    "^kubectl exec .* -- wc ",
+    # Environment and process info
+    "^kubectl exec .* -- env$",
+    "^kubectl exec .* -- env ",
+    "^kubectl exec .* -- printenv",
+    "^kubectl exec .* -- ps ",
+    "^kubectl exec .* -- ps$",
+    "^kubectl exec .* -- top ",
+    "^kubectl exec .* -- whoami",
+    "^kubectl exec .* -- id$",
+    "^kubectl exec .* -- id ",
+    "^kubectl exec .* -- pwd$",
+    "^kubectl exec .* -- hostname",
+    "^kubectl exec .* -- uname",
+    # Search/filter
+    "^kubectl exec .* -- grep ",
+    "^kubectl exec .* -- awk ",
+    "^kubectl exec .* -- sed ",
+    # Disk/network info
+    "^kubectl exec .* -- df ",
+    "^kubectl exec .* -- df$",
+    "^kubectl exec .* -- du ",
+    "^kubectl exec .* -- free",
+    "^kubectl exec .* -- netstat",
+    "^kubectl exec .* -- ss ",
+    "^kubectl exec .* -- ip ",
+    # Date/time
+    "^kubectl exec .* -- date",
+    "^kubectl exec .* -- uptime",
+    # Same patterns for k3s
+    "^k3s kubectl exec .* -- cat ",
+    "^k3s kubectl exec .* -- ls",
+    "^k3s kubectl exec .* -- env",
+    "^k3s kubectl exec .* -- ps",
+    "^k3s kubectl exec .* -- grep ",
+    "^k3s kubectl exec .* -- head ",
+    "^k3s kubectl exec .* -- tail ",
 ]
 
 [allow.secrets]
