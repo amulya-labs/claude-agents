@@ -394,6 +394,56 @@ description = "multi-line: venv ruff format && ruff check"
 command = "\\ kubectl get pods"
 description = "leading backslash with space before kubectl"
 
+# kubectl exec database: read-only psql queries (mutations caught by ask patterns)
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"SELECT count(*) FROM orders;\""
+description = "kubectl exec psql SELECT query"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"\\dt\""
+description = "kubectl exec psql \\dt meta-command"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"\\d orders\""
+description = "kubectl exec psql \\d table describe"
+
+[[allow]]
+command = "kubectl exec postgres-0 -- psql -U postgres -d mydb -tc \"SELECT version();\""
+description = "kubectl exec psql -tc tuples-only"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- env PGPASSWORD=secret psql -U postgres -d mydb -c \"SELECT 1;\""
+description = "kubectl exec psql with env PGPASSWORD prefix"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql"
+description = "kubectl exec bare psql (interactive)"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- mysql -u root mydb"
+description = "kubectl exec mysql"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- mysql"
+description = "kubectl exec bare mysql"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- psql -U postgres -d mydb -c \"SELECT 1;\""
+description = "k3s kubectl exec psql"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- env PGPASSWORD=secret psql -U postgres -d mydb"
+description = "k3s kubectl exec psql with env prefix"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- mysql -u root mydb"
+description = "k3s kubectl exec mysql"
+
+# Real-world: kubectl exec psql via env with password from secret
+[[allow]]
+command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"SELECT unnest(enum_range(NULL::archivepartitionstatus)) AS value;\""
+description = "kubectl exec psql with env PGPASSWORD var and SELECT"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
@@ -529,6 +579,60 @@ description = "k3s kubectl run"
 [[ask]]
 command = "k3s kubectl cp local.txt pod:/remote.txt"
 description = "k3s kubectl cp"
+
+# kubectl exec database mutations (destructive SQL via psql/mysql)
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"DROP TABLE orders;\""
+description = "kubectl exec psql DROP TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"DELETE FROM orders WHERE id=1;\""
+description = "kubectl exec psql DELETE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"INSERT INTO orders VALUES (1, 'test');\""
+description = "kubectl exec psql INSERT"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"UPDATE orders SET status='cancelled';\""
+description = "kubectl exec psql UPDATE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"ALTER TABLE orders ADD COLUMN foo TEXT;\""
+description = "kubectl exec psql ALTER TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"CREATE TABLE test (id int);\""
+description = "kubectl exec psql CREATE TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"TRUNCATE orders;\""
+description = "kubectl exec psql TRUNCATE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"GRANT ALL ON orders TO appuser;\""
+description = "kubectl exec psql GRANT"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"REVOKE ALL ON orders FROM appuser;\""
+description = "kubectl exec psql REVOKE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -f /tmp/migration.sql"
+description = "kubectl exec psql -f script file"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- mysql -u root mydb -e \"DROP TABLE orders;\""
+description = "kubectl exec mysql DROP TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- env PGPASSWORD=\"secret\" psql -U postgres -d mydb -c \"ALTER TYPE archivepartitionstatus ADD VALUE IF NOT EXISTS 'PENDING';\""
+description = "kubectl exec psql ALTER TYPE with env prefix"
+
+# Real-world: kubectl exec psql mutation with PGPASSWORD from variable
+[[ask]]
+command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"ALTER TYPE archivepartitionstatus ADD VALUE IF NOT EXISTS 'PENDING';\""
+description = "kubectl exec psql ALTER TYPE real-world (from hook logs)"
 
 [[ask]]
 command = "tmux kill-session -t main"

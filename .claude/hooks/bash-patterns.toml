@@ -135,6 +135,21 @@ patterns = [
     "^mysql .*DROP",
 ]
 
+[ask.kubectl_exec_db_mutations]
+description = "kubectl exec database commands with destructive SQL"
+# NOTE: These are checked BEFORE the allow.kubernetes_exec_database patterns.
+# Evaluation order (deny -> ask -> allow) provides defense-in-depth:
+# destructive SQL is caught here, read-only queries fall through to allow.
+patterns = [
+    # SQL DDL/DML mutation keywords (case-insensitive via scoped (?i:...))
+    # Note: (?i) as global flag mid-pattern is illegal in Python 3.12+
+    "kubectl exec .* -- .*psql.*(?i:DROP|TRUNCATE|DELETE|INSERT|UPDATE|ALTER|CREATE|GRANT|REVOKE)",
+    "kubectl exec .* -- .*mysql.*(?i:DROP|TRUNCATE|DELETE|INSERT|UPDATE|ALTER|CREATE|GRANT|REVOKE)",
+    # psql running a script file (can't inspect contents)
+    "kubectl exec .* -- .*psql.* -f ",
+    "kubectl exec .* -- .*mysql.* < ",
+]
+
 [ask.github_mutations]
 description = "GitHub CLI operations that modify state"
 patterns = [
@@ -1064,6 +1079,27 @@ patterns = [
     "^k3s kubectl exec .* -- grep ",
     "^k3s kubectl exec .* -- head ",
     "^k3s kubectl exec .* -- tail ",
+]
+
+[allow.kubernetes_exec_database]
+description = "kubectl exec database CLI tools (mutations blocked by ask.kubectl_exec_db_mutations)"
+# NOTE: Destructive SQL (DROP, DELETE, INSERT, etc.) is caught by
+# ask.kubectl_exec_db_mutations which is evaluated BEFORE these allow patterns.
+# What remains are read-only queries (SELECT, \d, \dt, etc.) and
+# psql meta-commands which are safe to auto-approve.
+patterns = [
+    # Direct psql (any flags like -U, -d, -c, -t, -tc, etc.)
+    "^kubectl exec .* -- psql ",
+    "^kubectl exec .* -- psql$",
+    # psql with env prefix (PGPASSWORD=...)
+    "^kubectl exec .* -- env .* psql",
+    # Direct mysql
+    "^kubectl exec .* -- mysql ",
+    "^kubectl exec .* -- mysql$",
+    # Same for k3s
+    "^k3s kubectl exec .* -- psql ",
+    "^k3s kubectl exec .* -- env .* psql",
+    "^k3s kubectl exec .* -- mysql ",
 ]
 
 [allow.secrets]
