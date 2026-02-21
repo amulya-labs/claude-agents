@@ -1091,6 +1091,12 @@ description = "Virtual environment binaries"
 patterns = [
     "^\\.venv/bin/",
     "^venv/bin/",
+    # Poetry virtualenvs (common path: ~/.cache/pypoetry/virtualenvs/*/bin/)
+    "pypoetry/virtualenvs/.*/bin/",
+    # Conda environments
+    "conda.*/envs/.*/bin/",
+    # pipx
+    "pipx/venvs/.*/bin/",
 ]
 
 [allow.system_readonly]

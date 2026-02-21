@@ -356,6 +356,19 @@ description = "kubectl get jobs wide output piped"
 command = "date -u"
 description = "date UTC"
 
+# Poetry virtualenv binaries
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/python -m pytest tests/"
+description = "poetry venv pytest"
+
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/ruff check --fix src/"
+description = "poetry venv ruff"
+
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/mypy src/"
+description = "poetry venv mypy"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
