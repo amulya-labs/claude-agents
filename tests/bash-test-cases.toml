@@ -318,6 +318,132 @@ description = "while loop with safe body"
 command = "done < input.txt"
 description = "done with input redirection (loop terminator)"
 
+# Multi-line commands with backslash line continuations
+# Claude Code sends these as literal \<newline> in JSON
+[[allow]]
+command = "echo \"=== test ===\" && \\\nkubectl get cronjob -n trading foo -o yaml"
+description = "multi-line: echo && kubectl get (line continuation)"
+
+[[allow]]
+command = "kubectl get cronjob -n trading foo -o yaml | grep -E \"successfulJobsHistoryLimit|failedJobsHistoryLimit\""
+description = "kubectl get piped to grep"
+
+[[allow]]
+command = "echo \"Current time: $(date -u '+%Y-%m-%d %H:%M:%S %Z')\" && \\\necho \"Current day: $(date -u '+%A (%u)')\" && \\\necho \"done\""
+description = "multi-line: echo chain with date subshells"
+
+[[allow]]
+command = "echo \"=== Image versions ===\" && \\\necho \"metrics-collector:\" && \\\nkubectl get cronjob -n trading foo -o jsonpath='{.spec.jobTemplate.spec.template.spec.containers[0].image}'"
+description = "multi-line: echo + kubectl get jsonpath"
+
+[[allow]]
+command = "kubectl get events -n trading --sort-by='.lastTimestamp' | grep -E \"intraday|parquet\" | tail -20"
+description = "kubectl get events piped to grep and tail"
+
+[[allow]]
+command = "kubectl get jobs -n trading --sort-by=.status.startTime | grep -E \"metrics|prices\" | tail -20"
+description = "kubectl get jobs piped to grep and tail"
+
+[[allow]]
+command = "kubectl logs -n trading -l app.kubernetes.io/component=metrics-collector --tail=50 --since=30m 2>&1 | head -100"
+description = "kubectl logs piped to head with stderr redirect"
+
+[[allow]]
+command = "kubectl get jobs -n trading --sort-by=.status.startTime -o wide | grep -E \"NAME|intraday\" | tail -30"
+description = "kubectl get jobs wide output piped"
+
+[[allow]]
+command = "date -u"
+description = "date UTC"
+
+# Poetry virtualenv binaries
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/python -m pytest tests/"
+description = "poetry venv pytest"
+
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/ruff check --fix src/"
+description = "poetry venv ruff"
+
+[[allow]]
+command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/mypy src/"
+description = "poetry venv mypy"
+
+# Bare echo (print newline)
+[[allow]]
+command = "echo"
+description = "bare echo (print newline)"
+
+# Bare echo after semicolon in chain
+[[allow]]
+command = "kubectl get secret api-keys -o jsonpath='{.data.KEY}' | base64 -d; echo"
+description = "kubectl get secret piped to base64 then bare echo"
+
+# Subshell inside echo (read-only operations in subshell)
+[[allow]]
+command = "echo \"VALUE: $(kubectl get secret api-keys -o jsonpath='{.data.KEY}' | base64 -d)\""
+description = "echo with kubectl subshell"
+
+# Multi-line venv commands with line continuations
+[[allow]]
+command = ".venv/bin/ruff format src/ && \\\n.venv/bin/ruff check --fix src/"
+description = "multi-line: venv ruff format && ruff check"
+
+# Leading backslash edge case (residual from line continuation)
+[[allow]]
+command = "\\ kubectl get pods"
+description = "leading backslash with space before kubectl"
+
+# kubectl exec database: read-only psql queries (mutations caught by ask patterns)
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"SELECT count(*) FROM orders;\""
+description = "kubectl exec psql SELECT query"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"\\dt\""
+description = "kubectl exec psql \\dt meta-command"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"\\d orders\""
+description = "kubectl exec psql \\d table describe"
+
+[[allow]]
+command = "kubectl exec postgres-0 -- psql -U postgres -d mydb -tc \"SELECT version();\""
+description = "kubectl exec psql -tc tuples-only"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- env PGPASSWORD=secret psql -U postgres -d mydb -c \"SELECT 1;\""
+description = "kubectl exec psql with env PGPASSWORD prefix"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- psql"
+description = "kubectl exec bare psql (interactive)"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- mysql -u root mydb"
+description = "kubectl exec mysql"
+
+[[allow]]
+command = "kubectl exec -n trading postgres-0 -- mysql"
+description = "kubectl exec bare mysql"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- psql -U postgres -d mydb -c \"SELECT 1;\""
+description = "k3s kubectl exec psql"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- env PGPASSWORD=secret psql -U postgres -d mydb"
+description = "k3s kubectl exec psql with env prefix"
+
+[[allow]]
+command = "k3s kubectl exec postgres-0 -- mysql -u root mydb"
+description = "k3s kubectl exec mysql"
+
+# Real-world: kubectl exec psql via env with password from secret
+[[allow]]
+command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"SELECT unnest(enum_range(NULL::archivepartitionstatus)) AS value;\""
+description = "kubectl exec psql with env PGPASSWORD var and SELECT"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
@@ -453,6 +579,60 @@ description = "k3s kubectl run"
 [[ask]]
 command = "k3s kubectl cp local.txt pod:/remote.txt"
 description = "k3s kubectl cp"
+
+# kubectl exec database mutations (destructive SQL via psql/mysql)
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"DROP TABLE orders;\""
+description = "kubectl exec psql DROP TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"DELETE FROM orders WHERE id=1;\""
+description = "kubectl exec psql DELETE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"INSERT INTO orders VALUES (1, 'test');\""
+description = "kubectl exec psql INSERT"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"UPDATE orders SET status='cancelled';\""
+description = "kubectl exec psql UPDATE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"ALTER TABLE orders ADD COLUMN foo TEXT;\""
+description = "kubectl exec psql ALTER TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"CREATE TABLE test (id int);\""
+description = "kubectl exec psql CREATE TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"TRUNCATE orders;\""
+description = "kubectl exec psql TRUNCATE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"GRANT ALL ON orders TO appuser;\""
+description = "kubectl exec psql GRANT"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -c \"REVOKE ALL ON orders FROM appuser;\""
+description = "kubectl exec psql REVOKE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- psql -U postgres -d mydb -f /tmp/migration.sql"
+description = "kubectl exec psql -f script file"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- mysql -u root mydb -e \"DROP TABLE orders;\""
+description = "kubectl exec mysql DROP TABLE"
+
+[[ask]]
+command = "kubectl exec -n trading postgres-0 -- env PGPASSWORD=\"secret\" psql -U postgres -d mydb -c \"ALTER TYPE archivepartitionstatus ADD VALUE IF NOT EXISTS 'PENDING';\""
+description = "kubectl exec psql ALTER TYPE with env prefix"
+
+# Real-world: kubectl exec psql mutation with PGPASSWORD from variable
+[[ask]]
+command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"ALTER TYPE archivepartitionstatus ADD VALUE IF NOT EXISTS 'PENDING';\""
+description = "kubectl exec psql ALTER TYPE real-world (from hook logs)"
 
 [[ask]]
 command = "tmux kill-session -t main"
