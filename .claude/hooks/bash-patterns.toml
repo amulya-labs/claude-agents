@@ -354,7 +354,7 @@ patterns = [
     "\\| *bash( |$)",
     "\\| *zsh( |$)",
     # Pipe to interpreters
-    "\\| *python[0-9.]?( |$)",
+    "\\| *python[0-9.]*( |$)",
     "\\| *perl( |$)",
     "\\| *ruby( |$)",
     "\\| *node( |$)",
