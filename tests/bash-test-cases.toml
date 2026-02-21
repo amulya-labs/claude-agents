@@ -318,6 +318,44 @@ description = "while loop with safe body"
 command = "done < input.txt"
 description = "done with input redirection (loop terminator)"
 
+# Multi-line commands with backslash line continuations
+# Claude Code sends these as literal \<newline> in JSON
+[[allow]]
+command = "echo \"=== test ===\" && \\\nkubectl get cronjob -n trading foo -o yaml"
+description = "multi-line: echo && kubectl get (line continuation)"
+
+[[allow]]
+command = "kubectl get cronjob -n trading foo -o yaml | grep -E \"successfulJobsHistoryLimit|failedJobsHistoryLimit\""
+description = "kubectl get piped to grep"
+
+[[allow]]
+command = "echo \"Current time: $(date -u '+%Y-%m-%d %H:%M:%S %Z')\" && \\\necho \"Current day: $(date -u '+%A (%u)')\" && \\\necho \"done\""
+description = "multi-line: echo chain with date subshells"
+
+[[allow]]
+command = "echo \"=== Image versions ===\" && \\\necho \"metrics-collector:\" && \\\nkubectl get cronjob -n trading foo -o jsonpath='{.spec.jobTemplate.spec.template.spec.containers[0].image}'"
+description = "multi-line: echo + kubectl get jsonpath"
+
+[[allow]]
+command = "kubectl get events -n trading --sort-by='.lastTimestamp' | grep -E \"intraday|parquet\" | tail -20"
+description = "kubectl get events piped to grep and tail"
+
+[[allow]]
+command = "kubectl get jobs -n trading --sort-by=.status.startTime | grep -E \"metrics|prices\" | tail -20"
+description = "kubectl get jobs piped to grep and tail"
+
+[[allow]]
+command = "kubectl logs -n trading -l app.kubernetes.io/component=metrics-collector --tail=50 --since=30m 2>&1 | head -100"
+description = "kubectl logs piped to head with stderr redirect"
+
+[[allow]]
+command = "kubectl get jobs -n trading --sort-by=.status.startTime -o wide | grep -E \"NAME|intraday\" | tail -30"
+description = "kubectl get jobs wide output piped"
+
+[[allow]]
+command = "date -u"
+description = "date UTC"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
