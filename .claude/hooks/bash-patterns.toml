@@ -349,9 +349,15 @@ patterns = [
 [ask.code_execution]
 description = "Arbitrary code execution patterns"
 patterns = [
-    "\\| *sh$",
-    "\\| *bash$",
-    "\\| *zsh$",
+    # Pipe to shell - ( |$) allows both "| bash -s" and bare "| bash"
+    "\\| *sh( |$)",
+    "\\| *bash( |$)",
+    "\\| *zsh( |$)",
+    # Pipe to interpreters
+    "\\| *python[0-9.]?( |$)",
+    "\\| *perl( |$)",
+    "\\| *ruby( |$)",
+    "\\| *node( |$)",
     "^eval ",
     "source /tmp/",
     "source /var/tmp/",
