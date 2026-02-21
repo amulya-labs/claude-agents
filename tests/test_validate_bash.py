@@ -156,7 +156,7 @@ class TestDenyPatterns:
 # ── Unit tests for internal functions ─────────────────────────────────────────
 
 
-class TestStripLineContinations:
+class TestStripLineContinuations:
     """Test backslash-newline line continuation stripping."""
 
     @pytest.mark.parametrize(
@@ -335,3 +335,8 @@ class TestEdgeCases:
             compiled_patterns["allow"],
         )
         assert decision == expected_decision
+
+
+if __name__ == "__main__":
+    # Allow running this file directly to execute the pytest suite.
+    raise SystemExit(pytest.main([__file__]))
