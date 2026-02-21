@@ -369,6 +369,31 @@ description = "poetry venv ruff"
 command = "/home/user/.cache/pypoetry/virtualenvs/myproject-abc123-py3.13/bin/mypy src/"
 description = "poetry venv mypy"
 
+# Bare echo (print newline)
+[[allow]]
+command = "echo"
+description = "bare echo (print newline)"
+
+# Bare echo after semicolon in chain
+[[allow]]
+command = "kubectl get secret api-keys -o jsonpath='{.data.KEY}' | base64 -d; echo"
+description = "kubectl get secret piped to base64 then bare echo"
+
+# Subshell inside echo (read-only operations in subshell)
+[[allow]]
+command = "echo \"VALUE: $(kubectl get secret api-keys -o jsonpath='{.data.KEY}' | base64 -d)\""
+description = "echo with kubectl subshell"
+
+# Multi-line venv commands with line continuations
+[[allow]]
+command = ".venv/bin/ruff format src/ && \\\n.venv/bin/ruff check --fix src/"
+description = "multi-line: venv ruff format && ruff check"
+
+# Leading backslash edge case (residual from line continuation)
+[[allow]]
+command = "\\ kubectl get pods"
+description = "leading backslash with space before kubectl"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================

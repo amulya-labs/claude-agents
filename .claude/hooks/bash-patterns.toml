@@ -901,7 +901,7 @@ patterns = [
     "^ln ",
     "^chmod ",
     "^touch ",
-    "^echo ",
+    "^echo( |$)",
     "^printf",
     "^sort",
     "^uniq",
