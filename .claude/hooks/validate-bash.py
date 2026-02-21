@@ -235,8 +235,27 @@ def strip_control_flow_keyword(segment: str) -> str:
     return segment
 
 
+def strip_line_continuations(cmd: str) -> str:
+    r"""Strip shell line continuations (\<newline>) from command.
+
+    In shell, a backslash followed by a newline is a line continuation
+    that joins lines. Claude Code sends multi-line commands with these
+    preserved in the JSON, e.g.:
+        echo "test" && \
+        kubectl get pods
+    becomes: 'echo "test" && \\\nkubectl get pods'
+
+    After splitting on &&, the second segment starts with '\\\n' which
+    must be removed before pattern matching.
+    """
+    return cmd.replace('\\\n', ' ')
+
+
 def clean_segment(segment: str) -> str:
     """Clean a command segment: strip whitespace, subshell chars, env vars, comments."""
+    # Strip line continuations first (before any whitespace stripping)
+    segment = strip_line_continuations(segment)
+
     segment = segment.strip()
 
     # Strip leading comments
