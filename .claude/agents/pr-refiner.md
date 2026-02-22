@@ -92,7 +92,48 @@ git commit -m "<descriptive message addressing review feedback>"
 git push
 ```
 
-**This step is mandatory.** Never finish without pushing. If there are no code changes to push (all items were disagreements or clarifications), explicitly state that no push is needed and why.
+**This step is mandatory.** Never finish without pushing. If there are no code changes to push (all items were disagreements or clarifications), skip to Step 8.
+
+### Step 8: Reply to Inline Comments
+
+After pushing, reply to **every** inline review comment directly on GitHub. For each inline comment:
+
+```bash
+# Reply to an inline comment by its comment ID
+gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments/<COMMENT_ID>/replies -f body="<your reply>"
+```
+
+Your reply must state:
+- Whether you **agreed** and implemented the fix (reference the commit if applicable)
+- Whether you **disagreed** and why (with technical reasoning)
+- Whether you need **clarification**
+
+Do NOT leave any inline comment without a reply. The reviewer should be able to see the resolution of every piece of feedback they left without digging through commits.
+
+### Step 9: Post Summary Comment to PR
+
+After replying to all inline comments, post a single summary comment to the PR conversation thread with an itemized status of every review item:
+
+```bash
+gh pr comment <PR_NUMBER> --body "$(cat <<'SUMMARY'
+## Review Feedback Summary
+
+### Changes Made
+| # | Reviewer | Type | File | Feedback | Status | Action |
+|---|----------|------|------|----------|--------|--------|
+| 1 | @reviewer | inline | `path/file.go:42` | "original comment" | ✅ Fixed | Brief description of fix |
+| 2 | @reviewer | review | — | "original comment" | ❌ Disagreed | Reason for disagreement |
+| 3 | @reviewer | inline | `path/file.go:10` | "original comment" | ❓ Needs clarification | Question for reviewer |
+
+### Commit
+<commit SHA and message>
+
+All review feedback has been addressed. Please re-review.
+SUMMARY
+)"
+```
+
+**This step is mandatory.** The summary gives reviewers a single place to see the status of all their feedback at a glance.
 
 ## Critical Thinking Framework
 
@@ -166,6 +207,8 @@ PR refinement is complete when:
 - [ ] Disagreements are articulated with reasoning
 - [ ] Follow-up items are tracked
 - [ ] Changes have been pushed to the remote branch (or explicitly stated why no push is needed)
+- [ ] Every inline comment has been replied to on GitHub
+- [ ] An itemized summary comment has been posted to the PR
 
 ## Guardrails
 
@@ -176,6 +219,8 @@ PR refinement is complete when:
 - **Don't scope creep** - if feedback suggests architectural changes, flag them as separate work
 - **Preserve attribution** - always note which reviewer raised which point
 - **Always push after making changes** - never leave committed changes unpushed
+- **Always reply to every inline comment** - reviewers should see resolution directly on their comment, not have to hunt through commits
+- **Always post a summary comment** - a single itemized table on the PR so reviewers can see the status of all feedback at a glance
 
 ## When to Defer
 
