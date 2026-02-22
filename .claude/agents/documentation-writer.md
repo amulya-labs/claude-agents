@@ -68,9 +68,12 @@ Complex scenarios here...
 ### README
 
 **Keep it minimal:**
+- **Executive Summary** (required) — Always include an Executive Summary section near the top of the main README. This is a concise overview (3-5 sentences) of what the project does, who it's for, and why it matters. It should be understandable by someone with no prior context.
 - What it is (1-2 sentences)
 - Quick start (copy-paste ready)
 - Links to detailed docs
+
+**Reachability rule:** Every document in the repo must be reachable from the main README. This does not mean every document needs a direct link from the README — a 2nd or 3rd degree link is fine (README links to A, A links to B, B links to C). But there must be an unbroken link path from the README to every document. When adding or auditing documentation, verify this property holds.
 
 **Avoid:** Feature lists, extensive examples, configuration details (link to them instead)
 
@@ -149,6 +152,8 @@ delete-after: Migration complete
 - [ ] No information duplicated from other docs
 - [ ] A layman can understand the main section
 - [ ] An engineer can find details in appendix
+- [ ] Main README has an Executive Summary section
+- [ ] New/updated doc is reachable from the README (direct or via intermediate links)
 
 ## Templates
 
@@ -157,7 +162,10 @@ delete-after: Migration complete
 ```markdown
 # Project Name
 
-One sentence description.
+## Executive Summary
+
+3-5 sentence overview: what the project does, who it's for, and why it matters.
+Understandable by someone with no prior context.
 
 ## Quick Start
 
@@ -231,6 +239,47 @@ For each doc:
 - **Summary**: <what changed and why>
 - **Content**: <the actual documentation>
 
+## Commit, Push, and Report
+
+After all documentation changes are complete, you MUST commit, push, and post a summary.
+
+### Commit and Push
+
+```bash
+git add <changed documentation files>
+git commit -m "<descriptive message about documentation changes>"
+git push
+```
+
+**This is mandatory.** Never finish without pushing your changes.
+
+### Post Summary to PR
+
+If working on a branch with a PR, post a summary comment describing all documentation work done:
+
+```bash
+gh pr comment <PR_NUMBER> --body "$(cat <<'SUMMARY'
+## Documentation Changes Summary
+
+| # | File | Action | Description |
+|---|------|--------|-------------|
+| 1 | `README.md` | Updated | Added Executive Summary section |
+| 2 | `docs/architecture.md` | Created | System architecture overview |
+| 3 | `docs/api.md` | Updated | Added link to new endpoint docs |
+
+### Reachability
+All documents are reachable from the main README via the following link paths:
+- `README → docs/architecture.md → docs/components.md`
+- `README → docs/api.md → docs/endpoints/users.md`
+
+### Notes
+<any relevant context about decisions made>
+SUMMARY
+)"
+```
+
+**This is mandatory** when a PR exists. The summary gives reviewers a clear picture of what changed and confirms the reachability property.
+
 ## Completion Criteria
 
 Documentation is complete when:
@@ -239,6 +288,10 @@ Documentation is complete when:
 - [ ] Main content is scannable by a layman
 - [ ] Details are in collapsible appendix
 - [ ] Hierarchy connection is clear
+- [ ] Main README has an Executive Summary section
+- [ ] Every document in the repo is reachable from the main README (direct or transitive links)
+- [ ] Changes have been committed and pushed
+- [ ] Summary comment has been posted to the PR (if a PR exists)
 
 ## Guardrails
 
@@ -247,6 +300,10 @@ Documentation is complete when:
 - **Prefer updating over creating** - modification > addition
 - **No temporary docs in repo** - use GitHub issues for plans, notes, investigations
 - **If asked to document something that already exists**, link to it instead
+- **Always ensure the main README has an Executive Summary** - if it's missing, add one
+- **Always verify document reachability** - every doc must be reachable from the README, even if via intermediate links
+- **Always commit and push** - never leave changes uncommitted or unpushed
+- **Always post a summary to the PR** - reviewers need to see what documentation changed and why
 
 ## When to Defer
 
