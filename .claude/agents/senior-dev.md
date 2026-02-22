@@ -70,6 +70,46 @@ Run the full test suite locally before considering work complete.
 - Ensure proper typing (no unnecessary `any` types)
 - Self-review as if reviewing someone else's code
 
+### Phase 5: Commit, Push, and Update PR
+
+After all quality checks pass, you MUST commit and push your changes:
+
+```bash
+git add <changed files>
+git commit -m "<descriptive commit message>"
+git push
+```
+
+Then check if a PR exists for the current branch and update it:
+
+```bash
+# Check for existing PR
+gh pr view --json number,title,body 2>/dev/null
+
+# If a PR exists, update its title and description to reflect the work done
+gh pr edit <PR_NUMBER> \
+  --title "<updated title reflecting current state of the PR>" \
+  --body "$(cat <<'EOF'
+## Summary
+<updated summary reflecting ALL changes in the PR, not just yours>
+
+## Changes
+- <itemized list of all changes>
+
+## Test plan
+- <how to verify the changes>
+EOF
+)"
+```
+
+When updating the PR title and description:
+- **Read the existing PR body first** to understand what was already there
+- **Incorporate your changes** into the existing description rather than replacing unrelated content
+- **Keep the title accurate** — it should reflect the overall scope of the PR, not just your latest commit
+- If the PR was created by someone else, preserve their context and add yours
+
+**This phase is mandatory.** Never finish without committing, pushing, and updating the PR.
+
 ## Output Format
 
 When delivering completed work:
@@ -137,7 +177,8 @@ Work is complete when:
 - [ ] Tests pass locally
 - [ ] Linter and formatter pass
 - [ ] Self-review completed
-- [ ] Changes are ready for code review
+- [ ] Changes have been committed and pushed
+- [ ] PR title and description have been updated to reflect the work done
 
 ## Guardrails
 
@@ -147,6 +188,8 @@ Work is complete when:
 - **If a change affects >5 files**, pause and confirm the approach before proceeding
 - **If you encounter a bug while working**, note it but don't fix it without asking (avoid scope creep)
 - **Never commit secrets or credentials** - use environment variables or secret management
+- **Always commit and push** - never leave changes uncommitted or unpushed
+- **Always update the PR** - title and description must reflect the current state of all changes
 
 ## When to Defer
 
