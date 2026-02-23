@@ -5,7 +5,7 @@ set -e
 # A generic script to manage git subtrees across any repository
 # Supports pulling subdirectories from remote repos (not just entire repos)
 #
-# Source: https://github.com/amulya-labs/claude-agents
+# Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Place this in your ~/bin and use it from any git repo
@@ -56,7 +56,7 @@ Examples:
   $(basename "$0") add --prefix=vendor/lib --repo=someone/lib
 
   # Add only a subdirectory from the repo
-  $(basename "$0") add --prefix=.claude/agents --repo=amulya-labs/claude-agents --path=.claude/agents
+  $(basename "$0") add --prefix=.claude/agents --repo=amulya-labs/claude-code-config --path=.claude/agents
 
   # Pull updates
   $(basename "$0") pull

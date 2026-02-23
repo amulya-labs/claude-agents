@@ -1,16 +1,16 @@
-# Claude Agents
+# Claude Code Config
 
-[![CI](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-agents/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-agents/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-agents)
+[![CI](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-code-config/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-code-config)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents](https://img.shields.io/badge/agents-16-blue.svg)](.claude/agents/)
 
-**Plug-and-play AI teammates for Claude Code.** Drop specialized agents into any project and delegate planning, coding, debugging, reviews, and more.
+**Production-ready configuration for Claude Code.** Agents, hooks, and settings you can drop into any project.
 
 ## Quick Install
 
 ```bash
-mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh && chmod +x scripts/manage-agents.sh && ./scripts/manage-agents.sh install
+mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-agents.sh && chmod +x scripts/manage-agents.sh && ./scripts/manage-agents.sh install
 ```
 
 ## What You Get
@@ -98,7 +98,7 @@ Claude can also select agents automatically based on your request.
 
 ```bash
 mkdir -p scripts
-curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/manage-agents.sh
+curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-agents.sh
 chmod +x scripts/manage-agents.sh
 ./scripts/manage-agents.sh install
 ```
@@ -109,11 +109,11 @@ Update later with `./scripts/manage-agents.sh update`.
 
 ```bash
 # Install the manager globally
-curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-agents/main/scripts/git-subtree-mgr
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 
 # Add .claude as a subtree
-git-subtree-mgr add --prefix=.claude --repo=amulya-labs/claude-agents --path=.claude
+git-subtree-mgr add --prefix=.claude --repo=amulya-labs/claude-code-config --path=.claude
 ```
 
 Update later with `git-subtree-mgr pull .claude`.
@@ -121,8 +121,8 @@ Update later with `git-subtree-mgr pull .claude`.
 ### Option 3: Manual Copy
 
 ```bash
-git clone https://github.com/amulya-labs/claude-agents.git
-cp -r claude-agents/.claude/ /path/to/your/project/.claude/
+git clone https://github.com/amulya-labs/claude-code-config.git
+cp -r claude-code-config/.claude/ /path/to/your/project/.claude/
 ```
 
 </details>

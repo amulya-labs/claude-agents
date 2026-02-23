@@ -1,7 +1,7 @@
 ---
 name: solution-eng
 description: Bridge product capabilities and customer needs with technical accuracy and deal momentum. Use for discovery, solution design, demos, POCs, and technical sales support.
-source: https://github.com/amulya-labs/claude-agents
+source: https://github.com/amulya-labs/claude-code-config
 license: MIT
 color: green
 ---

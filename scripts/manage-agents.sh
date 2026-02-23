@@ -4,14 +4,14 @@ set -e
 # Claude Code Config Manager
 # Copy this script to your project and use it to install/update .claude config
 #
-# Source: https://github.com/amulya-labs/claude-agents
+# Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Usage:
 #   ./scripts/manage-agents.sh install   # First-time setup
 #   ./scripts/manage-agents.sh update    # Pull latest config
 
-REPO="amulya-labs/claude-agents"
+REPO="amulya-labs/claude-code-config"
 BRANCH="main"
 CLAUDE_DIR=".claude"
 API_BASE="https://api.github.com/repos/$REPO/contents"

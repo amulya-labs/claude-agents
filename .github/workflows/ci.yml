@@ -175,7 +175,7 @@ jobs:
           for script in .claude/hooks/*.sh scripts/*.sh scripts/git-subtree-mgr; do
             if [ -f "$script" ]; then
               echo -n "Checking $script... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$script"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$script"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$script"; then
@@ -192,7 +192,7 @@ jobs:
           for script in .claude/hooks/*.py; do
             if [ -f "$script" ]; then
               echo -n "Checking $script... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$script"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$script"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$script"; then
@@ -209,7 +209,7 @@ jobs:
           for config in .claude/hooks/*.toml; do
             if [ -f "$config" ]; then
               echo -n "Checking $config... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-agents" "$config"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$config"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$config"; then
@@ -226,7 +226,7 @@ jobs:
             echo "ERROR: $errors file(s) missing proper attributions"
             echo ""
             echo "Required format for scripts:"
-            echo "  # Source: https://github.com/amulya-labs/claude-agents"
+            echo "  # Source: https://github.com/amulya-labs/claude-code-config"
             echo "  # License: MIT (https://opensource.org/licenses/MIT)"
             exit 1
           fi
