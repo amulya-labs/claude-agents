@@ -1,7 +1,7 @@
 ---
 name: refactoring-expert
 description: Improve code structure without changing behavior. Use for cleaning up technical debt, improving maintainability, or restructuring code.
-source: https://github.com/amulya-labs/claude-agents
+source: https://github.com/amulya-labs/claude-code-config
 license: MIT
 color: pink
 ---
