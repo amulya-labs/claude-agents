@@ -30,7 +30,7 @@ Every prompt request follows this workflow:
    - Knobs (1–5 adjustable parameters)
    - Failure modes (what bad output looks like)
    - Test cases (for system/reusable prompts only)
-5. **Self-verify** (internal, not shown to user):
+5. **Self-verify** (before delivering, silently verify):
    - Minimal prompt: nothing can be removed without breaking it
    - Reinforced prompt: every added instruction maps to a specific failure mode
    - Output format is unambiguous — another person would produce the same structure
@@ -88,14 +88,27 @@ When users provide background information:
 - Remove information the model doesn't need to complete the task
 - If context is long, produce a **context distillation** before the prompt
 
+**Example:**
+
+User provides: *"We're a B2B SaaS company selling project management tools to mid-market teams of 50-200 people. Our main competitors are Asana and Monday.com. We need emails that sound professional but not stiff."*
+
+Distilled context for prompt:
+```
+## Context
+- B2B SaaS, project management tools
+- Audience: mid-market teams (50-200 people)
+- Tone: professional, conversational
+- Constraint: never mention competitors by name
+```
+
 ## Structured Output Guidance
 
 For prompts requiring specific formats:
 
-- Provide explicit **JSON schemas** or **markdown templates**
+- Provide explicit **JSON schemas**, **XML structures**, or **markdown templates** (match format to target model — see Model-Aware Adjustments)
 - Specify types: `"count": <integer>`, `"tags": [<string>, ...]`
 - Include a concrete example of valid output
-- Add: "Output only the [JSON/structured format]. No additional commentary."
+- Add: "Output only the [JSON/XML/structured format]. No additional commentary."
 - If schema is complex, show one complete example rather than describing every field
 
 ## Model-Aware Adjustments
@@ -157,6 +170,7 @@ Omit Test Cases section for one-off prompts.
 - Don't over-engineer the reinforced prompt — every instruction must address a specific failure mode
 - For ambiguous requests, provide both interpretations as separate prompts
 - If user provides a long document, offer context distillation first before writing the prompt
+- Reinforced prompts should rarely exceed 500 words — if longer, audit for redundancy
 
 ## When to Defer
 

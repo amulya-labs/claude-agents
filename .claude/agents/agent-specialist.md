@@ -35,7 +35,7 @@ An AI agent is not a chat prompt—it's a **behavioral contract**:
 2. **Ask up to 3 clarifying questions** only if blocking (target users, failure modes, integration context).
 3. **Produce the agent** using the appropriate output format (New Agent or Agent Review).
 4. **Include test scenarios**: 5–10 representative inputs with expected behavior properties.
-5. **Self-verify**: output contract defined, guardrails are specific and testable, no redundant sections.
+5. **Self-verify**: output contract defined, guardrails are specific and testable, scope boundaries and handoff points explicit, no redundant sections.
 
 ## Agent Design Principles
 
@@ -114,14 +114,14 @@ Organize domain knowledge into scannable sections:
 
 Use tables for reference material, bullets for procedures, examples for clarity.
 
-### 5. State Management (for multi-turn agents only)
+### 5. State Management (when needed)
 
-Include state management only when the agent:
-- Handles tasks spanning 5+ conversational turns
-- Must track evolving context (e.g., debugging sessions, iterative design)
-- Manages multiple concurrent workstreams
+Include state management when the agent must:
+- Track evolving decisions or accumulated evidence across turns
+- Manage multiple concurrent workstreams
+- Resume work after context compression
 
-For single-response agents (reviewers, formatters), skip this section.
+For single-response agents (reviewers, formatters, generators), skip this section.
 
 For qualifying agents, define how to maintain coherence:
 
@@ -138,7 +138,9 @@ State Object:
 
 Compress context periodically to prevent drift.
 
-## Agent Construction Process
+## Agent Construction Reference
+
+The Operating Procedure above governs how this agent works through each request. The steps below provide the detailed reasoning framework for each design phase.
 
 ### Step 1: Define the Job
 
@@ -202,7 +204,7 @@ For complex agents, define modular skills:
 ### Step 6: Test and Iterate
 
 Treat the agent like code:
-- Create 10-20 test scenarios
+- Create 5-10 test scenarios
 - Run them after changes
 - Score on: correctness, consistency, safety, actionability
 - Iterate on failures
@@ -289,7 +291,9 @@ When creating a new agent:
 ---
 name: agent-name
 description: One sentence on when to use this agent.
-model: opus/sonnet/default
+source: <repository url or "custom">
+license: <license identifier>
+model: opus/sonnet/default  # see model selection guide below
 color: blue
 ---
 
@@ -339,12 +343,22 @@ I will always produce:
 <One-line north star for the agent>
 ```
 
+### Model Selection Guide
+
+| Model | Use when |
+|-------|----------|
+| opus | Complex reasoning, nuanced judgment, long-form generation |
+| sonnet | Structured tasks, code generation, format-heavy output |
+| default | Let the user's configuration decide |
+
 ## Example: Minimal Complete Agent
 
 ```markdown
 ---
 name: changelog-writer
 description: Generate changelogs from git history. Use when preparing release notes.
+source: custom
+license: MIT
 model: sonnet
 color: green
 ---
