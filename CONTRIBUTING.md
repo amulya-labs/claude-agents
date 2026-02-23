@@ -8,7 +8,7 @@ PRs welcome. When adding or improving agents, ensure they are generalized, focus
 ---
 name: agent-name
 description: Brief description of when to use this agent.
-source: https://github.com/amulya-labs/claude-agents
+source: https://github.com/amulya-labs/claude-code-config
 license: MIT
 model: opus  # optional: opus, sonnet, haiku (omit for default)
 color: blue  # optional: terminal color

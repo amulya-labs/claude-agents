@@ -3,7 +3,7 @@
 # Validates commands against patterns defined in bash-patterns.toml
 # Handles command combinations (pipes, chains, subshells)
 #
-# Source: https://github.com/amulya-labs/claude-agents
+# Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
 
 set -e

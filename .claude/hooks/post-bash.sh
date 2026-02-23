@@ -2,7 +2,7 @@
 # Claude Code PostToolUse hook for Bash commands
 # Logs ASK command outcomes (approved)
 #
-# Source: https://github.com/amulya-labs/claude-agents
+# Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
