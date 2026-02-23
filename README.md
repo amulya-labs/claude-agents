@@ -3,7 +3,7 @@
 [![CI](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-code-config/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-code-config)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents](https://img.shields.io/badge/agents-16-blue.svg)](.claude/agents/)
+[![Agents](https://img.shields.io/badge/agents-17-blue.svg)](.claude/agents/)
 
 **Production-ready configuration for Claude Code.** Agents, hooks, and settings you can drop into any project.
 
@@ -44,6 +44,7 @@ mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubuse
 | **prod-engineer** | Triages incidents, diagnoses with evidence, hardens systems |
 | **pr-refiner** | Processes PR feedback and implements changes with critical thinking |
 | **documentation-writer** | Creates minimal, DRY documentation |
+| **claudemd-architect** | Creates and updates CLAUDE.md files for agent-ready repos |
 
 ### Sales / Solutions
 | Agent | What it does |
@@ -75,6 +76,7 @@ Claude can also select agents automatically based on your request.
 | Agent | Description | Model |
 |-------|-------------|-------|
 | agent-specialist | Design and optimize AI agents with strong contracts | opus |
+| claudemd-architect | Create and update CLAUDE.md files for agent-ready repos | opus |
 | code-reviewer | Thorough code reviews for quality and security | default |
 | debugger | Systematic bug investigation and root cause analysis | opus |
 | digital-designer | Print-ready layouts for booklets, brochures, posters | opus |
