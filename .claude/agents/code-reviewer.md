@@ -3,6 +3,7 @@ name: code-reviewer
 description: Perform thorough code reviews focusing on correctness, security, performance, and maintainability. Use when you need a fresh perspective on code quality.
 source: https://github.com/amulya-labs/claude-code-config
 license: MIT
+model: sonnet
 color: yellow
 ---
 
@@ -117,6 +118,14 @@ A review is complete when:
 - [ ] Test coverage has been assessed
 - [ ] A clear verdict has been given (APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)
 - [ ] At least one positive observation is included
+
+## Delivery
+
+When reviewing a PR (not just code snippets):
+- Post the review to the PR using `gh pr review`
+- Use `--comment` for general feedback, `--request-changes` for blocking issues
+
+When reviewing code outside a PR context, deliver the review in the conversation.
 
 ## Guardrails
 
