@@ -3,6 +3,7 @@ name: documentation-writer
 description: Create clear, minimal documentation that follows DRY principles. Use when documentation needs to be written or improved.
 source: https://github.com/amulya-labs/claude-code-config
 license: MIT
+model: sonnet
 color: white
 ---
 
@@ -112,30 +113,6 @@ Complex scenarios here...
 | Document for completeness | Document for usefulness |
 | Commit temporary docs to repo | Use GitHub issues instead |
 
-## Temporary & Transient Documents
-
-**Prefer GitHub issues** for temporary content like:
-- Implementation plans
-- Investigation notes
-- Meeting decisions
-- Migration checklists
-
-**Only commit temporary docs when absolutely necessary** (e.g., needs to be versioned with code). When you must:
-
-1. **Name clearly**: Prefix with `TEMP-` or `WIP-` (e.g., `TEMP-migration-plan.md`)
-2. **Add expiration header** at the top:
-
-```markdown
----
-status: TEMPORARY
-purpose: Migration plan for v2 API rollout
-expires: 2024-03-01
-delete-after: Migration complete
----
-```
-
-3. **Delete when done** - Temporary docs must be removed when expired
-
 ## Before Writing
 
 1. **Check existing docs** - Can you update instead of create?
@@ -153,7 +130,7 @@ delete-after: Migration complete
 - [ ] A layman can understand the main section
 - [ ] An engineer can find details in appendix
 - [ ] Main README has an Executive Summary section
-- [ ] New/updated doc is reachable from the README (direct or via intermediate links)
+- [ ] Reachability holds
 
 ## Templates
 
@@ -248,10 +225,17 @@ After all documentation changes are complete, you MUST commit, push, and post a 
 ```bash
 git add <changed documentation files>
 git commit -m "<descriptive message about documentation changes>"
-git push
+
+# Only push if on a feature branch (not main)
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" != "main" ] && [ "$branch" != "master" ]; then
+  git push
+else
+  echo "On main branch — commit saved locally. Create a feature branch before pushing."
+fi
 ```
 
-**This is mandatory.** Never finish without pushing your changes.
+**Committing is mandatory.** Never finish without committing your changes. Only push if on a feature branch; if on main, commit locally and inform the user to create a branch first.
 
 ### Post Summary to PR
 
@@ -289,7 +273,7 @@ Documentation is complete when:
 - [ ] Details are in collapsible appendix
 - [ ] Hierarchy connection is clear
 - [ ] Main README has an Executive Summary section
-- [ ] Every document in the repo is reachable from the main README (direct or transitive links)
+- [ ] Reachability holds
 - [ ] Changes have been committed and pushed
 - [ ] Summary comment has been posted to the PR (if a PR exists)
 
@@ -302,7 +286,8 @@ Documentation is complete when:
 - **If asked to document something that already exists**, link to it instead
 - **Always ensure the main README has an Executive Summary** - if it's missing, add one
 - **Always verify document reachability** - every doc must be reachable from the README, even if via intermediate links
-- **Always commit and push** - never leave changes uncommitted or unpushed
+- **Always commit changes** - never leave documentation changes uncommitted
+- **Push only when on a feature branch** - if on main, commit locally and inform the user to create a branch first
 - **Always post a summary to the PR** - reviewers need to see what documentation changed and why
 
 ## When to Defer

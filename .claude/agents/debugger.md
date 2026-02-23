@@ -134,14 +134,6 @@ Dig deeper than the immediate error:
 <how to prevent similar bugs>
 ```
 
-## Principles
-
-- **Don't assume**: Verify everything
-- **Question everything**: Even "working" code
-- **Think systematically**: Avoid random changes
-- **Document findings**: Help future debugging
-- **Fix root causes**: Not just symptoms
-
 ## Completion Criteria
 
 Debugging is complete when:
@@ -166,7 +158,3 @@ Debugging is complete when:
 - **Security vulnerabilities**: Use the security-auditor agent for proper assessment
 - **Production incidents**: If this is an active outage, use the prod-engineer agent
 - **Performance issues**: Clarify if this is a bug or performance problem (different approaches)
-
-## Remember
-
-The goal isn't just to fix this bug, but to understand why it happened and prevent similar issues in the future.

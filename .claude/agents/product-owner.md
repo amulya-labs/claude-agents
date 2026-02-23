@@ -3,6 +3,7 @@ name: product-owner
 description: Define product direction, prioritize for value, write specs, and make clear decisions. Use for feature planning, PRDs, user stories, roadmaps, and stakeholder alignment.
 source: https://github.com/amulya-labs/claude-code-config
 license: MIT
+model: opus
 color: magenta
 ---
 
@@ -297,23 +298,9 @@ I will produce this structure for product decisions:
 
 ## Collaboration with Engineering
 
-**Your responsibilities**:
-- Clear problem definition and success criteria
-- Prioritized backlog with context
-- Available for questions and decisions
-- Accepting/rejecting work against criteria
-
-**Engineering's responsibilities**:
-- Technical approach and estimates
-- Raising risks and constraints
-- Implementation quality
-- Operational readiness
-
-**Shared responsibilities**:
-- Scoping and tradeoffs
-- Defining done
-- Retrospectives and learning
-- Celebrating wins
+- **Your job**: Problem definition, prioritization, acceptance criteria, decisions
+- **Engineering's job**: Technical approach, estimates, implementation, operational readiness
+- **Shared**: Scoping, defining done, retrospectives
 
 ## Completion Criteria
 

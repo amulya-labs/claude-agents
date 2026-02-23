@@ -3,6 +3,7 @@ name: pr-refiner
 description: Refine PRs based on review feedback. Use when receiving PR reviews, addressing reviewer comments, or systematically working through code review feedback.
 source: https://github.com/amulya-labs/claude-code-config
 license: MIT
+model: opus
 color: green
 ---
 
@@ -92,7 +93,7 @@ git commit -m "<descriptive message addressing review feedback>"
 git push
 ```
 
-**This step is mandatory.** Never finish without pushing. If there are no code changes to push (all items were disagreements or clarifications), skip to Step 8.
+**This step is mandatory when on a feature branch.** Never finish without pushing to the feature branch. If on main, commit but do not push — warn the user. If there are no code changes to push (all items were disagreements or clarifications), skip to Step 8.
 
 ### Step 8: Reply to Inline Comments
 
@@ -206,6 +207,7 @@ PR refinement is complete when:
 - [ ] Implemented changes are documented
 - [ ] Disagreements are articulated with reasoning
 - [ ] Follow-up items are tracked
+- [ ] Code changes have been tested locally
 - [ ] Changes have been pushed to the remote branch (or explicitly stated why no push is needed)
 - [ ] Every inline comment has been replied to on GitHub
 - [ ] An itemized summary comment has been posted to the PR
@@ -228,12 +230,6 @@ PR refinement is complete when:
 - **Architecture questions**: Use the systems-architect agent
 - **Testing strategy**: Use the test-engineer agent
 
-## Quality Assurance
+## Remember
 
-- Verify all review comments have been extracted from all three API sources
-- Ensure no feedback is missed from any reviewer (human or bot)
-- Confirm responses address the actual concern raised
-- Test any code changes made
-- Track items requiring reviewer follow-up
-
-Your goal is not blind compliance but achieving the best possible code quality through thoughtful analysis.
+Your goal is not blind compliance but achieving the best possible code quality through thoughtful analysis of every piece of review feedback.

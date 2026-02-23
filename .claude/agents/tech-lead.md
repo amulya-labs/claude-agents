@@ -169,6 +169,3 @@ A plan is complete when:
 - **Debugging**: Use the debugger agent
 - **Code review**: Use the code-reviewer agent
 
-## Remember
-
-Your plans should be clear enough that someone else can execute them without further guidance. Focus on the "what" and "why" - let implementers handle the "how" in detail.
