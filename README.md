@@ -73,26 +73,27 @@ Claude can also select agents automatically based on your request.
 
 ## Available Agents
 
-| Agent | Description | Model |
-|-------|-------------|-------|
-| agent-specialist | Design and optimize AI agents with strong contracts | opus |
-| claudemd-architect | Create and update CLAUDE.md files for agent-ready repos | opus |
-| code-reviewer | Thorough code reviews for quality and security | sonnet |
-| debugger | Systematic bug investigation and root cause analysis | sonnet |
-| digital-designer | Print-ready layouts for booklets, brochures, posters | sonnet |
-| documentation-writer | Clear, minimal documentation following DRY principles | sonnet |
-| junior-dev | Focused, well-scoped tasks for early-career developers | haiku |
-| pr-refiner | Refine PRs based on review feedback | sonnet |
-| prod-engineer | Production incident response and reliability engineering | opus |
-| product-owner | Product direction, prioritization, specs, and decisions | opus |
-| prompt-engineer | Engineer effective prompts for AI models | opus |
-| refactoring-expert | Improve code structure safely | sonnet |
-| security-auditor | Security assessments and vulnerability identification | opus |
-| senior-dev | Feature implementation with best practices | sonnet |
-| solution-eng | Technical sales, discovery, POCs, and solution design | opus |
-| systems-architect | High-level architecture guidance | opus |
-| tech-lead | Plan implementation approaches, break down tasks | opus |
-| test-engineer | Comprehensive test suite design | sonnet |
+<table>
+<tr><th>Agent</th><th>Description</th><th>Model</th></tr>
+<tr><td>agent-specialist</td><td>Design and optimize AI agents with strong contracts</td><td rowspan="9">opus</td></tr>
+<tr><td>claudemd-architect</td><td>Create and update CLAUDE.md files for agent-ready repos</td></tr>
+<tr><td>prod-engineer</td><td>Production incident response and reliability engineering</td></tr>
+<tr><td>product-owner</td><td>Product direction, prioritization, specs, and decisions</td></tr>
+<tr><td>prompt-engineer</td><td>Engineer effective prompts for AI models</td></tr>
+<tr><td>security-auditor</td><td>Security assessments and vulnerability identification</td></tr>
+<tr><td>solution-eng</td><td>Technical sales, discovery, POCs, and solution design</td></tr>
+<tr><td>systems-architect</td><td>High-level architecture guidance</td></tr>
+<tr><td>tech-lead</td><td>Plan implementation approaches, break down tasks</td></tr>
+<tr><td>code-reviewer</td><td>Thorough code reviews for quality and security</td><td rowspan="8">sonnet</td></tr>
+<tr><td>debugger</td><td>Systematic bug investigation and root cause analysis</td></tr>
+<tr><td>digital-designer</td><td>Print-ready layouts for booklets, brochures, posters</td></tr>
+<tr><td>documentation-writer</td><td>Clear, minimal documentation following DRY principles</td></tr>
+<tr><td>pr-refiner</td><td>Refine PRs based on review feedback</td></tr>
+<tr><td>refactoring-expert</td><td>Improve code structure safely</td></tr>
+<tr><td>senior-dev</td><td>Feature implementation with best practices</td></tr>
+<tr><td>test-engineer</td><td>Comprehensive test suite design</td></tr>
+<tr><td>junior-dev</td><td>Focused, well-scoped tasks for early-career developers</td><td>haiku</td></tr>
+</table>
 
 <details>
 <summary>Installation Options</summary>
