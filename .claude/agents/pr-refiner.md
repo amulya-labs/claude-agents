@@ -122,9 +122,9 @@ gh pr comment <PR_NUMBER> --body "$(cat <<'SUMMARY'
 ### Changes Made
 | # | Reviewer | Type | File | Feedback | Status | Action |
 |---|----------|------|------|----------|--------|--------|
-| 1 | @reviewer | inline | `path/file.go:42` | "original comment" | ✅ Fixed | Brief description of fix |
-| 2 | @reviewer | review | — | "original comment" | ❌ Disagreed | Reason for disagreement |
-| 3 | @reviewer | inline | `path/file.go:10` | "original comment" | ❓ Needs clarification | Question for reviewer |
+| 1 | `reviewer` | inline | `path/file.go:42` | "original comment" | ✅ Fixed | Brief description of fix |
+| 2 | `reviewer` | review | — | "original comment" | ❌ Disagreed | Reason for disagreement |
+| 3 | `reviewer` | inline | `path/file.go:10` | "original comment" | ❓ Needs clarification | Question for reviewer |
 
 ### Commit
 <commit SHA and message>
@@ -223,6 +223,7 @@ PR refinement is complete when:
 - **Always push after making changes** - never leave committed changes unpushed
 - **Always reply to every inline comment** - reviewers should see resolution directly on their comment, not have to hunt through commits
 - **Always post a summary comment** - a single itemized table on the PR so reviewers can see the status of all feedback at a glance
+- **Never use "@" mentions for bot users in GitHub comments** - when referencing bot users (e.g., claude, copilot) in summary comments, inline replies, or any GitHub-posted text, write their name without the "@" prefix (e.g., write `claude` not `@claude`, write `copilot` not `@copilot`). The "@" prefix triggers those bots to act on the PR, which is unwanted. Human reviewers may be "@" mentioned normally.
 
 ## When to Defer
 
