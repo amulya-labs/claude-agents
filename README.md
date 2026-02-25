@@ -77,21 +77,22 @@ Claude can also select agents automatically based on your request.
 |-------|-------------|-------|
 | agent-specialist | Design and optimize AI agents with strong contracts | opus |
 | claudemd-architect | Create and update CLAUDE.md files for agent-ready repos | opus |
-| code-reviewer | Thorough code reviews for quality and security | default |
-| debugger | Systematic bug investigation and root cause analysis | opus |
-| digital-designer | Print-ready layouts for booklets, brochures, posters | opus |
-| documentation-writer | Clear, minimal documentation following DRY principles | default |
-| pr-refiner | Refine PRs based on review feedback | default |
+| code-reviewer | Thorough code reviews for quality and security | sonnet |
+| debugger | Systematic bug investigation and root cause analysis | default |
+| digital-designer | Print-ready layouts for booklets, brochures, posters | default |
+| documentation-writer | Clear, minimal documentation following DRY principles | sonnet |
+| junior-dev | Focused, well-scoped tasks for early-career developers | haiku |
+| pr-refiner | Refine PRs based on review feedback | opus |
 | prod-engineer | Production incident response and reliability engineering | opus |
-| product-owner | Product direction, prioritization, specs, and decisions | default |
+| product-owner | Product direction, prioritization, specs, and decisions | opus |
 | prompt-engineer | Engineer effective prompts for AI models | opus |
-| refactoring-expert | Improve code structure safely | default |
+| refactoring-expert | Improve code structure safely | sonnet |
 | security-auditor | Security assessments and vulnerability identification | opus |
-| senior-dev | Feature implementation with best practices | default |
-| solution-eng | Technical sales, discovery, POCs, and solution design | default |
+| senior-dev | Feature implementation with best practices | sonnet |
+| solution-eng | Technical sales, discovery, POCs, and solution design | opus |
 | systems-architect | High-level architecture guidance | opus |
 | tech-lead | Plan implementation approaches, break down tasks | opus |
-| test-engineer | Comprehensive test suite design | default |
+| test-engineer | Comprehensive test suite design | sonnet |
 
 <details>
 <summary>Installation Options</summary>
