@@ -444,6 +444,84 @@ description = "k3s kubectl exec mysql"
 command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"SELECT unnest(enum_range(NULL::archivepartitionstatus)) AS value;\""
 description = "kubectl exec psql with env PGPASSWORD var and SELECT"
 
+# Local data processing piped to interpreters (non-download sources are allowed)
+[[allow]]
+command = "cat file.json | python3 -c \"import json, sys; print(json.load(sys.stdin))\""
+description = "cat piped to python3 -c (local data processing)"
+
+[[allow]]
+command = "gh run list --json status | python3 -c \"import json,sys; print(json.load(sys.stdin))\""
+description = "gh piped to python3 (CLI output processing)"
+
+[[allow]]
+command = "git show HEAD:file.json | python3 -c \"import json,sys; d=json.load(sys.stdin)\""
+description = "git show piped to python3 (repo data processing)"
+
+# Backup tools
+[[allow]]
+command = "resticprofile --name local show"
+description = "resticprofile show"
+
+[[allow]]
+command = "restic snapshots --json --latest 5"
+description = "restic snapshots"
+
+# Shell syntax check
+[[allow]]
+command = "bash -n /path/to/script.sh"
+description = "bash syntax check"
+
+# GPU tools
+[[allow]]
+command = "nvidia-smi"
+description = "nvidia GPU info"
+
+# System readonly additions
+[[allow]]
+command = "systemctl cat nginx.service"
+description = "systemctl cat service"
+
+[[allow]]
+command = "crontab -l"
+description = "crontab list (read-only)"
+
+# Absolute path executables
+[[allow]]
+command = "/usr/local/bin/resticprofile version"
+description = "absolute path executable"
+
+[[allow]]
+command = "/home/user/.local/bin/my-script arg1"
+description = "user local bin script"
+
+# Temp file cleanup
+[[allow]]
+command = "rm -rf /tmp/test-dir"
+description = "rm -rf temp directory"
+
+[[allow]]
+command = "rm /tmp/tempfile.txt"
+description = "rm temp file"
+
+# rsync (moved to allow)
+[[allow]]
+command = "rsync -av ./src/ ./backup/"
+description = "rsync local copy"
+
+# Package manager queries
+[[allow]]
+command = "dpkg -l | grep nginx"
+description = "dpkg list packages"
+
+[[allow]]
+command = "apt list --installed 2>/dev/null | grep python"
+description = "apt list installed packages"
+
+# Swap/memory inspection
+[[allow]]
+command = "swapon --show"
+description = "swapon show"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
@@ -589,9 +667,10 @@ command = "kubectl  exec pod -- bash"
 description = "kubectl exec with double space (bypass attempt)"
 
 # Security: control flow with dangerous body
-[[ask]]
+# Note: rm -rf /tmp/* is now allowed by temp_cleanup pattern
+[[allow]]
 command = "if true; then rm -rf /tmp/*; fi"
-description = "if statement with dangerous body"
+description = "if statement with temp cleanup body (allowed)"
 
 [[ask]]
 command = "for f in *; do rm -f $f; done"
@@ -742,25 +821,25 @@ description = "loginctl kill-user"
 command = "localectl set-locale LANG=en_US.UTF-8"
 description = "localectl mutation (should not match locale)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X POST repos/owner/repo/issues -f title=test"
-description = "gh api POST"
+description = "gh api POST (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X PUT repos/owner/repo/topics -f names=topic"
-description = "gh api PUT"
+description = "gh api PUT (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X PATCH repos/owner/repo -f description=new"
-description = "gh api PATCH"
+description = "gh api PATCH (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X DELETE repos/owner/repo/issues/1"
-description = "gh api DELETE"
+description = "gh api DELETE (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api --method POST repos/owner/repo/issues"
-description = "gh api --method POST"
+description = "gh api --method POST (now allowed)"
 
 [[ask]]
 command = "sg docker -c 'docker ps'"
@@ -819,14 +898,6 @@ command = "scp file.txt user@host:/tmp/"
 description = "scp command"
 
 [[ask]]
-command = "rm -rf ./build"
-description = "rm -rf directory"
-
-[[ask]]
-command = "rm -f important.txt"
-description = "rm -f file"
-
-[[ask]]
 command = "kill 1234"
 description = "kill process"
 
@@ -845,6 +916,24 @@ description = "gh pr merge"
 [[ask]]
 command = "gh release delete v1.0.0 --yes"
 description = "gh release delete"
+
+# Narrowed crontab patterns (only writes ask, reads are allowed)
+[[ask]]
+command = "crontab -e"
+description = "crontab edit (still asks)"
+
+[[ask]]
+command = "crontab -r"
+description = "crontab remove (still asks)"
+
+# Narrowed rm patterns (non-/tmp/ still asks)
+[[ask]]
+command = "rm -rf ./build"
+description = "rm -rf non-tmp directory (still asks)"
+
+[[ask]]
+command = "rm -f important.txt"
+description = "rm -f non-tmp file (still asks)"
 
 # =============================================================================
 # DENY - Commands that should always be blocked
