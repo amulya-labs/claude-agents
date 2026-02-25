@@ -494,6 +494,25 @@ description = "absolute path executable"
 command = "/home/user/.local/bin/my-script arg1"
 description = "user local bin script"
 
+# Absolute path executables - dangerous commands (matched by absolute_path_executables allow patterns)
+# NOTE: These bypass deny/ask patterns because ^rm, ^reboot, ^shutdown, ^systemctl
+# patterns don't match when the command starts with /usr/bin/ or /usr/local/bin/.
+[[allow]]
+command = "/usr/bin/rm -rf /"
+description = "absolute path rm -rf / (bypasses deny via absolute path)"
+
+[[allow]]
+command = "/usr/bin/reboot"
+description = "absolute path reboot (bypasses deny via absolute path)"
+
+[[allow]]
+command = "/usr/local/bin/shutdown now"
+description = "absolute path shutdown (bypasses ask via absolute path)"
+
+[[allow]]
+command = "/usr/bin/systemctl restart nginx"
+description = "absolute path systemctl restart (bypasses ask via absolute path)"
+
 # Temp file cleanup
 [[allow]]
 command = "rm -rf /tmp/test-dir"

@@ -1210,7 +1210,7 @@ patterns = [
 ]
 
 [allow.mail_tools]
-description = "Mail tool version and info checks"
+description = "Mail tools (sendmail, msmtp, mail)"
 patterns = [
     "^sendmail",
     "^msmtp",
