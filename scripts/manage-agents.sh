@@ -8,14 +8,17 @@ set -e
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Usage:
-#   ./scripts/manage-agents.sh install   # First-time setup
-#   ./scripts/manage-agents.sh update    # Pull latest config
+#   ./scripts/manage-agents.sh install                        # First-time setup
+#   ./scripts/manage-agents.sh install --with-gha-workflows   # Include Claude GitHub Actions
+#   ./scripts/manage-agents.sh update                         # Pull latest config
+#   ./scripts/manage-agents.sh update --with-gha-workflows    # Update including workflows
 
 REPO="amulya-labs/claude-code-config"
 BRANCH="main"
 CLAUDE_DIR=".claude"
 API_BASE="https://api.github.com/repos/$REPO/contents"
 RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH"
+WITH_GHA_WORKFLOWS=false
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -109,6 +112,17 @@ download_all() {
     else
         warn "  settings.json not found (optional)"
     fi
+
+    # Optionally download GitHub Actions workflows
+    if $WITH_GHA_WORKFLOWS; then
+        download_gha_workflows
+    fi
+}
+
+download_gha_workflows() {
+    info "Fetching Claude GitHub Actions workflows..."
+    download_dir "gha-workflow-templates" ".github/workflows"
+    warn "Requires CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
 }
 
 install_config() {
@@ -123,9 +137,15 @@ install_config() {
     download_all
 
     git add "$CLAUDE_DIR"
+    if $WITH_GHA_WORKFLOWS; then
+        git add .github/workflows/ 2>/dev/null || true
+    fi
 
     echo ""
     info "Done! Config installed to $CLAUDE_DIR"
+    if $WITH_GHA_WORKFLOWS; then
+        info "Claude workflows installed to .github/workflows/"
+    fi
     echo ""
     echo "Next steps:"
     echo "  git commit -m 'Add claude-code config'"
@@ -144,15 +164,31 @@ update_config() {
     download_all
 
     git add "$CLAUDE_DIR"
+    if $WITH_GHA_WORKFLOWS; then
+        git add .github/workflows/ 2>/dev/null || true
+    fi
 
     echo ""
     info "Done! Config updated."
+    if $WITH_GHA_WORKFLOWS; then
+        info "Claude workflows updated in .github/workflows/"
+    fi
     echo ""
     echo "Next steps:"
     echo "  git diff --cached  # review changes"
     echo "  git commit -m 'Update claude-code config'"
     echo "  git push"
 }
+
+# Parse global flags
+shift_args=()
+for arg in "$@"; do
+    case "$arg" in
+        --with-gha-workflows) WITH_GHA_WORKFLOWS=true ;;
+        *) shift_args+=("$arg") ;;
+    esac
+done
+set -- "${shift_args[@]}"
 
 case "${1:-}" in
     install)
@@ -164,16 +200,24 @@ case "${1:-}" in
     *)
         echo "Claude Code Config Manager"
         echo ""
-        echo "Usage: $0 <command>"
+        echo "Usage: $0 <command> [options]"
         echo ""
         echo "Commands:"
         echo "  install   Add .claude config to your project (first-time setup)"
         echo "  update    Pull the latest config (agents, hooks, settings)"
         echo ""
+        echo "Options:"
+        echo "  --with-gha-workflows   Also install Claude GitHub Actions workflows"
+        echo "                         (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
+        echo ""
         echo "This downloads:"
         echo "  .claude/agents/   - Reusable Claude Code agents"
         echo "  .claude/hooks/    - PreToolUse hooks (e.g., bash validation)"
         echo "  .claude/settings.json - Hook configuration"
+        echo ""
+        echo "With --with-gha-workflows, also downloads:"
+        echo "  .github/workflows/claude.yml             - @claude mention handler"
+        echo "  .github/workflows/claude-code-review.yml - Auto PR review"
         exit 1
         ;;
 esac

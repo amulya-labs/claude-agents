@@ -153,6 +153,18 @@ jobs:
           echo "Running bash hook tests..."
           tests/test-validate-bash.sh
 
+  validate-manage-agents:
+    name: Validate manage-agents.sh
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run manage-agents tests
+        run: tests/test-manage-agents.sh
+
   validate-attributions:
     name: Validate Attributions
     runs-on: ubuntu-latest
