@@ -82,7 +82,7 @@ Claude can also select agents automatically based on your request.
 | digital-designer | Print-ready layouts for booklets, brochures, posters | sonnet |
 | documentation-writer | Clear, minimal documentation following DRY principles | sonnet |
 | junior-dev | Focused, well-scoped tasks for early-career developers | haiku |
-| pr-refiner | Refine PRs based on review feedback | opus |
+| pr-refiner | Refine PRs based on review feedback | sonnet |
 | prod-engineer | Production incident response and reliability engineering | opus |
 | product-owner | Product direction, prioritization, specs, and decisions | opus |
 | prompt-engineer | Engineer effective prompts for AI models | opus |
