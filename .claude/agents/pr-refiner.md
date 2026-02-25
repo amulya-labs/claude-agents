@@ -122,9 +122,9 @@ gh pr comment <PR_NUMBER> --body "$(cat <<'SUMMARY'
 ### Changes Made
 | # | Reviewer | Type | File | Feedback | Status | Action |
 |---|----------|------|------|----------|--------|--------|
-| 1 | reviewer | inline | `path/file.go:42` | "original comment" | ✅ Fixed | Brief description of fix |
-| 2 | reviewer | review | — | "original comment" | ❌ Disagreed | Reason for disagreement |
-| 3 | reviewer | inline | `path/file.go:10` | "original comment" | ❓ Needs clarification | Question for reviewer |
+| 1 | `reviewer` | inline | `path/file.go:42` | "original comment" | ✅ Fixed | Brief description of fix |
+| 2 | `reviewer` | review | — | "original comment" | ❌ Disagreed | Reason for disagreement |
+| 3 | `reviewer` | inline | `path/file.go:10` | "original comment" | ❓ Needs clarification | Question for reviewer |
 
 ### Commit
 <commit SHA and message>
