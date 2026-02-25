@@ -78,8 +78,8 @@ Claude can also select agents automatically based on your request.
 | agent-specialist | Design and optimize AI agents with strong contracts | opus |
 | claudemd-architect | Create and update CLAUDE.md files for agent-ready repos | opus |
 | code-reviewer | Thorough code reviews for quality and security | sonnet |
-| debugger | Systematic bug investigation and root cause analysis | default |
-| digital-designer | Print-ready layouts for booklets, brochures, posters | default |
+| debugger | Systematic bug investigation and root cause analysis | sonnet |
+| digital-designer | Print-ready layouts for booklets, brochures, posters | sonnet |
 | documentation-writer | Clear, minimal documentation following DRY principles | sonnet |
 | junior-dev | Focused, well-scoped tasks for early-career developers | haiku |
 | pr-refiner | Refine PRs based on review feedback | opus |
