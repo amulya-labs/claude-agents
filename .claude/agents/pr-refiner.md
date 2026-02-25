@@ -35,9 +35,14 @@ gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews
 
 # Inline review comments on specific lines of code (the most important source)
 gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments
+
+# Review threads with node IDs (needed for resolving conversations later)
+gh api graphql -f query='query { repository(owner: "<owner>", name: "<repo>") { pullRequest(number: <PR_NUMBER>) { reviewThreads(first: 100) { nodes { id isResolved path line comments(first: 1) { nodes { databaseId author { login } } } } } } } }'
 ```
 
 **Inline review comments** (`/pulls/{pr}/comments`) are distinct from top-level PR comments. They are attached to specific files and line numbers. You must fetch them separately -- `gh pr view --comments` does NOT include them.
+
+**Review threads** (GraphQL) provide the thread node IDs (`PRRT_...`) needed to resolve conversations in Step 9. Build a mapping of `comment databaseId → thread node ID` from this response for later use.
 
 Process feedback from ALL reviewers: human reviewers, `claude`, `Copilot`, linters, and any other bot or person. Do not filter by reviewer name.
 
@@ -111,7 +116,26 @@ Your reply must state:
 
 Do NOT leave any inline comment without a reply. The reviewer should be able to see the resolution of every piece of feedback they left without digging through commits.
 
-### Step 9: Post Summary Comment to PR
+### Step 9: Resolve Addressed Threads
+
+After replying to inline comments, resolve each review thread where you **agreed and implemented the fix** or where the feedback was **already addressed**. Use the thread node IDs collected in Step 2:
+
+```bash
+# Resolve a single thread by its node ID
+gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "<THREAD_NODE_ID>"}) { thread { id isResolved } } }'
+```
+
+**Only resolve threads where:**
+- You agreed with the feedback and implemented a fix
+- The feedback was already addressed in a prior commit
+- The comment was purely informational (no action needed)
+
+**Do NOT resolve threads where:**
+- You disagreed with the feedback (leave open for reviewer to respond)
+- You requested clarification (leave open for discussion)
+- The thread requires reviewer verification before closing
+
+### Step 10: Post Summary Comment to PR
 
 After replying to all inline comments, post a single summary comment to the PR conversation thread with an itemized status of every review item:
 
@@ -210,6 +234,7 @@ PR refinement is complete when:
 - [ ] Code changes have been tested locally
 - [ ] Changes have been pushed to the remote branch (or explicitly stated why no push is needed)
 - [ ] Every inline comment has been replied to on GitHub
+- [ ] Addressed review threads have been resolved via GraphQL
 - [ ] An itemized summary comment has been posted to the PR
 
 ## Guardrails
@@ -222,6 +247,7 @@ PR refinement is complete when:
 - **Preserve attribution** - always note which reviewer raised which point
 - **Always push after making changes** - never leave committed changes unpushed
 - **Always reply to every inline comment** - reviewers should see resolution directly on their comment, not have to hunt through commits
+- **Resolve addressed threads** - after replying, resolve threads where you agreed and implemented the fix; leave disagreements and clarifications unresolved for reviewer follow-up
 - **Always post a summary comment** - a single itemized table on the PR so reviewers can see the status of all feedback at a glance
 - **Never use "@" mentions for bot users in GitHub comments** - when referencing bot users (e.g., claude, copilot) in summary comments, inline replies, or any GitHub-posted text, write their name without the "@" prefix (e.g., write `claude` not `@claude`, write `copilot` not `@copilot`). The "@" prefix triggers those bots to act on the PR, which is unwanted. Human reviewers may be "@" mentioned normally.
 
