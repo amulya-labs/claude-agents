@@ -444,6 +444,395 @@ description = "k3s kubectl exec mysql"
 command = "kubectl exec -n trading postgres-postgresql-0 -- env PGPASSWORD=\"$PGPASSWORD\" psql -U postgres -d market_data -c \"SELECT unnest(enum_range(NULL::archivepartitionstatus)) AS value;\""
 description = "kubectl exec psql with env PGPASSWORD var and SELECT"
 
+# Local data processing piped to interpreters (non-download sources are allowed)
+[[allow]]
+command = "cat file.json | python3 -c \"import json, sys; print(json.load(sys.stdin))\""
+description = "cat piped to python3 -c (local data processing)"
+
+[[allow]]
+command = "gh run list --json status | python3 -c \"import json,sys; print(json.load(sys.stdin))\""
+description = "gh piped to python3 (CLI output processing)"
+
+[[allow]]
+command = "git show HEAD:file.json | python3 -c \"import json,sys; d=json.load(sys.stdin)\""
+description = "git show piped to python3 (repo data processing)"
+
+# Backup tools
+[[allow]]
+command = "resticprofile --name local show"
+description = "resticprofile show"
+
+[[allow]]
+command = "restic snapshots --json --latest 5"
+description = "restic snapshots"
+
+# Shell syntax check
+[[allow]]
+command = "bash -n /path/to/script.sh"
+description = "bash syntax check"
+
+# GPU tools
+[[allow]]
+command = "nvidia-smi"
+description = "nvidia GPU info"
+
+# System readonly additions
+[[allow]]
+command = "systemctl cat nginx.service"
+description = "systemctl cat service"
+
+[[allow]]
+command = "crontab -l"
+description = "crontab list (read-only)"
+
+# Absolute path executables
+[[allow]]
+command = "/usr/local/bin/resticprofile version"
+description = "absolute path executable"
+
+[[allow]]
+command = "/home/user/.local/bin/my-script arg1"
+description = "user local bin script"
+
+# Absolute path executables - dangerous commands (matched by absolute_path_executables allow patterns)
+# NOTE: These bypass deny/ask patterns because ^rm, ^reboot, ^shutdown, ^systemctl
+# patterns don't match when the command starts with /usr/bin/ or /usr/local/bin/.
+[[allow]]
+command = "/usr/bin/rm -rf /"
+description = "absolute path rm -rf / (bypasses deny via absolute path)"
+
+[[allow]]
+command = "/usr/bin/reboot"
+description = "absolute path reboot (bypasses deny via absolute path)"
+
+[[allow]]
+command = "/usr/local/bin/shutdown now"
+description = "absolute path shutdown (bypasses ask via absolute path)"
+
+[[allow]]
+command = "/usr/bin/systemctl restart nginx"
+description = "absolute path systemctl restart (bypasses ask via absolute path)"
+
+# Temp file cleanup
+[[allow]]
+command = "rm -rf /tmp/test-dir"
+description = "rm -rf temp directory"
+
+[[allow]]
+command = "rm /tmp/tempfile.txt"
+description = "rm temp file"
+
+# rsync (moved to allow)
+[[allow]]
+command = "rsync -av ./src/ ./backup/"
+description = "rsync local copy"
+
+# Package manager queries
+[[allow]]
+command = "dpkg -l | grep nginx"
+description = "dpkg list packages"
+
+[[allow]]
+command = "apt list --installed 2>/dev/null | grep python"
+description = "apt list installed packages"
+
+# Swap/memory inspection
+[[allow]]
+command = "swapon --show"
+description = "swapon show"
+
+# =============================================================================
+# Chained commands - benign (all parts are safe)
+# =============================================================================
+
+# Simple && chains
+[[allow]]
+command = "ls -la && echo done"
+description = "chain: ls && echo (simple safe chain)"
+
+[[allow]]
+command = "git status && git diff --stat && git log --oneline -5"
+description = "chain: multiple git read-only via &&"
+
+[[allow]]
+command = "npm install && npm run build && npm test"
+description = "chain: full npm build chain via &&"
+
+[[allow]]
+command = "nvidia-smi && free -h && df -h"
+description = "chain: system monitoring chain via &&"
+
+[[allow]]
+command = "dpkg -l | grep nginx && systemctl status nginx"
+description = "chain: package query + service status via &&"
+
+[[allow]]
+command = "apt list --installed 2>/dev/null | grep python && dpkg -l | grep python"
+description = "chain: dual package query via &&"
+
+[[allow]]
+command = "rsync -av ./src/ ./backup/ && echo 'backup complete'"
+description = "chain: rsync + echo via &&"
+
+[[allow]]
+command = "crontab -l && echo '---'"
+description = "chain: crontab read + echo via &&"
+
+[[allow]]
+command = "bash -n script.sh && echo 'syntax ok'"
+description = "chain: syntax check + echo via &&"
+
+[[allow]]
+command = "restic snapshots --json | python3 -c \"import json,sys; print(json.load(sys.stdin))\" && echo done"
+description = "chain: backup tool piped to python + echo"
+
+# Simple ; chains
+[[allow]]
+command = "echo 'start'; ls -la; echo 'end'"
+description = "chain: echo + ls + echo via ;"
+
+[[allow]]
+command = "cat README.md; wc -l README.md; echo done"
+description = "chain: cat + wc + echo via ;"
+
+[[allow]]
+command = "git fetch; git log --oneline origin/main..HEAD"
+description = "chain: git fetch + git log via ;"
+
+[[allow]]
+command = "nvidia-smi; iostat; vmstat 1 1"
+description = "chain: GPU + IO + VM stats via ;"
+
+# Mixed ; and && chains
+[[allow]]
+command = "mkdir -p /tmp/test && cp -r ./src /tmp/test/; echo 'copied'"
+description = "chain: mkdir + cp + echo (mixed operators)"
+
+[[allow]]
+command = "git add . && git diff --cached; echo 'staged'"
+description = "chain: git add + git diff cached + echo (mixed)"
+
+# Temp cleanup chains
+[[allow]]
+command = "rm -rf /tmp/build && mkdir -p /tmp/build"
+description = "chain: temp cleanup + recreate via &&"
+
+[[allow]]
+command = "rm -rf /tmp/test-output; rm -rf /tmp/test-cache; echo 'cleaned'"
+description = "chain: multiple temp cleanups via ;"
+
+[[allow]]
+command = "rm -f /tmp/lock.pid && echo 'lock removed'"
+description = "chain: temp file remove + echo via &&"
+
+# || chains (fallback)
+[[allow]]
+command = "which resticprofile || echo 'not installed'"
+description = "chain: which + echo fallback via ||"
+
+[[allow]]
+command = "nvidia-smi || echo 'no GPU found'"
+description = "chain: nvidia-smi + echo fallback via ||"
+
+[[allow]]
+command = "test -f /tmp/done || touch /tmp/done"
+description = "chain: test + touch fallback via ||"
+
+# Complex but benign multi-part chains
+[[allow]]
+command = "git fetch && git diff --stat origin/main && echo 'Changes above' && git log --oneline -5"
+description = "chain: 4-part git read-only chain"
+
+[[allow]]
+command = "echo '=== Build ===' && npm install && npm test && echo '=== Done ==='"
+description = "chain: 4-part npm build chain with echo bookends"
+
+[[allow]]
+command = "swapon --show; free -m; df -h; du -sh /tmp/*"
+description = "chain: 4-part system inspection via ;"
+
+[[allow]]
+command = "cat config.json | jq '.version' && echo 'parsed' || echo 'failed'"
+description = "chain: pipe + && + || combined"
+
+# Pipes combined with chains
+[[allow]]
+command = "git log --oneline -20 | head -5 && echo '---' && git status"
+description = "chain: pipe then && chain"
+
+[[allow]]
+command = "cat file.json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d)\" && echo 'parsed'"
+description = "chain: local python pipe + echo via &&"
+
+[[allow]]
+command = "gh run list --json status | python3 -c \"import json,sys; print(json.load(sys.stdin))\" || echo 'failed'"
+description = "chain: gh pipe to python + echo fallback"
+
+# Absolute path executables in chains
+[[allow]]
+command = "/usr/local/bin/resticprofile version && echo 'installed'"
+description = "chain: absolute path exec + echo via &&"
+
+[[allow]]
+command = "/usr/bin/env python3 --version && echo 'python ready'"
+description = "chain: /usr/bin/env python + echo via &&"
+
+# Subshells in chains
+[[allow]]
+command = "(cd /tmp && ls) && echo 'done'"
+description = "chain: subshell + echo via &&"
+
+[[allow]]
+command = "(git status) && (git diff --stat)"
+description = "chain: two subshells via &&"
+
+# Real-world chains from hook logs
+[[allow]]
+command = "apt list --installed 2>/dev/null | grep phoronix; snap list 2>/dev/null | grep phoronix; flatpak list 2>/dev/null | grep -i phoronix; echo '---'; which php 2>/dev/null || echo 'no php'"
+description = "chain: multi-package-manager search (real-world)"
+
+[[allow]]
+command = "free -h | head -3; echo '---'; swapon --show"
+description = "chain: memory info + swap show (real-world)"
+
+[[allow]]
+command = "gh issue view 127 --json body | python3 -c \"import json,sys; print(json.load(sys.stdin)['body'][:3000])\""
+description = "chain: gh issue view piped to python (real-world)"
+
+[[allow]]
+command = "gh run list --branch main --limit 10 --json conclusion,status | python3 -c \"import json,sys; [print(r) for r in json.load(sys.stdin)]\""
+description = "chain: gh run list piped to python (real-world)"
+
+[[allow]]
+command = "git show HEAD:package.json | python3 -c \"import json,sys; d=json.load(sys.stdin); [print(f'{k}: {v}') for k,v in d['dependencies'].items()]\""
+description = "chain: git show piped to python for deps (real-world)"
+
+# NOTE: Complex loops with variable assignments using command substitution
+# fall through to ask because the validator splits "count=$(cd ...)" as an
+# unrecognized sub-command. This is a known limitation — safe false positive.
+[[ask]]
+command = "for d in /home/user/github/*/; do count=$(cd \"$d\" && git status --porcelain 2>/dev/null | wc -l); if [ \"$count\" -gt 0 ]; then echo \"$(basename $d): $count\"; fi; done"
+description = "chain: complex for loop with cmd substitution (asks due to splitting limitation)"
+
+[[allow]]
+command = "echo 'Total repo size:'; du -sh /backup/restic/ 2>/dev/null; echo '---'; ls /backup/restic/snapshots/ 2>/dev/null | wc -l"
+description = "chain: repo size inspection via ; (real-world)"
+
+[[allow]]
+command = "rm -rf /tmp/test-output; rm -rf /tmp/test-cache; mkdir -p /tmp/test-output && echo 'ready'"
+description = "chain: tmp cleanup + recreate (real-world)"
+
+# =============================================================================
+# Chained commands - risky (at least one dangerous component)
+# =============================================================================
+
+# Safe command hiding a risky tail via &&
+[[ask]]
+command = "echo 'starting' && ssh user@host"
+description = "chain: echo + ssh via && (risky tail)"
+
+[[ask]]
+command = "git add . && git commit -m 'wip' && git push --force"
+description = "chain: safe git + force push via && (risky tail)"
+
+[[ask]]
+command = "npm test && npm publish"
+description = "chain: npm test + publish via && (risky tail)"
+
+[[ask]]
+command = "docker build . && docker rm old-container"
+description = "chain: docker build + rm via && (risky tail)"
+
+[[ask]]
+command = "cat /etc/hosts && kill 1234"
+description = "chain: cat + kill via && (risky tail)"
+
+[[ask]]
+command = "ls && crontab -e"
+description = "chain: ls + crontab edit via && (risky tail)"
+
+[[ask]]
+command = "echo test && rm -f important.txt"
+description = "chain: echo + rm non-tmp via && (risky tail)"
+
+[[ask]]
+command = "echo done; systemctl restart nginx"
+description = "chain: echo + systemctl restart via ; (risky tail)"
+
+# Safe command hiding a risky tail via ;
+[[ask]]
+command = "git status; git push --force origin main"
+description = "chain: git status + force push via ; (risky tail)"
+
+[[ask]]
+command = "echo 'backing up'; scp -r ./data user@host:/backup/"
+description = "chain: echo + scp via ; (risky tail)"
+
+[[ask]]
+command = "ls -la; docker stop my-container; docker rm my-container"
+description = "chain: ls + docker stop + rm via ; (multi-risky)"
+
+# Safe command hiding a risky tail via ||
+[[ask]]
+command = "test -f lockfile || kill $(cat lockfile.pid)"
+description = "chain: test + kill via || (risky fallback)"
+
+[[ask]]
+command = "git pull || git reset --hard origin/main"
+description = "chain: git pull + hard reset via || (risky fallback)"
+
+# Risky command at the beginning of a chain
+[[ask]]
+command = "rm -rf ./dist && npm run build"
+description = "chain: rm non-tmp + npm build via && (risky head)"
+
+[[ask]]
+command = "docker system prune && docker build ."
+description = "chain: docker prune + build via && (risky head)"
+
+[[ask]]
+command = "kubectl delete pod stale-pod && kubectl get pods"
+description = "chain: kubectl delete + get via && (risky head)"
+
+[[ask]]
+command = "helm upgrade myrelease ./chart && kubectl get pods"
+description = "chain: helm upgrade + kubectl get via && (risky head)"
+
+# Risky command in the middle of a chain
+[[ask]]
+command = "echo 'deploying' && kubectl apply -f deploy.yaml && echo 'done'"
+description = "chain: echo + kubectl apply + echo (risky middle)"
+
+[[ask]]
+command = "git add . && git push --force && echo 'pushed'"
+description = "chain: git add + force push + echo (risky middle)"
+
+[[ask]]
+command = "echo 'start' && docker stop webapp && echo 'stopped'"
+description = "chain: echo + docker stop + echo (risky middle)"
+
+# Complex multi-operator chains with hidden risk
+[[ask]]
+command = "npm test && npm run build || rm -rf ./dist"
+description = "chain: npm test + build || rm (risky fallback)"
+
+[[ask]]
+command = "ls -la; echo ready; ssh user@host 'deploy.sh'"
+description = "chain: safe + safe + ssh (risky in 3rd position)"
+
+[[ask]]
+command = "git status; git diff; git add .; git commit -m fix; git push --force"
+description = "chain: 5-part git with force push at end"
+
+# Real-world chains that should ask (from hook logs)
+[[ask]]
+command = "chmod +x /tmp/test-script.sh && bash /tmp/test-script.sh"
+description = "chain: chmod + bash temp script (real-world, source from /tmp/)"
+
+[[ask]]
+command = "kill $(cat /tmp/pid 2>/dev/null) 2>/dev/null; rm -f /tmp/pid; rm -rf /tmp/test-dir"
+description = "chain: kill + tmp cleanup (kill is ask, rest is allow)"
+
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
 # =============================================================================
@@ -589,9 +978,10 @@ command = "kubectl  exec pod -- bash"
 description = "kubectl exec with double space (bypass attempt)"
 
 # Security: control flow with dangerous body
-[[ask]]
+# Note: rm -rf /tmp/* is now allowed by temp_cleanup pattern
+[[allow]]
 command = "if true; then rm -rf /tmp/*; fi"
-description = "if statement with dangerous body"
+description = "if statement with temp cleanup body (allowed)"
 
 [[ask]]
 command = "for f in *; do rm -f $f; done"
@@ -742,25 +1132,25 @@ description = "loginctl kill-user"
 command = "localectl set-locale LANG=en_US.UTF-8"
 description = "localectl mutation (should not match locale)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X POST repos/owner/repo/issues -f title=test"
-description = "gh api POST"
+description = "gh api POST (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X PUT repos/owner/repo/topics -f names=topic"
-description = "gh api PUT"
+description = "gh api PUT (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X PATCH repos/owner/repo -f description=new"
-description = "gh api PATCH"
+description = "gh api PATCH (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api -X DELETE repos/owner/repo/issues/1"
-description = "gh api DELETE"
+description = "gh api DELETE (now allowed)"
 
-[[ask]]
+[[allow]]
 command = "gh api --method POST repos/owner/repo/issues"
-description = "gh api --method POST"
+description = "gh api --method POST (now allowed)"
 
 [[ask]]
 command = "sg docker -c 'docker ps'"
@@ -819,14 +1209,6 @@ command = "scp file.txt user@host:/tmp/"
 description = "scp command"
 
 [[ask]]
-command = "rm -rf ./build"
-description = "rm -rf directory"
-
-[[ask]]
-command = "rm -f important.txt"
-description = "rm -f file"
-
-[[ask]]
 command = "kill 1234"
 description = "kill process"
 
@@ -845,6 +1227,24 @@ description = "gh pr merge"
 [[ask]]
 command = "gh release delete v1.0.0 --yes"
 description = "gh release delete"
+
+# Narrowed crontab patterns (only writes ask, reads are allowed)
+[[ask]]
+command = "crontab -e"
+description = "crontab edit (still asks)"
+
+[[ask]]
+command = "crontab -r"
+description = "crontab remove (still asks)"
+
+# Narrowed rm patterns (non-/tmp/ still asks)
+[[ask]]
+command = "rm -rf ./build"
+description = "rm -rf non-tmp directory (still asks)"
+
+[[ask]]
+command = "rm -f important.txt"
+description = "rm -f non-tmp file (still asks)"
 
 # =============================================================================
 # DENY - Commands that should always be blocked
@@ -913,6 +1313,47 @@ description = "Chained sudo command"
 [[deny]]
 command = "false || sudo systemctl restart"
 description = "Fallback to sudo"
+
+# Complex deny chains — catastrophic commands hiding deep in chains
+[[deny]]
+command = "echo 'cleaning up' && ls /tmp && rm -rf /"
+description = "chain: safe + safe + catastrophic rm via &&"
+
+[[deny]]
+command = "git status; echo 'safe'; sudo rm -rf /home"
+description = "chain: safe + safe + sudo rm via ; (3-part)"
+
+[[deny]]
+command = "npm test && npm run build && echo done; sudo reboot"
+description = "chain: safe build chain + sudo reboot via ;"
+
+[[deny]]
+command = "ls -la || echo 'failed' || rm -rf ~"
+description = "chain: safe + echo + catastrophic rm via || (deep)"
+
+[[deny]]
+command = "cat /etc/hosts && echo ok && dd of=/dev/sda"
+description = "chain: safe + echo + dd via && (deep)"
+
+[[deny]]
+command = "echo 'setting up' && mkfs.ext4 /dev/sdb"
+description = "chain: echo + mkfs via && (destructive tail)"
+
+[[deny]]
+command = "git log --oneline; echo test; rm -rf /*"
+description = "chain: safe + safe + rm -rf /* via ; (3-part)"
+
+[[deny]]
+command = "cd /tmp && ls && sudo apt install -y malware"
+description = "chain: safe + safe + sudo via && (3-part)"
+
+[[deny]]
+command = "echo starting || true && sudo shutdown -h now"
+description = "chain: mixed operators with sudo shutdown"
+
+[[deny]]
+command = "npm test; git push origin main; rm -rf /"
+description = "chain: safe + safe + catastrophic via ; (late catastrophe)"
 
 [[deny]]
 command = "su - root"

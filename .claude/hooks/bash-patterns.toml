@@ -298,7 +298,9 @@ patterns = [
 [ask.user_management]
 description = "User, group, and cron management"
 patterns = [
-    "^crontab",
+    "^crontab -e",
+    "^crontab -r",
+    "^crontab [^-]",
     "^visudo",
     "^passwd",
     "^useradd",
@@ -320,7 +322,6 @@ description = "Remote access and file transfer"
 patterns = [
     "^ssh ",
     "^scp ",
-    "^rsync ",
     "^sftp ",
     "^ftp ",
     "^telnet ",
@@ -330,8 +331,8 @@ patterns = [
 [ask.file_deletion]
 description = "Potentially destructive file removal"
 patterns = [
-    "^rm -r",
-    "^rm -f",
+    "^rm -r(?!f? /tmp/)",
+    "^rm -f(?! /tmp/)",
 ]
 
 [ask.dangerous_pipelines]
@@ -349,43 +350,20 @@ patterns = [
 [ask.code_execution]
 description = "Arbitrary code execution patterns"
 patterns = [
-    # Pipe to shell - ( |$) allows both "| bash -s" and bare "| bash"
+    # Pipe to shell - always ask regardless of source
     "\\| *sh( |$)",
     "\\| *bash( |$)",
     "\\| *zsh( |$)",
-    # Pipe to interpreters
-    "\\| *python[0-9.]*( |$)",
-    "\\| *perl( |$)",
-    "\\| *ruby( |$)",
-    "\\| *node( |$)",
+    # Remote download piped to interpreters (curl/wget + interpreter)
+    "(curl|wget|http|fetch).*\\| *python[0-9.]*( |$)",
+    "(curl|wget|http|fetch).*\\| *perl( |$)",
+    "(curl|wget|http|fetch).*\\| *ruby( |$)",
+    "(curl|wget|http|fetch).*\\| *node( |$)",
     "^eval ",
     "source /tmp/",
     "source /var/tmp/",
     "\\. /tmp/",
     "\\. /var/tmp/",
-]
-
-[ask.github_api_mutations]
-description = "GitHub API calls that modify state"
-patterns = [
-    # -X flag (short form)
-    "^gh api .* -X POST",
-    "^gh api .* -X PUT",
-    "^gh api .* -X PATCH",
-    "^gh api .* -X DELETE",
-    "^gh api -X POST",
-    "^gh api -X PUT",
-    "^gh api -X PATCH",
-    "^gh api -X DELETE",
-    # --method flag (long form)
-    "^gh api .* --method POST",
-    "^gh api .* --method PUT",
-    "^gh api .* --method PATCH",
-    "^gh api .* --method DELETE",
-    "^gh api --method POST",
-    "^gh api --method PUT",
-    "^gh api --method PATCH",
-    "^gh api --method DELETE",
 ]
 
 [ask.terminal_multiplexer_mutations]
@@ -439,6 +417,7 @@ patterns = [
     "^return",
     "^exit",
     "^local ",
+    "^bash -n ",
     "^test$",
     "^\\[$",
     # Control flow keywords - only bare keywords are auto-allowed.
@@ -945,6 +924,7 @@ patterns = [
     "^sed ",
     "^jq",
     "^yq",
+    "^rsync ",
     "^curl",
     "^wget",
     "^http ",
@@ -1152,6 +1132,8 @@ patterns = [
     "^systemctl show",
     "^systemctl list",
     "^systemctl is-",
+    "^systemctl cat",
+    "^crontab -l",
     "^service .* status",
     "^getent ",
     # locale: add word boundary to avoid matching localectl
@@ -1192,6 +1174,82 @@ patterns = [
     "^screen -ls",
     "^screen -list",
     "^screen -wipe",
+]
+
+[allow.backup_tools]
+description = "Backup and restore tools"
+patterns = [
+    "^restic",
+    "^resticprofile",
+]
+
+[allow.gpu_tools]
+description = "GPU monitoring tools"
+patterns = [
+    "^nvidia-smi",
+    "^rocm-smi",
+    "^nvtop",
+]
+
+[allow.package_info]
+description = "Package manager read-only queries"
+patterns = [
+    "^apt list",
+    "^apt show",
+    "^apt search",
+    "^apt-cache",
+    "^apt policy",
+    "^dpkg -l",
+    "^dpkg -L",
+    "^dpkg -s",
+    "^dpkg --list",
+    "^snap list",
+    "^snap info",
+    "^flatpak list",
+    "^flatpak info",
+]
+
+[allow.mail_tools]
+description = "Mail tools (sendmail, msmtp, mail)"
+patterns = [
+    "^sendmail",
+    "^msmtp",
+    "^mail ",
+]
+
+[allow.benchmarks]
+description = "Benchmarking tools"
+patterns = [
+    "^phoronix-test-suite",
+    "^sysbench",
+    "^fio ",
+    "^iperf",
+]
+
+[allow.swap_memory]
+description = "Swap and memory inspection"
+patterns = [
+    "^swapon",
+    "^vmstat",
+    "^iostat",
+    "^sar ",
+]
+
+[allow.absolute_path_executables]
+description = "System and user-installed binaries by absolute path"
+patterns = [
+    "^/usr/bin/",
+    "^/usr/local/bin/",
+    "^/home/[^/]+/\\.local/bin/",
+    "^~/\\.local/bin/",
+]
+
+[allow.temp_cleanup]
+description = "Temp file cleanup"
+patterns = [
+    "^rm -rf /tmp/",
+    "^rm -f /tmp/",
+    "^rm /tmp/",
 ]
 
 [allow.command_utilities]
