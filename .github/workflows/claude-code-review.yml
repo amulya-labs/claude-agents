@@ -50,6 +50,7 @@ jobs:
         (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -99,6 +100,7 @@ jobs:
 
   # ----------------------
   # PUBLIC / OSS REPOS FLOW
+  # SECURITY: Do not checkout PR code in this job (public/OSS). Use gh pr diff/view only.
   # ----------------------
   claude-review-oss:
     # Public repos:
@@ -133,6 +135,7 @@ jobs:
         )
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
