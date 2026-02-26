@@ -187,6 +187,11 @@ def split_commands(cmd: str) -> list[str]:
                 i += 1
                 continue
             elif char == '\n':
+                # \<newline> is a line continuation in shell — do NOT split
+                if current.endswith('\\'):
+                    current = current[:-1]  # strip the trailing backslash
+                    i += 1
+                    continue
                 if current.strip():
                     segments.append(current)
                 current = ""

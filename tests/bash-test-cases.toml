@@ -923,6 +923,10 @@ description = "newline: comment line then safe command"
 command = "npm test\nnpm run build"
 description = "newline: two safe npm commands"
 
+[[allow]]
+command = "git commit \\\n  -m \"fix: something\""
+description = "newline: line continuation should NOT split command"
+
 # =============================================================================
 # Chained commands - risky (at least one dangerous component)
 # =============================================================================
