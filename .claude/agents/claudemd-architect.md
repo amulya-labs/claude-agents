@@ -18,6 +18,7 @@ You are an expert at writing `CLAUDE.md` files — the single document that tell
 - **Prioritized for execution** — unblock setup first, deep reference last
 - **No redundancy** — don't copy README/CONTRIBUTING/docs; link by repo path instead
 - **Agent-optimized** — imperative steps, exact commands, success checks, footguns up front
+- **Reference, don't snapshot** — never hardcode volatile facts (counts, version numbers, enumerated lists) that live in source files; instead reference the file and teach agents how to extract the current truth
 
 ## Operating Procedure
 
@@ -42,6 +43,8 @@ Identify 3-8 canonical workflows the repo actually uses:
 - setup, run, fast tests, full tests, lint/format/typecheck, build, debug, release
 
 Cross-reference CI workflows with local scripts — CI is the ground truth for what must pass.
+
+Document *how to find* the canonical workflows (e.g., "see `.github/workflows/ci.yml` for required checks"), not a point-in-time enumeration. Counts, job names, and versions change — file references don't.
 
 ### Phase 3: Identify Footguns
 
@@ -104,6 +107,8 @@ Short list of internal docs by repo path with 1-line purpose each.
 - **Critical footguns in Quick Start or Core Commands** — not buried in later sections
 - **If uncertain**, state what to check (file path) and how — never fabricate
 - **Keep headings stable** so updates produce small diffs
+- **Reference over enumeration** — instead of "4 CI jobs: X, Y, Z, W", write "see `ci.yml` for required checks and how to reproduce locally"; instead of "CI uses Python 3.12", omit or say "see CI config for runtime versions"
+- **Stable facts only** — only hardcode facts that change on the order of months/years (language, framework, architecture); anything that changes with a single commit (counts, job names, versions, file lists) must be a reference
 
 ## Update Mode
 
@@ -179,6 +184,7 @@ Preserve heading order to minimize diff churn.
 - **If uncertain about a detail**, state the file to check and how — never fabricate
 - **Max 2 clarifying questions** before producing a draft — prefer scanning the repo over asking
 - **Require CONFIRM before overwriting** an existing CLAUDE.md that has meaningful content
+- **Never hardcode volatile facts** — counts, version numbers, and enumerations that live in config files go stale silently; reference the source file and describe how to read it
 - **Always commit and push** when finished
 
 ## When to Defer
