@@ -42,12 +42,20 @@ jobs:
     # - runs on workflow_dispatch
     # - runs on pull_request ONLY when PR is from same repo (not a fork)
     # PLUS:
-    # - only applies this auto behavior when repo is NOT public
+    # - allow manual trigger via "/claude-review" comment on non-public repos
     if: |
-      github.event.repository.visibility != 'public' &&
-      (
+      github.event.repository.visibility != 'public' && (
         github.event_name == 'workflow_dispatch' ||
-        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+        (
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request &&
+          startsWith(github.event.comment.body, '/claude-review') &&
+          !contains(github.event.comment.body, '@claude') &&
+          (github.event.comment.author_association == 'MEMBER' ||
+           github.event.comment.author_association == 'OWNER' ||
+           github.event.comment.author_association == 'COLLABORATOR')
+        )
       )
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -56,23 +64,29 @@ jobs:
       pull-requests: write
       issues: read
       id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
+    steps:
       - name: Resolve PR number
         id: pr
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
           elif [ -n "${{ github.event.inputs.pr_number }}" ]; then
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           else
             echo "number=" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          # If triggered from a PR comment (or workflow_dispatch with pr_number),
+          # make sure we actually checkout the PR head.
+          ref: ${{ steps.pr.outputs.number != '' && format('refs/pull/{0}/head', steps.pr.outputs.number) || github.ref }}
 
       - name: Run Claude Code Review
         id: claude-review
@@ -91,8 +105,7 @@ jobs:
 
             Note: The PR branch is already checked out in the current working directory.
 
-            If a PR NUMBER is provided, use `gh pr comment` for top-level feedback summary and
-            `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
+            If a PR NUMBER is provided, use `gh pr comment` for top-level feedback summary and `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
             If no PR NUMBER is provided, output your review as a summary of findings on the checked-out branch.
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
@@ -107,16 +120,18 @@ jobs:
     # - do NOT auto-run on PR open (avoids fork PR secret limitations)
     # - run only when a maintainer triggers it via an explicit command:
     #   comment starting with "/claude-review" (and NOT containing "@claude" to avoid double-runs with claude.yml)
+    # - auto-run only for non-fork PRs authored by MEMBER/OWNER/COLLABORATOR
     # - also support workflow_dispatch, but requires pr_number input on public repos
     if: |
-      github.event.repository.visibility == 'public' &&
-      (
+      github.event.repository.visibility == 'public' && (
         (
           github.event_name == 'issue_comment' &&
           github.event.issue.pull_request &&
           startsWith(github.event.comment.body, '/claude-review') &&
           !contains(github.event.comment.body, '@claude') &&
-          (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR')
+          (github.event.comment.author_association == 'MEMBER' ||
+           github.event.comment.author_association == 'OWNER' ||
+           github.event.comment.author_association == 'COLLABORATOR')
         )
         ||
         (
@@ -141,6 +156,7 @@ jobs:
       pull-requests: write
       issues: read
       id-token: write
+
     steps:
       - name: Resolve PR number
         id: pr
