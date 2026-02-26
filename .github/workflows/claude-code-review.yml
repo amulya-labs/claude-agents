@@ -104,7 +104,7 @@ jobs:
           github.event.issue.pull_request &&
           startsWith(github.event.comment.body, '/claude-review') &&
           !contains(github.event.comment.body, '@claude') &&
-          (github.actor_association == 'MEMBER' || github.actor_association == 'OWNER' || github.actor_association == 'COLLABORATOR')
+          (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR')
         )
         ||
         (
