@@ -118,6 +118,16 @@ jobs:
         )
         ||
         (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          (
+            github.event.pull_request.author_association == 'MEMBER' ||
+            github.event.pull_request.author_association == 'OWNER' ||
+            github.event.pull_request.author_association == 'COLLABORATOR'
+          )
+        )
+        ||
+        (
           github.event_name == 'workflow_dispatch' &&
           github.event.inputs.pr_number != ''
         )
@@ -133,7 +143,9 @@ jobs:
         id: pr
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
             echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
           else
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
