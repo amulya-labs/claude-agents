@@ -3,7 +3,7 @@
 [![CI](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-code-config/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-code-config)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agents](https://img.shields.io/badge/agents-17-blue.svg)](.claude/agents/)
+[![Agents](https://img.shields.io/badge/agents-19-blue.svg)](.claude/agents/)
 
 **Production-ready configuration for Claude Code.** Agents, hooks, and settings you can drop into any project.
 
@@ -46,10 +46,16 @@ mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubuse
 | **documentation-writer** | Creates minimal, DRY documentation |
 | **claudemd-architect** | Creates and updates CLAUDE.md files for agent-ready repos |
 
+### Data & ML
+| Agent | What it does |
+|-------|--------------|
+| **ml-architect** | Designs ML systems end-to-end: data pipelines, training, serving, monitoring |
+
 ### Sales / Solutions
 | Agent | What it does |
 |-------|--------------|
 | **solution-eng** | Runs discovery, designs solutions, manages POCs |
+| **marketing-lead** | Crafts positioning, messaging, and go-to-market copy that converts |
 
 ### Creative
 | Agent | What it does |
@@ -75,8 +81,10 @@ Claude can also select agents automatically based on your request.
 
 <table>
 <tr><th>Agent</th><th>Description</th><th>Model</th></tr>
-<tr><td>agent-specialist</td><td>Design and optimize AI agents with strong contracts</td><td rowspan="9">opus</td></tr>
+<tr><td>agent-specialist</td><td>Design and optimize AI agents with strong contracts</td><td rowspan="11">opus</td></tr>
 <tr><td>claudemd-architect</td><td>Create and update CLAUDE.md files for agent-ready repos</td></tr>
+<tr><td>marketing-lead</td><td>Positioning, messaging, and go-to-market copy</td></tr>
+<tr><td>ml-architect</td><td>End-to-end ML system design and production ML decisions</td></tr>
 <tr><td>prod-engineer</td><td>Production incident response and reliability engineering</td></tr>
 <tr><td>product-owner</td><td>Product direction, prioritization, specs, and decisions</td></tr>
 <tr><td>prompt-engineer</td><td>Engineer effective prompts for AI models</td></tr>
