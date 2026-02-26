@@ -1297,9 +1297,10 @@ description = "File removal on relative paths (project files, build artifacts)"
 # Safe because: relative paths are within the project directory.
 # Catastrophic patterns (/, ~, *, .) are caught by deny.catastrophic_deletion
 # which runs BEFORE this allow pattern.
+# $ is excluded from the first-char class to prevent 'rm -rf $HOME' from being auto-approved.
 patterns = [
-    # rm with any flags + relative path (not starting with / or ~)
-    "^rm\\s+(-[a-zA-Z]+\\s+)*[^-/~\\s]",
+    # rm with any flags + relative path (not starting with /, ~, or $)
+    "^rm\\s+(-[a-zA-Z]+\\s+)*[^-/~$\\s]",
     # rm with any flags + explicit ./ prefix
     "^rm\\s+(-[a-zA-Z]+\\s+)*\\./",
 ]
@@ -1313,7 +1314,7 @@ patterns = [
 ]
 
 [allow.clipboard_opener]
-description = "Clipboard utilities and file/URL openers"
+description = "Clipboard utilities and URL openers"
 patterns = [
     "^pbcopy",
     "^pbpaste",
@@ -1322,8 +1323,17 @@ patterns = [
     "^wl-copy",
     "^wl-paste",
     "^xdg-open ",
-    "^open ",
-    "^truncate ",
+    # Restrict open to URLs only; bare 'open -a Terminal' or 'open malware.app' would prompt
+    "^open\\s+https?://",
+]
+
+[allow.file_truncate]
+description = "File truncation on relative paths (log files, build artifacts)"
+patterns = [
+    # truncate with flags + relative path (not starting with /, ~, or $)
+    "^truncate\\s+(-[a-zA-Z]+\\s+)*[^-/~$\\s]",
+    # truncate with flags + explicit ./ prefix
+    "^truncate\\s+(-[a-zA-Z]+\\s+)*\\./",
 ]
 
 [allow.command_utilities]

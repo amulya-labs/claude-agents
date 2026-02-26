@@ -57,7 +57,7 @@ shellcheck .claude/hooks/*.sh && \
 ## Repo Map
 
 ```
-.claude/agents/          -- 19 agent markdown files with YAML frontmatter; add/edit agents here
+.claude/agents/          -- agent markdown files with YAML frontmatter; add/edit agents here
 .claude/hooks/           -- PreToolUse/PostToolUse bash command validation hooks
   validate-bash.sh       -- Shell entry point: reads stdin JSON, calls validate-bash.py, logs
   validate-bash.py       -- Python validator: splits chains, cleans segments, matches patterns
