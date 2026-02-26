@@ -8,10 +8,10 @@ set -e
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Usage:
-#   ./scripts/manage-claude-code-config.sh install                        # First-time setup
-#   ./scripts/manage-claude-code-config.sh install --with-gha-workflows   # Include Claude GitHub Actions
-#   ./scripts/manage-claude-code-config.sh update                         # Pull latest config
-#   ./scripts/manage-claude-code-config.sh update --with-gha-workflows    # Update including workflows
+#   ./scripts/manage-claude-code-config.sh install                        # First-time setup (includes Claude workflows)
+#   ./scripts/manage-claude-code-config.sh install --with-gha-workflows   # Also install extra workflow templates
+#   ./scripts/manage-claude-code-config.sh update                         # Pull latest config (includes Claude workflows)
+#   ./scripts/manage-claude-code-config.sh update --with-gha-workflows    # Update including extra workflow templates
 
 REPO="amulya-labs/claude-code-config"
 BRANCH="main"
@@ -113,9 +113,12 @@ download_all() {
         warn "  settings.json not found (optional)"
     fi
 
-    # Optionally download GitHub Actions workflows
+    # Always download Claude workflows
+    download_gha_workflows
+
+    # Optionally download extra workflow templates
     if $WITH_GHA_WORKFLOWS; then
-        download_gha_workflows
+        download_gha_workflow_templates
     fi
 }
 
@@ -134,6 +137,11 @@ download_gha_workflows() {
     warn "Requires CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
 }
 
+download_gha_workflow_templates() {
+    info "Fetching additional workflow templates..."
+    download_dir "github-workflow-templates" ".github/workflows"
+}
+
 install_config() {
     check_git
 
@@ -146,14 +154,13 @@ install_config() {
     download_all
 
     git add "$CLAUDE_DIR"
-    if $WITH_GHA_WORKFLOWS; then
-        git add .github/workflows/ 2>/dev/null || true
-    fi
+    git add .github/workflows/ 2>/dev/null || true
 
     echo ""
     info "Done! Config installed to $CLAUDE_DIR"
+    info "Claude workflows installed to .github/workflows/"
     if $WITH_GHA_WORKFLOWS; then
-        info "Claude workflows installed to .github/workflows/"
+        info "Extra workflow templates installed to .github/workflows/"
     fi
     echo ""
     echo "Next steps:"
@@ -173,14 +180,13 @@ update_config() {
     download_all
 
     git add "$CLAUDE_DIR"
-    if $WITH_GHA_WORKFLOWS; then
-        git add .github/workflows/ 2>/dev/null || true
-    fi
+    git add .github/workflows/ 2>/dev/null || true
 
     echo ""
     info "Done! Config updated."
+    info "Claude workflows updated in .github/workflows/"
     if $WITH_GHA_WORKFLOWS; then
-        info "Claude workflows updated in .github/workflows/"
+        info "Extra workflow templates updated in .github/workflows/"
     fi
     echo ""
     echo "Next steps:"
@@ -216,17 +222,19 @@ case "${1:-}" in
         echo "  update    Pull the latest config (agents, hooks, settings)"
         echo ""
         echo "Options:"
-        echo "  --with-gha-workflows   Also install Claude GitHub Actions workflows"
-        echo "                         (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
+        echo "  --with-gha-workflows   Also install extra workflow templates from"
+        echo "                         github-workflow-templates/ in the source repo"
         echo ""
         echo "This downloads:"
         echo "  .claude/agents/   - Reusable Claude Code agents"
         echo "  .claude/hooks/    - PreToolUse hooks (e.g., bash validation)"
         echo "  .claude/settings.json - Hook configuration"
-        echo ""
-        echo "With --with-gha-workflows, also downloads:"
         echo "  .github/workflows/claude.yml             - @claude mention handler"
         echo "  .github/workflows/claude-code-review.yml - Auto PR review"
+        echo "  (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
+        echo ""
+        echo "With --with-gha-workflows, also downloads:"
+        echo "  Extra workflow templates from github-workflow-templates/"
         exit 1
         ;;
 esac
