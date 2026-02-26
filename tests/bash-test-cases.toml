@@ -1180,6 +1180,56 @@ description = "gh label delete (destructive)"
 command = "gh label delete bug --yes"
 description = "gh label delete with --yes"
 
+# gh api mutations should ask
+[[ask]]
+command = "gh api /repos/owner/repo/issues -X POST --field title=test"
+description = "gh api POST with -X flag"
+
+[[ask]]
+command = "gh api /repos/owner/repo/pulls/1 -X PATCH --field state=closed"
+description = "gh api PATCH with -X flag"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues/1 --method DELETE"
+description = "gh api DELETE with --method flag"
+
+[[ask]]
+command = "gh api -X PUT /repos/owner/repo/topics --field names=test"
+description = "gh api PUT with -X flag before path"
+
+[[ask]]
+command = "gh api --method POST /repos/owner/repo/dispatches --field event_type=deploy"
+description = "gh api POST with --method flag before path"
+
+[[ask]]
+command = "gh api --method=POST /repos/owner/repo/dispatches --field event_type=deploy"
+description = "gh api POST with --method=VALUE equals-sign form before path"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues --method=POST --field title=test"
+description = "gh api POST with --method=VALUE equals-sign form after path"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues --method=DELETE"
+description = "gh api DELETE with --method=VALUE equals-sign form"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues -XPOST --field title=test"
+description = "gh api POST with curl-style combined -XPOST form"
+
+[[ask]]
+command = "gh api -XDELETE /repos/owner/repo/issues/1"
+description = "gh api DELETE with curl-style combined -XDELETE form before path"
+
+# gh api read-only (GET) should be allowed via broad ^gh pattern
+[[allow]]
+command = "gh api /repos/owner/repo/issues"
+description = "gh api GET (default, no method flag)"
+
+[[allow]]
+command = "gh api /repos/owner/repo/pulls --jq '.[].title'"
+description = "gh api GET with jq filter"
+
 [[ask]]
 command = "kubectl run debug --image=alpine"
 description = "kubectl run"
@@ -1312,25 +1362,25 @@ description = "loginctl kill-user"
 command = "localectl set-locale LANG=en_US.UTF-8"
 description = "localectl mutation (should not match locale)"
 
-[[allow]]
+[[ask]]
 command = "gh api -X POST repos/owner/repo/issues -f title=test"
-description = "gh api POST (now allowed)"
+description = "gh api POST mutation"
 
-[[allow]]
+[[ask]]
 command = "gh api -X PUT repos/owner/repo/topics -f names=topic"
-description = "gh api PUT (now allowed)"
+description = "gh api PUT mutation"
 
-[[allow]]
+[[ask]]
 command = "gh api -X PATCH repos/owner/repo -f description=new"
-description = "gh api PATCH (now allowed)"
+description = "gh api PATCH mutation"
 
-[[allow]]
+[[ask]]
 command = "gh api -X DELETE repos/owner/repo/issues/1"
-description = "gh api DELETE (now allowed)"
+description = "gh api DELETE mutation"
 
-[[allow]]
+[[ask]]
 command = "gh api --method POST repos/owner/repo/issues"
-description = "gh api --method POST (now allowed)"
+description = "gh api --method POST mutation"
 
 [[ask]]
 command = "sg docker -c 'docker ps'"
