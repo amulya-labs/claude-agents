@@ -24,7 +24,7 @@ concurrency:
       format('{0}-pr-{1}', github.workflow, github.event.pull_request.number)
       ||
     github.event_name == 'issue_comment' &&
-      format('{0}-pr-{1}', github.workflow, github.event.issue.number)
+      format('{0}-issue_comment-pr-{1}', github.workflow, github.event.issue.number)
       ||
     github.event_name == 'workflow_dispatch' &&
       format('{0}-pr-{1}', github.workflow, github.event.inputs.pr_number)
