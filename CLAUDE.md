@@ -57,7 +57,7 @@ shellcheck .claude/hooks/*.sh && \
 ## Repo Map
 
 ```
-.claude/agents/          -- 18 agent markdown files with YAML frontmatter; add/edit agents here
+.claude/agents/          -- 19 agent markdown files with YAML frontmatter; add/edit agents here
 .claude/hooks/           -- PreToolUse/PostToolUse bash command validation hooks
   validate-bash.sh       -- Shell entry point: reads stdin JSON, calls validate-bash.py, logs
   validate-bash.py       -- Python validator: splits chains, cleans segments, matches patterns
@@ -88,7 +88,9 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
 - Edit `.claude/hooks/bash-patterns.toml`
 - Categories: `[deny.*]` (always block), `[ask.*]` (prompt user), `[allow.*]` (auto-approve)
 - Evaluation order: deny -> ask -> allow -> ask (default if no match)
-- Lean liberal: if a command is safe, add it to allow; reserve ask for genuinely risky ops
+- **Lean liberal**: if a command is safe, add it to allow; reserve ask for genuinely risky ops
+- When a chain of commands (`cmd1 && cmd2 && cmd3`) is composed entirely of individually safe commands, the chain should be auto-approved -- never prompt just because commands are chained together
+- The goal is minimal friction: agents should rarely be interrupted for routine dev commands (build tools, linters, test runners, package managers, git operations, file manipulation on relative paths)
 - For every new pattern, add corresponding test cases to `tests/bash-test-cases.toml`
 
 ### Hook Logic
