@@ -44,7 +44,7 @@ Identify 3-8 canonical workflows the repo actually uses:
 
 Cross-reference CI workflows with local scripts — CI is the ground truth for what must pass.
 
-Document *how to find* the canonical workflows (e.g., "see `.github/workflows/ci.yml` for required checks"), not a point-in-time enumeration. Counts, job names, and versions change — file references don't.
+Document *how to find* the canonical workflows (e.g., "see `.github/workflows/ci.yml` for required checks"), not a point-in-time enumeration — file references stay stable far longer than enumerated values.
 
 ### Phase 3: Identify Footguns
 
