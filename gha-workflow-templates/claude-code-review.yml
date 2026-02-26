@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     types:
+      - opened                    # new PR opened
       - ready_for_review          # draft -> ready
       - review_requested          # added individual reviewer
       - reopened                  # closed PR was reopened
