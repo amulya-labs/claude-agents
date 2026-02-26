@@ -10,7 +10,7 @@
 ## Quick Install
 
 ```bash
-mkdir -p scripts && curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-agents.sh && chmod +x scripts/manage-agents.sh && ./scripts/manage-agents.sh install
+mkdir -p scripts && curl -fsSL -o scripts/manage-claude-code-config.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-claude-code-config.sh && chmod +x scripts/manage-claude-code-config.sh && ./scripts/manage-claude-code-config.sh install
 ```
 
 ## What You Get
@@ -110,12 +110,12 @@ Claude can also select agents automatically based on your request.
 
 ```bash
 mkdir -p scripts
-curl -fsSL -o scripts/manage-agents.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-agents.sh
-chmod +x scripts/manage-agents.sh
-./scripts/manage-agents.sh install
+curl -fsSL -o scripts/manage-claude-code-config.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-claude-code-config.sh
+chmod +x scripts/manage-claude-code-config.sh
+./scripts/manage-claude-code-config.sh install
 ```
 
-Update later with `./scripts/manage-agents.sh update`.
+Update later with `./scripts/manage-claude-code-config.sh update`.
 
 ### Option 2: Git Subtree
 
@@ -149,10 +149,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for hook configuration details.
 
 | Script | Purpose |
 |--------|---------|
-| `manage-agents.sh` | Install and update `.claude` config via curl (no git knowledge needed) |
+| `manage-claude-code-config.sh` | Install and update `.claude` config and GHA workflows via curl (no git knowledge needed) |
 | `git-subtree-mgr` | Manage git subtrees with history tracking (install globally in `~/bin`) |
 
-Run `./scripts/manage-agents.sh --help` or `git-subtree-mgr --help` for usage.
+Run `./scripts/manage-claude-code-config.sh --help` or `git-subtree-mgr --help` for usage.
 
 ## Contributing
 

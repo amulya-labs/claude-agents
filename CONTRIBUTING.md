@@ -109,7 +109,8 @@ CMD:    git rebase main
 
 | Use case | Recommended |
 |----------|-------------|
-| Just want the agents, minimal setup | `manage-agents.sh` |
+| Just want the agents, minimal setup | `manage-claude-code-config.sh` |
+| Also want Claude GitHub Actions workflows | `manage-claude-code-config.sh --with-gha-workflows` |
 | Want git history of upstream changes | `git-subtree-mgr` |
 | Managing multiple subtrees in a project | `git-subtree-mgr` |
-| Non-technical team members | `manage-agents.sh` |
+| Non-technical team members | `manage-claude-code-config.sh` |

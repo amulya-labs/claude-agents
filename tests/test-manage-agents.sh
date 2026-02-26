@@ -1,6 +1,6 @@
 #!/bin/bash
-# Tests for manage-agents.sh — verifies workflow templates are distributed
-# correctly (sourced from gha-workflow-templates/, not .github/workflows/).
+# Tests for manage-claude-code-config.sh — verifies workflow templates are distributed
+# correctly (sourced from .github/workflows/).
 #
 # Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-MANAGE_SCRIPT="$REPO_ROOT/scripts/manage-agents.sh"
+MANAGE_SCRIPT="$REPO_ROOT/scripts/manage-claude-code-config.sh"
 
 PASS=0
 FAIL=0
@@ -43,32 +43,31 @@ assert() {
 
 # ── Repo layout checks ─────────────────────────────────────────────
 
-echo "=== Workflow template file locations ==="
+echo "=== Workflow file locations ==="
 
-EXPECTED_TEMPLATES=(claude.yml claude-code-review.yml)
+EXPECTED_WORKFLOWS=(claude.yml claude-code-review.yml)
 
-for f in "${EXPECTED_TEMPLATES[@]}"; do
-    if [[ -f "$REPO_ROOT/gha-workflow-templates/$f" ]]; then
-        assert "gha-workflow-templates/$f exists" "pass"
+for f in "${EXPECTED_WORKFLOWS[@]}"; do
+    if [[ -f "$REPO_ROOT/.github/workflows/$f" ]]; then
+        assert ".github/workflows/$f exists" "pass"
     else
-        assert "gha-workflow-templates/$f exists" "fail" "File not found"
+        assert ".github/workflows/$f exists" "fail" "File not found"
     fi
 done
 
-for f in "${EXPECTED_TEMPLATES[@]}"; do
-    if [[ ! -f "$REPO_ROOT/.github/workflows/$f" ]]; then
-        assert ".github/workflows/$f does NOT exist (not live)" "pass"
-    else
-        assert ".github/workflows/$f does NOT exist (not live)" "fail" \
-            "File should not be in .github/workflows/ — it would run as a live GitHub Action"
-    fi
-done
+# gha-workflow-templates/ should no longer exist
+if [[ ! -d "$REPO_ROOT/gha-workflow-templates" ]]; then
+    assert "gha-workflow-templates/ directory removed" "pass"
+else
+    assert "gha-workflow-templates/ directory removed" "fail" \
+        "Directory should be removed — workflows now live in .github/workflows/"
+fi
 
 echo
 
-# ── manage-agents.sh script checks ─────────────────────────────────
+# ── manage-claude-code-config.sh script checks ─────────────────────
 
-echo "=== manage-agents.sh flag and function checks ==="
+echo "=== manage-claude-code-config.sh flag and function checks ==="
 
 # shellcheck disable=SC2310
 if grep -q 'WITH_GHA_WORKFLOWS=false' "$MANAGE_SCRIPT"; then
@@ -106,16 +105,24 @@ fi
 
 echo
 
-# ── download_gha_workflows path mapping ─────────────────────────────
+# ── download_gha_workflows explicit file downloads ──────────────────
 
-echo "=== download_gha_workflows path mapping ==="
+echo "=== download_gha_workflows explicit file downloads ==="
 
-# The function should call download_dir with remote=gha-workflow-templates, local=.github/workflows
-if grep -q 'download_dir "gha-workflow-templates" ".github/workflows"' "$MANAGE_SCRIPT"; then
-    assert "download_gha_workflows maps gha-workflow-templates → .github/workflows" "pass"
+# The function should explicitly download only the two Claude workflow files,
+# not use download_dir (which would fetch all files in the directory including ci.yml etc.)
+if grep -q 'for wf in claude.yml claude-code-review.yml' "$MANAGE_SCRIPT"; then
+    assert "download_gha_workflows fetches only claude.yml and claude-code-review.yml" "pass"
 else
-    assert "download_gha_workflows maps gha-workflow-templates → .github/workflows" "fail" \
-        "Expected: download_dir \"gha-workflow-templates\" \".github/workflows\""
+    assert "download_gha_workflows fetches only claude.yml and claude-code-review.yml" "fail" \
+        "Expected: for wf in claude.yml claude-code-review.yml"
+fi
+
+if ! grep -q 'download_dir ".github/workflows" ".github/workflows"' "$MANAGE_SCRIPT"; then
+    assert "download_gha_workflows does not use download_dir (avoids fetching ci.yml etc.)" "pass"
+else
+    assert "download_gha_workflows does not use download_dir (avoids fetching ci.yml etc.)" "fail" \
+        "Should not use download_dir for workflows — it would fetch all files in the directory"
 fi
 
 echo
@@ -126,9 +133,9 @@ echo "=== shellcheck ==="
 
 if command -v shellcheck &>/dev/null; then
     if shellcheck "$MANAGE_SCRIPT" 2>&1; then
-        assert "manage-agents.sh passes shellcheck" "pass"
+        assert "manage-claude-code-config.sh passes shellcheck" "pass"
     else
-        assert "manage-agents.sh passes shellcheck" "fail"
+        assert "manage-claude-code-config.sh passes shellcheck" "fail"
     fi
 else
     echo "  (shellcheck not installed — skipping)"
