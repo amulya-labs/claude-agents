@@ -98,7 +98,8 @@ patterns = [
     "^git reset --hard",
     "^git clean -fd",
     "^git rebase",
-    "^git merge",
+    # Use negative lookahead to avoid matching 'git merge-base' (read-only)
+    "^git merge(?!-base\\b)",
     "^git cherry-pick",
     "^git revert",
     "^git stash drop",
@@ -668,6 +669,10 @@ patterns = [
     "^ltrace",
     "^perf ",
     "^valgrind",
+    # Desktop/display environment info (read-only queries)
+    "^gnome-extensions ",
+    "^glxinfo",
+    "^prime-select query",
 ]
 
 [allow.command_wrappers]
@@ -931,6 +936,15 @@ patterns = [
     "^httpie",
 ]
 
+[allow.find_exec_readonly]
+description = "find -exec continuation segments with read-only commands"
+# When 'find ... -exec cmd {} \; -exec cmd2 {} \;' is split on ';', the second
+# and subsequent -exec clauses become orphaned segments starting with '-exec'.
+# These are safe to allow when the command is a read-only viewer.
+patterns = [
+    "^-exec\\s+(cat|echo|head|tail|grep|wc|stat|file|ls|print|printf)\\s",
+]
+
 [allow.process_inspection]
 description = "Process inspection (not control)"
 patterns = [
@@ -1119,6 +1133,8 @@ patterns = [
     "conda.*/envs/.*/bin/",
     # pipx
     "pipx/venvs/.*/bin/",
+    # Temporary venvs in /tmp (e.g. /tmp/test-venv/bin/pip, /tmp/test-venv/bin/pytest)
+    "^/tmp/[^/]+/bin/",
 ]
 
 [allow.system_readonly]

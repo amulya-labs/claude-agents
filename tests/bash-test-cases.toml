@@ -541,6 +541,58 @@ description = "apt list installed packages"
 command = "swapon --show"
 description = "swapon show"
 
+# git merge-base (read-only, should not trigger ask.git_destructive)
+[[allow]]
+command = "git merge-base HEAD origin/main | xargs git log --oneline"
+description = "git merge-base piped to xargs git log (read-only)"
+
+[[allow]]
+command = "git merge-base --fork-point origin/main"
+description = "git merge-base --fork-point (read-only)"
+
+# find with multiple -exec clauses using safe read-only commands
+[[allow]]
+command = "find /tmp -exec echo {} \\; -exec cat {} \\;"
+description = "find with multiple -exec: echo then cat (read-only)"
+
+[[allow]]
+command = "find . -name '*.txt' -exec head -5 {} \\; -exec echo '---' \\;"
+description = "find with multiple -exec: head then echo separator (read-only)"
+
+# venv binaries in /tmp (e.g. temporary test environments)
+[[allow]]
+command = "/tmp/test-venv/bin/pip install pytest"
+description = "pip install in /tmp venv"
+
+[[allow]]
+command = "/tmp/test-venv/bin/pytest tests/"
+description = "pytest in /tmp venv"
+
+[[allow]]
+command = "/tmp/myenv/bin/pip install -r requirements.txt"
+description = "pip install -r in /tmp venv"
+
+# Desktop/display environment info (system_inspection)
+[[allow]]
+command = "gnome-extensions list"
+description = "gnome-extensions list (read-only)"
+
+[[allow]]
+command = "gnome-extensions list --enabled"
+description = "gnome-extensions list --enabled (read-only)"
+
+[[allow]]
+command = "glxinfo"
+description = "glxinfo (OpenGL info, read-only)"
+
+[[allow]]
+command = "glxinfo | grep -i opengl"
+description = "glxinfo piped to grep (read-only)"
+
+[[allow]]
+command = "prime-select query"
+description = "prime-select query (read-only GPU profile query)"
+
 # =============================================================================
 # Chained commands - benign (all parts are safe)
 # =============================================================================
@@ -1167,6 +1219,15 @@ description = "git force push"
 [[ask]]
 command = "git reset --hard HEAD~1"
 description = "git reset hard"
+
+# git merge (destructive, unlike git merge-base which is read-only)
+[[ask]]
+command = "git merge main"
+description = "git merge branch (destructive)"
+
+[[ask]]
+command = "git merge origin/feature"
+description = "git merge remote branch (destructive)"
 
 [[ask]]
 command = "docker rm container"
