@@ -164,6 +164,15 @@ patterns = [
     "^gh run cancel",
 ]
 
+[ask.github_api_mutations]
+description = "GitHub API calls that mutate state (POST, PUT, PATCH, DELETE)"
+patterns = [
+    "^gh api .* -X (POST|PUT|PATCH|DELETE)",
+    "^gh api .* --method (POST|PUT|PATCH|DELETE)",
+    "^gh api -X (POST|PUT|PATCH|DELETE)",
+    "^gh api --method (POST|PUT|PATCH|DELETE)",
+]
+
 [ask.file_permissions]
 description = "Broad file permission changes"
 patterns = [
