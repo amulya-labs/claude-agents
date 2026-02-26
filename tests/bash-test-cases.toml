@@ -902,6 +902,27 @@ description = "chain: repo size inspection via ; (real-world)"
 command = "rm -rf /tmp/test-output; rm -rf /tmp/test-cache; mkdir -p /tmp/test-output && echo 'ready'"
 description = "chain: tmp cleanup + recreate (real-world)"
 
+# Newline-separated commands (bare newlines are command separators like ;)
+[[allow]]
+command = "git status\ngit log --oneline -5"
+description = "newline: two safe git commands"
+
+[[allow]]
+command = "COMMIT=\"840b1d8\"\ngh api repos/org/repo/pulls/16/comments/123/replies -f body=\"Fixed.\"\necho \"Done\""
+description = "newline: env var + gh api + echo (issue #24 repro)"
+
+[[allow]]
+command = "echo hello\nls -la\necho done"
+description = "newline: three safe commands"
+
+[[allow]]
+command = "# This is a comment\necho hello"
+description = "newline: comment line then safe command"
+
+[[allow]]
+command = "npm test\nnpm run build"
+description = "newline: two safe npm commands"
+
 # =============================================================================
 # Chained commands - risky (at least one dangerous component)
 # =============================================================================
@@ -1012,6 +1033,19 @@ description = "chain: chmod + bash temp script (real-world, source from /tmp/)"
 [[ask]]
 command = "kill $(cat /tmp/pid 2>/dev/null) 2>/dev/null; rm -f /tmp/pid; rm -rf /tmp/test-dir"
 description = "chain: kill + tmp cleanup (kill is ask, rest is allow)"
+
+# Newline-separated commands with risky parts
+[[ask]]
+command = "echo hello\nssh user@host"
+description = "newline: safe + risky ssh"
+
+[[ask]]
+command = "git status\ngit push --force"
+description = "newline: safe git + force push"
+
+[[ask]]
+command = "echo start\nkubectl apply -f deploy.yaml\necho done"
+description = "newline: safe + risky kubectl apply + safe"
 
 # =============================================================================
 # ASK - Commands that should prompt for confirmation
@@ -1610,6 +1644,15 @@ description = "chain: mixed operators with sudo shutdown"
 [[deny]]
 command = "npm test; git push origin main; rm -rf /"
 description = "chain: safe + safe + catastrophic via ; (late catastrophe)"
+
+# Newline-separated commands with denied parts
+[[deny]]
+command = "echo hello\nsudo rm -rf /"
+description = "newline: safe + catastrophic sudo rm"
+
+[[deny]]
+command = "ls -la\nrm -rf /"
+description = "newline: safe + catastrophic rm"
 
 [[deny]]
 command = "su - root"

@@ -139,11 +139,12 @@ def strip_leading_comment(cmd: str) -> str:
 
 
 def split_commands(cmd: str) -> list[str]:
-    """Split command on &&, ||, ; (respecting quotes, comments, and shell syntax).
+    """Split command on &&, ||, ;, newlines (respecting quotes, comments, and shell syntax).
 
     Special handling for:
     - ;; (case statement terminator) - not a split point
     - Quoted strings
+    - Bare newlines are command separators (like ;) in shell
     """
     segments = []
     current = ""
@@ -166,7 +167,7 @@ def split_commands(cmd: str) -> list[str]:
                 elif quote == char:
                     quote = None
 
-        # Split on && || ; outside quotes
+        # Split on && || ; \n outside quotes
         if quote is None:
             if cmd[i:i+2] in ('&&', '||'):
                 if current.strip():
@@ -180,6 +181,12 @@ def split_commands(cmd: str) -> list[str]:
                     current += ';;'
                     i += 2
                     continue
+                if current.strip():
+                    segments.append(current)
+                current = ""
+                i += 1
+                continue
+            elif char == '\n':
                 if current.strip():
                     segments.append(current)
                 current = ""
