@@ -139,7 +139,9 @@ download_gha_workflows() {
 
 download_gha_workflow_templates() {
     info "Fetching additional workflow templates..."
-    download_dir "github-workflow-templates" ".github/workflows"
+    # TODO: remove this guard when github-workflow-templates/ is populated in the source repo
+    warn "No extra workflow templates available yet — coming in a future release"
+    # download_dir "github-workflow-templates" ".github/workflows"
 }
 
 install_config() {
@@ -159,6 +161,7 @@ install_config() {
     echo ""
     info "Done! Config installed to $CLAUDE_DIR"
     info "Claude workflows installed to .github/workflows/"
+    warn "  → Workflows require CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
     if $WITH_GHA_WORKFLOWS; then
         info "Extra workflow templates installed to .github/workflows/"
     fi
@@ -185,6 +188,7 @@ update_config() {
     echo ""
     info "Done! Config updated."
     info "Claude workflows updated in .github/workflows/"
+    warn "  → Workflows require CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
     if $WITH_GHA_WORKFLOWS; then
         info "Extra workflow templates updated in .github/workflows/"
     fi

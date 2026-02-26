@@ -138,12 +138,15 @@ echo
 echo "=== download_all() behavior ==="
 
 # download_gha_workflows should be called unconditionally (not inside an if $WITH_GHA_WORKFLOWS block)
-# In download_all(), the call should appear OUTSIDE any conditional
-if grep -A2 'download_gha_workflows$' "$MANAGE_SCRIPT" | grep -q 'if \$WITH_GHA_WORKFLOWS'; then
+# Extract the download_all() body and verify the call appears outside any conditional block
+download_all_body=$(sed -n '/^download_all()/,/^}/p' "$MANAGE_SCRIPT")
+conditional_block=$(echo "$download_all_body" | sed -n '/if \$WITH_GHA_WORKFLOWS/,/fi/p')
+if echo "$download_all_body" | grep -q 'download_gha_workflows$' && \
+   ! echo "$conditional_block" | grep -q 'download_gha_workflows$'; then
+    assert "download_gha_workflows is called unconditionally in download_all()" "pass"
+else
     assert "download_gha_workflows is called unconditionally in download_all()" "fail" \
         "download_gha_workflows should not be inside an if \$WITH_GHA_WORKFLOWS block"
-else
-    assert "download_gha_workflows is called unconditionally in download_all()" "pass"
 fi
 
 # download_gha_workflow_templates should be called conditionally
