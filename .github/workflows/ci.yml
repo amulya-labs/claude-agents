@@ -154,7 +154,7 @@ jobs:
           tests/test-validate-bash.sh
 
   validate-manage-agents:
-    name: Validate manage-agents.sh
+    name: Validate manage-claude-code-config.sh
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
