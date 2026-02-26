@@ -26,9 +26,6 @@ concurrency:
     github.event_name == 'issue_comment' &&
       format('{0}-pr-{1}', github.workflow, github.event.issue.number)
       ||
-    github.event_name == 'workflow_run' &&
-      format('{0}-run-{1}-{2}', github.workflow, github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch)
-      ||
     github.event_name == 'workflow_dispatch' &&
       format('{0}-pr-{1}', github.workflow, github.event.inputs.pr_number)
       ||
@@ -64,6 +61,18 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Resolve PR number
+        id: pr
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.inputs.pr_number }}" ]; then
+            echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
@@ -71,9 +80,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
+            PR NUMBER: ${{ steps.pr.outputs.number }}
 
-            Please review this pull request with a focus on:
+            Please review this pull request (or the current branch if no PR number is provided) with a focus on:
             - Code quality and best practices
             - Potential bugs or issues
             - Security implications
@@ -81,8 +90,9 @@ jobs:
 
             Note: The PR branch is already checked out in the current working directory.
 
-            Use `gh pr comment` for top-level feedback summary.
-            Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
+            If a PR NUMBER is provided, use `gh pr comment` for top-level feedback summary and
+            `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
+            If no PR NUMBER is provided, output your review as a summary of findings on the checked-out branch.
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Glob,Grep"
@@ -155,4 +165,3 @@ jobs:
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Glob,Grep"
-

@@ -105,16 +105,24 @@ fi
 
 echo
 
-# ── download_gha_workflows path mapping ─────────────────────────────
+# ── download_gha_workflows explicit file downloads ──────────────────
 
-echo "=== download_gha_workflows path mapping ==="
+echo "=== download_gha_workflows explicit file downloads ==="
 
-# The function should call download_dir with remote=.github/workflows, local=.github/workflows
-if grep -q 'download_dir ".github/workflows" ".github/workflows"' "$MANAGE_SCRIPT"; then
-    assert "download_gha_workflows maps .github/workflows → .github/workflows" "pass"
+# The function should explicitly download only the two Claude workflow files,
+# not use download_dir (which would fetch all files in the directory including ci.yml etc.)
+if grep -q 'for wf in claude.yml claude-code-review.yml' "$MANAGE_SCRIPT"; then
+    assert "download_gha_workflows fetches only claude.yml and claude-code-review.yml" "pass"
 else
-    assert "download_gha_workflows maps .github/workflows → .github/workflows" "fail" \
-        "Expected: download_dir \".github/workflows\" \".github/workflows\""
+    assert "download_gha_workflows fetches only claude.yml and claude-code-review.yml" "fail" \
+        "Expected: for wf in claude.yml claude-code-review.yml"
+fi
+
+if ! grep -q 'download_dir ".github/workflows" ".github/workflows"' "$MANAGE_SCRIPT"; then
+    assert "download_gha_workflows does not use download_dir (avoids fetching ci.yml etc.)" "pass"
+else
+    assert "download_gha_workflows does not use download_dir (avoids fetching ci.yml etc.)" "fail" \
+        "Should not use download_dir for workflows — it would fetch all files in the directory"
 fi
 
 echo

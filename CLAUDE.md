@@ -142,7 +142,7 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
 - **4 CI jobs** (all must pass for PRs to main):
   1. `validate-agents` -- parses YAML frontmatter, checks required fields
   2. `validate-hooks` -- shellcheck, TOML validation, `tests/test-validate-bash.sh`
-  3. `validate-manage-agents` -- shellcheck + `tests/test-manage-agents.sh` (tests `manage-claude-code-config.sh`)
+  3. `validate-manage-claude-code-config` -- shellcheck + `tests/test-manage-agents.sh` (tests `manage-claude-code-config.sh`)
   4. `validate-attributions` -- checks `Source:` and `License:` in all scripts/configs
 - CI runs on push to `main` and all PRs targeting `main`
 - Reproduce locally: see full CI-equivalent command in Core Commands

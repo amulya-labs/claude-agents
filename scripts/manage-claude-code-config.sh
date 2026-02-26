@@ -121,7 +121,16 @@ download_all() {
 
 download_gha_workflows() {
     info "Fetching Claude GitHub Actions workflows..."
-    download_dir ".github/workflows" ".github/workflows"
+    local workflow_dir=".github/workflows"
+    mkdir -p "$workflow_dir"
+    for wf in claude.yml claude-code-review.yml; do
+        local url="$RAW_BASE/.github/workflows/$wf"
+        if curl -fsSL "$url" -o "$workflow_dir/$wf" 2>/dev/null; then
+            info "  Downloaded $wf"
+        else
+            warn "  Failed to download $wf"
+        fi
+    done
     warn "Requires CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
 }
 
