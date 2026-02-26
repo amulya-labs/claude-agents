@@ -69,7 +69,7 @@ scripts/manage-claude-code-config.sh -- Install/update .claude config and GHA wo
 scripts/git-subtree-mgr  -- Git subtree manager for tracking upstream changes
 .github/workflows/       -- Live GitHub Actions: ci.yml, scorecard.yml, claude.yml, claude-code-review.yml
 tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.py, test-validate-bash.sh, test-manage-agents.sh
-.github/workflows/ci.yml -- CI: 4 jobs (agents, hooks, manage-agents, attributions)
+.github/workflows/ci.yml -- CI job definitions (source of truth for what must pass)
 ```
 
 ## Change Workflow
@@ -139,14 +139,9 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
 
 ## CI/CD Notes
 
-- **4 CI jobs** (all must pass for PRs to main):
-  1. `validate-agents` -- parses YAML frontmatter, checks required fields
-  2. `validate-hooks` -- shellcheck, TOML validation, `tests/test-validate-bash.sh`
-  3. `validate-manage-claude-code-config` -- shellcheck + `tests/test-manage-agents.sh` (tests `manage-claude-code-config.sh`)
-  4. `validate-attributions` -- checks `Source:` and `License:` in all scripts/configs
+- All CI jobs must pass for PRs to main — see `.github/workflows/ci.yml` for current job definitions and required checks
 - CI runs on push to `main` and all PRs targeting `main`
 - Reproduce locally: see full CI-equivalent command in Core Commands
-- CI uses Python 3.12 and `pyyaml` for agent validation
 
 ## Guardrails
 
