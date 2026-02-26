@@ -1201,6 +1201,26 @@ description = "gh api PUT with -X flag before path"
 command = "gh api --method POST /repos/owner/repo/dispatches --field event_type=deploy"
 description = "gh api POST with --method flag before path"
 
+[[ask]]
+command = "gh api --method=POST /repos/owner/repo/dispatches --field event_type=deploy"
+description = "gh api POST with --method=VALUE equals-sign form before path"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues --method=POST --field title=test"
+description = "gh api POST with --method=VALUE equals-sign form after path"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues --method=DELETE"
+description = "gh api DELETE with --method=VALUE equals-sign form"
+
+[[ask]]
+command = "gh api /repos/owner/repo/issues -XPOST --field title=test"
+description = "gh api POST with curl-style combined -XPOST form"
+
+[[ask]]
+command = "gh api -XDELETE /repos/owner/repo/issues/1"
+description = "gh api DELETE with curl-style combined -XDELETE form before path"
+
 # gh api read-only (GET) should be allowed via broad ^gh pattern
 [[allow]]
 command = "gh api /repos/owner/repo/issues"

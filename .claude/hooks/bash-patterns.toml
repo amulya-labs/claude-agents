@@ -166,11 +166,19 @@ patterns = [
 
 [ask.github_api_mutations]
 description = "GitHub API calls that mutate state (POST, PUT, PATCH, DELETE)"
+# Two variants per flag: flag-after-path ("gh api /path -X POST")
+# and flag-before-path ("gh api -X POST /path"). The .* in the after-path
+# variants requires at least one character between "api " and the flag,
+# so the before-path forms genuinely need their own patterns.
+# --method[= ] matches both "--method POST" and "--method=POST" (cobra CLI).
+# -X(METHOD) matches curl-style combined form "-XPOST" (no space).
 patterns = [
     "^gh api .* -X (POST|PUT|PATCH|DELETE)",
-    "^gh api .* --method (POST|PUT|PATCH|DELETE)",
+    "^gh api .* -X(POST|PUT|PATCH|DELETE)",
+    "^gh api .* --method[= ](POST|PUT|PATCH|DELETE)",
     "^gh api -X (POST|PUT|PATCH|DELETE)",
-    "^gh api --method (POST|PUT|PATCH|DELETE)",
+    "^gh api -X(POST|PUT|PATCH|DELETE)",
+    "^gh api --method[= ](POST|PUT|PATCH|DELETE)",
 ]
 
 [ask.file_permissions]
