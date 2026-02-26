@@ -222,6 +222,109 @@ CONTROL_FLOW_TERMINATORS = re.compile(
 )
 
 
+def extract_assignments(segment: str) -> dict[str, str]:
+    """Extract VAR=literal assignments from a raw segment.
+
+    Only captures literal values (unquoted, single-quoted, double-quoted).
+    Dynamic values ($(...), backticks, $VAR references) are skipped.
+
+    Returns dict of {name: value} for captured assignments.
+    """
+    env = {}
+    rest = segment.lstrip()
+    while True:
+        match = re.match(r'^([A-Za-z_][A-Za-z0-9_]*)=', rest)
+        if not match:
+            break
+
+        name = match.group(1)
+        rest = rest[match.end():]
+
+        if rest.startswith('$(') or rest.startswith('`'):
+            # Dynamic — skip entire assignment, stop capturing
+            break
+        elif rest.startswith('$') and len(rest) > 1 and re.match(r'[A-Za-z_]', rest[1]):
+            # Variable reference — skip
+            break
+        elif rest.startswith('"'):
+            # Double-quoted value
+            i = 1
+            while i < len(rest):
+                if rest[i] == '\\' and i + 1 < len(rest):
+                    i += 2
+                    continue
+                if rest[i] == '"':
+                    break
+                i += 1
+            env[name] = rest[1:i]
+            rest = rest[i + 1:]
+        elif rest.startswith("'"):
+            # Single-quoted value
+            end = rest.find("'", 1)
+            if end > 0:
+                env[name] = rest[1:end]
+                rest = rest[end + 1:]
+            else:
+                break
+        else:
+            # Unquoted value — ends at whitespace
+            val_match = re.match(r'^([^\s]*)', rest)
+            env[name] = val_match.group(1) if val_match else ""
+            rest = rest[val_match.end():] if val_match else ""
+
+        rest = rest.lstrip()
+
+    return env
+
+
+def substitute_known_vars(segment: str, env: dict[str, str]) -> str:
+    """Replace $VAR or ${VAR} at position 0 of a cleaned segment with known values.
+
+    Only substitutes if the variable name exists in env.
+    Only operates at position 0 (the command itself), not arguments.
+    """
+    if not segment.startswith('$'):
+        return segment
+
+    # Try ${VAR} form first
+    match = re.match(r'^\$\{([A-Za-z_][A-Za-z0-9_]*)\}', segment)
+    if match:
+        name = match.group(1)
+        if name in env:
+            return env[name] + segment[match.end():]
+        return segment
+
+    # Try $VAR form
+    match = re.match(r'^\$([A-Za-z_][A-Za-z0-9_]*)', segment)
+    if match:
+        name = match.group(1)
+        if name in env:
+            return env[name] + segment[match.end():]
+
+    return segment
+
+
+def strip_bash_c_wrapper(segment: str) -> str:
+    """Unwrap simple bash -c / sh -c wrappers to expose the inner command.
+
+    Handles: bash -c "cmd", bash -c 'cmd', sh -c "cmd", /bin/bash -c "cmd", etc.
+    Complex quoting (nested quotes, escaped quotes inside) is left unchanged.
+    """
+    match = re.match(r'^(?:/bin/)?(bash|sh)\s+-c\s+([\'"])(.*)\2\s*$', segment, re.DOTALL)
+    if not match:
+        return segment
+
+    delimiter = match.group(2)
+    inner = match.group(3)
+
+    # Reject if inner contains the delimiter at all (escaped or not)
+    # Any occurrence means the quoting is complex enough to skip unwrapping
+    if delimiter in inner:
+        return segment
+
+    return inner
+
+
 def strip_control_flow_keyword(segment: str) -> str:
     """Strip shell control flow keywords from segment start.
 
@@ -286,6 +389,9 @@ def clean_segment(segment: str) -> str:
     # Strip env vars
     segment = strip_env_vars(segment)
 
+    # Unwrap bash -c / sh -c wrappers to expose the inner command
+    segment = strip_bash_c_wrapper(segment)
+
     # Strip shell control flow keywords (then, else, do, etc.)
     # This allows validation of the body command within control structures
     segment = strip_control_flow_keyword(segment)
@@ -343,10 +449,19 @@ def validate_command(
     final_decision = "allow"
     final_reason = "Command matches allow patterns"
 
+    # Track variable assignments across the chain for resolution
+    env_context: dict[str, str] = {}
+
     for segment in segments:
+        # Capture assignments BEFORE clean_segment strips them
+        env_context.update(extract_assignments(segment))
+
         cleaned = clean_segment(segment)
         if not cleaned:
             continue
+
+        # Substitute known variables in the cleaned command
+        cleaned = substitute_known_vars(cleaned, env_context)
 
         # Check DENY first (per-segment)
         matched, section = check_patterns(cleaned, deny_patterns)

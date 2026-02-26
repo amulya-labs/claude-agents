@@ -270,6 +270,94 @@ class TestCleanSegment:
         assert validate_bash.clean_segment(input_seg) == expected
 
 
+class TestExtractAssignments:
+    """Test intra-chain variable assignment extraction."""
+
+    @pytest.mark.parametrize(
+        "input_seg,expected",
+        [
+            ("RUFF=/path/to/ruff", {"RUFF": "/path/to/ruff"}),
+            ('FOO="bar baz"', {"FOO": "bar baz"}),
+            ("FOO='bar baz'", {"FOO": "bar baz"}),
+            ("FOO=$(cmd)", {}),
+            ("FOO=$BAR", {}),
+            ("FOO=bar BAZ=qux cmd", {"FOO": "bar", "BAZ": "qux"}),
+            ("ls -la", {}),
+            ("FOO=bar", {"FOO": "bar"}),
+            ('A=1 B="two" C=3 cmd', {"A": "1", "B": "two", "C": "3"}),
+        ],
+        ids=[
+            "simple-unquoted",
+            "double-quoted",
+            "single-quoted",
+            "command-substitution-skipped",
+            "var-reference-skipped",
+            "multiple-before-command",
+            "no-assignments",
+            "assignment-only",
+            "mixed-quoting-styles",
+        ],
+    )
+    def test_extract(self, input_seg, expected):
+        assert validate_bash.extract_assignments(input_seg) == expected
+
+
+class TestSubstituteKnownVars:
+    """Test variable substitution at command position."""
+
+    @pytest.mark.parametrize(
+        "input_seg,env,expected",
+        [
+            ("$RUFF format src/", {"RUFF": "/path/ruff"}, "/path/ruff format src/"),
+            ("${RUFF} format", {"RUFF": "/path/ruff"}, "/path/ruff format"),
+            ("$UNKNOWN cmd", {}, "$UNKNOWN cmd"),
+            ("git status", {"GIT": "/usr/bin/git"}, "git status"),
+            ("$CMD", {"CMD": "ls"}, "ls"),
+            ("${CMD}", {"CMD": "ls"}, "ls"),
+        ],
+        ids=[
+            "dollar-var",
+            "braced-var",
+            "unknown-unchanged",
+            "no-dollar-unchanged",
+            "bare-var-no-args",
+            "braced-var-no-args",
+        ],
+    )
+    def test_substitute(self, input_seg, env, expected):
+        assert validate_bash.substitute_known_vars(input_seg, env) == expected
+
+
+class TestStripBashCWrapper:
+    """Test bash -c / sh -c unwrapping."""
+
+    @pytest.mark.parametrize(
+        "input_seg,expected",
+        [
+            ('bash -c "git status"', "git status"),
+            ("bash -c 'ls -la'", "ls -la"),
+            ('/bin/bash -c "mypy src/"', "mypy src/"),
+            ('sh -c "echo hello"', "echo hello"),
+            ('/bin/sh -c "cat file.txt"', "cat file.txt"),
+            ('bash -c "has \\"nested\\" quotes"', 'bash -c "has \\"nested\\" quotes"'),
+            ("bash -n script.sh", "bash -n script.sh"),
+            ("bash -c cmd_no_quotes", "bash -c cmd_no_quotes"),
+        ],
+        ids=[
+            "bash-double-quoted",
+            "bash-single-quoted",
+            "absolute-bash-path",
+            "sh-double-quoted",
+            "absolute-sh-path",
+            "nested-quotes-unchanged",
+            "not-c-flag-unchanged",
+            "no-quotes-unchanged",
+        ],
+    )
+    def test_strip(self, input_seg, expected):
+        assert validate_bash.strip_bash_c_wrapper(input_seg) == expected
+
+
 class TestStripControlFlowKeyword:
     """Test control flow keyword stripping."""
 
