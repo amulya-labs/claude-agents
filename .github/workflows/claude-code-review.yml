@@ -23,13 +23,16 @@ concurrency:
     (github.event_name == 'pull_request') &&
       format('{0}-pr-{1}', github.workflow, github.event.pull_request.number)
       ||
-    (github.event_name == 'issue_comment') &&
+    (github.event_name == 'issue_comment' &&
+     github.event.issue.pull_request &&
+     startsWith(github.event.comment.body, '/claude-review') &&
+     github.actor != 'claude[bot]') &&
       format('{0}-issue_comment-pr-{1}', github.workflow, github.event.issue.number)
       ||
     (github.event_name == 'workflow_dispatch') &&
       format('{0}-dispatch-pr-{1}', github.workflow, github.event.inputs.pr_number)
       ||
-    format('{0}-branch-{1}', github.workflow, github.ref_name || github.ref)
+    format('{0}-noop-{1}', github.workflow, github.run_id)
     }}
   cancel-in-progress: true
 
