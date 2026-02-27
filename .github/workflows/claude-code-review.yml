@@ -196,9 +196,10 @@ jobs:
             IMPORTANT:
             - Do NOT assume the PR code is checked out locally.
             - Use `gh pr view` and `gh pr diff` to inspect changes.
-            - Use `gh pr comment` for top-level feedback summary.
+            - Use `gh api` to read specific file contents when you need context beyond the diff.
+            - When posting comments, write the body to a temp file first, then use `gh pr comment <number> --body-file /tmp/review.md`. Do NOT use heredocs or command substitution in the --body argument.
             - Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
-            --max-turns 10
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Glob,Grep"
+            --max-turns 15
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh *),Bash(cat *),Bash(echo *),Read,Glob,Grep"
