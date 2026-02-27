@@ -1,7 +1,6 @@
 # Source: https://github.com/amulya-labs/claude-code-config
 # License: MIT (https://opensource.org/licenses/MIT)
 
-# Test PR — verify review workflow runs after fix #48
 name: Claude Code Review
 
 on:
