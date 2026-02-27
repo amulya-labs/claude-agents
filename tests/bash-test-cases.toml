@@ -2055,3 +2055,48 @@ description = "echo with $(git log) substitution"
 [[ask]]
 command = "TOOL=$(which ruff) && $TOOL check src/"
 description = "$() variable assignment not resolvable — $TOOL stays opaque"
+
+# ) in heredoc body inside $(): must not prematurely close the $() substitution
+[[allow]]
+command = "git commit -m \"$(cat <<'EOF'\nFix the) bug\nEOF\n)\""
+description = "$() with unbalanced ) in heredoc body — heredoc mode prevents premature close"
+
+[[allow]]
+command = "git commit -m \"$(cat <<'EOF'\nFix (the) bug\nEOF\n)\""
+description = "$() with balanced (the) in heredoc body — parens cancel out correctly"
+
+# =============================================================================
+# ^builtin pattern: deny-listed commands must not be bypassed via 'builtin'
+# =============================================================================
+
+# Safe builtins (bypass function shadowing, don't have ask/deny guards)
+[[allow]]
+command = "builtin echo hello"
+description = "builtin echo: safe use of builtin prefix"
+
+[[allow]]
+command = "builtin cd /tmp"
+description = "builtin cd: safe use of builtin prefix"
+
+[[allow]]
+command = "builtin hash"
+description = "builtin hash with no args: safe"
+
+# Dangerous builtins (have ask guards — ^builtin must not bypass them)
+[[ask]]
+command = "builtin eval dangerous_cmd"
+description = "builtin eval: ask guard not bypassed by builtin prefix"
+
+[[ask]]
+command = "builtin exec /bin/sh"
+description = "builtin exec: ask guard not bypassed by builtin prefix"
+
+# =============================================================================
+# Escape handling in $(): backslash inside single quotes is not an escape
+# =============================================================================
+
+# Backslash inside single-quoted $() arg: shell sees 'test\' (close quote) + s done
+# _find_matching_paren must not treat \' as escaping the closing single quote
+[[allow]]
+command = "echo $(echo 'test\\'s done')"
+description = "backslash in single-quoted arg inside $(): not an escape, paren closes correctly"

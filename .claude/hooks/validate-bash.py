@@ -141,19 +141,38 @@ def strip_leading_comment(cmd: str) -> str:
 def _find_matching_paren(cmd: str, start: int) -> int:
     """Find the matching ')' for a '(' that was just consumed.
 
-    Tracks nested parentheses and respects quotes (both single and double).
+    Tracks nested parentheses, quotes (single and double), and heredoc bodies
+    so that a ')' inside a heredoc is not mistaken for the closing paren.
     Returns the index one past the matching ')'.
     Returns len(cmd) if unmatched (unclosed substitution).
     """
     depth = 1
     i = start
     inner_quote = None
+    heredoc_delim = None  # active heredoc delimiter (str) inside $()
 
     while i < len(cmd) and depth > 0:
         char = cmd[i]
 
-        # Skip escaped characters
-        if char == '\\' and i + 1 < len(cmd):
+        # --- Heredoc mode inside $(): consume body until delimiter ---
+        if heredoc_delim is not None:
+            if char == '\n':
+                next_nl = cmd.find('\n', i + 1)
+                if next_nl == -1:
+                    next_nl = len(cmd)
+                raw_line = cmd[i + 1:next_nl]
+                # Use exact match only (<<- stripping is unusual inside $(); treat
+                # conservatively and do not strip tabs so we don't close too early).
+                if raw_line == heredoc_delim:
+                    i = next_nl  # skip to end of delimiter line
+                    heredoc_delim = None
+                    continue
+            i += 1
+            continue
+
+        # Skip escaped characters — but NOT inside single quotes, where backslash
+        # has no special meaning in bash (\' does NOT escape the closing single quote).
+        if char == '\\' and i + 1 < len(cmd) and inner_quote != "'":
             i += 2
             continue
 
@@ -163,7 +182,14 @@ def _find_matching_paren(cmd: str, start: int) -> int:
             elif inner_quote == char:
                 inner_quote = None
         elif inner_quote is None:
-            if char == '(':
+            # Detect heredoc operator << (but not <<<) to enter heredoc mode
+            if char == '<' and cmd[i:i+2] == '<<' and (i + 2 >= len(cmd) or cmd[i + 2] != '<'):
+                delim, _strip, end_pos = _parse_heredoc_delim(cmd, i + 2)
+                if delim:
+                    i = end_pos
+                    heredoc_delim = delim
+                    continue
+            elif char == '(':
                 depth += 1
             elif char == ')':
                 depth -= 1

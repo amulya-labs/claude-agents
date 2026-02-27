@@ -483,7 +483,11 @@ patterns = [
     "^typeset ",
     "^let ",
     "^getopts ",
-    "^builtin ",
+    # ^builtin with negative lookahead: block commands that have ask/deny guards.
+    # Without this, 'builtin eval dangerous' would skip ask.code_execution's eval guard
+    # because deny->ask->allow order means allow matches after ask misses (^eval pattern
+    # won't fire on 'builtin eval ...'). The lookahead re-blocks the dangerous forms.
+    "^builtin (?!eval|exec|source|mapfile)\\S",
     "^hash ",
     "^hash$",
     # Control flow keywords - only bare keywords are auto-allowed.
