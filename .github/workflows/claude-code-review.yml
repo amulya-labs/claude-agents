@@ -54,7 +54,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
 
     steps:
@@ -70,6 +70,17 @@ jobs:
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: React to triggering comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content='eyes'
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -82,6 +93,8 @@ jobs:
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
+          timeout_minutes: 30
+          track_progress: ${{ github.event_name != 'workflow_dispatch' && github.event.action != 'review_requested' }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -99,6 +112,7 @@ jobs:
             Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
+            --max-turns 10
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Glob,Grep"
 
   # =============================
@@ -135,7 +149,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
 
     steps:
@@ -151,10 +165,23 @@ jobs:
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: React to triggering comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content='eyes'
+
       - name: Run Claude Code Review (OSS)
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
+          timeout_minutes: 30
+          track_progress: ${{ github.event_name != 'workflow_dispatch' && github.event.action != 'review_requested' }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -173,4 +200,5 @@ jobs:
             - Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues with inline comments on the relevant lines.
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
+            --max-turns 10
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Glob,Grep"
