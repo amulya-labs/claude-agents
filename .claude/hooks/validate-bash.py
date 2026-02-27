@@ -304,11 +304,17 @@ def substitute_known_vars(segment: str, env: dict[str, str]) -> str:
     return segment
 
 
+_SHELL_META = re.compile(r'&&|\|\||;|\||\$\(|`')
+
+
 def strip_bash_c_wrapper(segment: str) -> str:
     """Unwrap simple bash -c / sh -c wrappers to expose the inner command.
 
     Handles: bash -c "cmd", bash -c 'cmd', sh -c "cmd", /bin/bash -c "cmd", etc.
     Complex quoting (nested quotes, escaped quotes inside) is left unchanged.
+    Compound inner commands (containing &&, ||, ;, |, $(), backtick) are left
+    unchanged so split_commands() can process them correctly and deny patterns
+    are not bypassed.
     """
     match = re.match(r'^(?:/bin/)?(bash|sh)\s+-c\s+([\'"])(.*)\2\s*$', segment, re.DOTALL)
     if not match:
@@ -317,9 +323,19 @@ def strip_bash_c_wrapper(segment: str) -> str:
     delimiter = match.group(2)
     inner = match.group(3)
 
+    # Reject multi-line input: embedded newlines indicate complex quoting
+    if '\n' in inner or '\r' in inner:
+        return segment
+
     # Reject if inner contains the delimiter at all (escaped or not)
     # Any occurrence means the quoting is complex enough to skip unwrapping
     if delimiter in inner:
+        return segment
+
+    # Reject compound inner commands: split_commands() handles these correctly
+    # on the un-wrapped form; unwrapping here would skip that splitting and
+    # let e.g. 'bash -c "echo hi && rm -rf /"' bypass deny patterns.
+    if _SHELL_META.search(inner):
         return segment
 
     return inner

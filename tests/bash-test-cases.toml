@@ -573,6 +573,14 @@ command = "git merge origin/main --no-edit"
 description = "git merge origin/main with --no-edit"
 
 [[allow]]
+command = "git merge --no-edit origin/main"
+description = "git merge --no-edit origin/main (flag before branch)"
+
+[[allow]]
+command = "git merge --no-ff origin/main"
+description = "git merge --no-ff origin/main (flag before branch)"
+
+[[allow]]
 command = "git fetch origin main && git merge origin/main --no-edit"
 description = "git fetch + merge origin/main chain"
 
@@ -625,35 +633,35 @@ description = "pip install -r in /tmp venv"
 
 # Absolute paths to .venv/bin/ (worktree agents use absolute paths)
 [[allow]]
-command = "/home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -n 4 -m \"not slow\" -v 2>&1 | tail -30"
+command = "/home/user/project/.venv/bin/pytest tests/unit/ -n 4 -m \"not slow\" -v 2>&1 | tail -30"
 description = "absolute .venv/bin/pytest with flags and pipe"
 
 [[allow]]
-command = "/home/rrl/github/stock-trading/.venv/bin/ruff format src/file.py 2>&1"
+command = "/home/user/project/.venv/bin/ruff format src/file.py 2>&1"
 description = "absolute .venv/bin/ruff format"
 
 [[allow]]
-command = "/home/rrl/github/stock-trading/.venv/bin/python -c \"import sys; print(sys.path)\" 2>&1"
+command = "/home/user/project/.venv/bin/python -c \"import sys; print(sys.path)\" 2>&1"
 description = "absolute .venv/bin/python -c"
 
 [[allow]]
-command = "/home/rrl/github/stock-trading/.venv/bin/pip show package 2>/dev/null | grep Location"
+command = "/home/user/project/.venv/bin/pip show package 2>/dev/null | grep Location"
 description = "absolute .venv/bin/pip show"
 
 [[allow]]
-command = "/home/rrl/github/stock-trading/.venv/bin/mypy src/ 2>&1 | tail -20"
+command = "/home/user/project/.venv/bin/mypy src/ 2>&1 | tail -20"
 description = "absolute .venv/bin/mypy"
 
 [[allow]]
-command = "PYTHONPATH=\"/home/rrl/github/stock-trading/.claude/worktrees/agent-abc123:${PYTHONPATH}\" /home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -n 4 -v --no-header 2>&1 | tail -15"
+command = "PYTHONPATH=\"/home/user/project/.claude/worktrees/agent-abc123:${PYTHONPATH}\" /home/user/project/.venv/bin/pytest tests/unit/ -n 4 -v --no-header 2>&1 | tail -15"
 description = "PYTHONPATH env var + absolute .venv/bin/pytest (worktree)"
 
 [[allow]]
-command = "cd /home/rrl/github/stock-trading && /home/rrl/github/stock-trading/.venv/bin/pytest tests/unit/ -v 2>&1"
+command = "cd /home/user/project && /home/user/project/.venv/bin/pytest tests/unit/ -v 2>&1"
 description = "cd + absolute .venv/bin/pytest chain"
 
 [[allow]]
-command = "pip show stock-trading 2>/dev/null | grep Location || /home/rrl/github/stock-trading/.venv/bin/pip show stock-trading 2>/dev/null | grep Location"
+command = "pip show stock-trading 2>/dev/null | grep Location || /home/user/project/.venv/bin/pip show stock-trading 2>/dev/null | grep Location"
 description = "pip show fallback chain with absolute .venv/bin/pip"
 
 # Intra-chain variable resolution (worktree agents assign venv paths to vars)
@@ -1693,6 +1701,19 @@ description = "dynamic assignment via command substitution (not resolved)"
 [[ask]]
 command = "bash -c \"bash -c \\\"nested\\\"\""
 description = "nested bash -c with complex quoting (not unwrapped)"
+
+# Compound inner commands not unwrapped (security: prevents bypassing deny patterns)
+[[ask]]
+command = "bash -c \"echo hi && rm -rf /\""
+description = "bash -c compound inner with && (not unwrapped, falls to ask)"
+
+[[ask]]
+command = "bash -c \"git status; git log\""
+description = "bash -c compound inner with ; (not unwrapped, falls to ask)"
+
+[[ask]]
+command = "sh -c \"ls && unknown-command arg\""
+description = "sh -c compound inner with && (not unwrapped, falls to ask)"
 
 # =============================================================================
 # DENY - Commands that should always be blocked

@@ -342,6 +342,13 @@ class TestStripBashCWrapper:
             ('bash -c "has \\"nested\\" quotes"', 'bash -c "has \\"nested\\" quotes"'),
             ("bash -n script.sh", "bash -n script.sh"),
             ("bash -c cmd_no_quotes", "bash -c cmd_no_quotes"),
+            # Compound inner commands are NOT unwrapped (security: prevents deny bypass)
+            ('bash -c "echo hi && rm -rf /"', 'bash -c "echo hi && rm -rf /"'),
+            ("bash -c 'git status; git log'", "bash -c 'git status; git log'"),
+            ('bash -c "ls | grep foo"', 'bash -c "ls | grep foo"'),
+            ('bash -c "cmd $(date)"', 'bash -c "cmd $(date)"'),
+            # Multi-line inner content is NOT unwrapped
+            ('bash -c "line1\nline2"', 'bash -c "line1\nline2"'),
         ],
         ids=[
             "bash-double-quoted",
@@ -352,6 +359,11 @@ class TestStripBashCWrapper:
             "nested-quotes-unchanged",
             "not-c-flag-unchanged",
             "no-quotes-unchanged",
+            "compound-and-unchanged",
+            "compound-semicolon-unchanged",
+            "compound-pipe-unchanged",
+            "compound-subshell-unchanged",
+            "multiline-unchanged",
         ],
     )
     def test_strip(self, input_seg, expected):

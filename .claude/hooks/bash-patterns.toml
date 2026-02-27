@@ -101,8 +101,9 @@ patterns = [
     # only prompt for interactive rebase which rewrites history in complex ways
     "^git rebase .*(-i |--interactive |-i$|--interactive$)",
     # Use negative lookahead to avoid matching 'git merge-base' (read-only)
-    # and 'git merge origin/' (standard forward-merge from remote)
-    "^git merge(?!-base\\b)(?! origin/)",
+    # and any merge that includes 'origin/' anywhere in its arguments
+    # (covers 'git merge origin/main', 'git merge --no-edit origin/main', etc.)
+    "^git merge(?!-base\\b)(?!.* origin/)",
     "^git cherry-pick",
     "^git revert",
     "^git stash drop",
