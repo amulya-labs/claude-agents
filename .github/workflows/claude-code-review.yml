@@ -118,6 +118,17 @@ jobs:
             --max-turns 15
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(*),Read,Glob,Grep"
 
+      - name: Post failure notice
+        if: failure() && steps.claude-review.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${{ steps.pr.outputs.number }}" \
+            --repo "${{ github.repository }}" \
+            --body-file - <<'EOF'
+          > **Note:** The automated code review was interrupted before completing (timeout or error). Any inline comments posted above are valid findings, but the review may be incomplete. You can re-trigger with `/claude-review`.
+          EOF
+
   # =============================
   # OSS / PUBLIC (public repos)
   # =============================
@@ -206,3 +217,14 @@ jobs:
           claude_args: |
             --max-turns 15
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(*),Read,Glob,Grep"
+
+      - name: Post failure notice
+        if: failure() && steps.claude-review.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "${{ steps.pr.outputs.number }}" \
+            --repo "${{ github.repository }}" \
+            --body-file - <<'EOF'
+          > **Note:** The automated code review was interrupted before completing (timeout or error). Any inline comments posted above are valid findings, but the review may be incomplete. You can re-trigger with `/claude-review`.
+          EOF
