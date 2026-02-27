@@ -30,7 +30,7 @@ concurrency:
       format('{0}-dispatch-pr-{1}', github.workflow, github.event.inputs.pr_number)
       ||
     format('{0}-branch-{1}', github.workflow, github.ref_name || github.ref)
-  }}
+    }}
   cancel-in-progress: true
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
           github.event.issue.pull_request &&
           startsWith(github.event.comment.body, '/claude-review') &&
           !contains(github.event.comment.body, '@claude') &&
-          (github.actor_association == 'MEMBER' || github.actor_association == 'OWNER' || github.actor_association == 'COLLABORATOR')
+          (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR')
         )
       )
     runs-on: ubuntu-latest
@@ -113,7 +113,7 @@ jobs:
           github.event.issue.pull_request &&
           startsWith(github.event.comment.body, '/claude-review') &&
           !contains(github.event.comment.body, '@claude') &&
-          (github.actor_association == 'MEMBER' || github.actor_association == 'OWNER' || github.actor_association == 'COLLABORATOR')
+          (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR')
         )
         ||
         (
