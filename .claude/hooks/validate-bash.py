@@ -138,6 +138,72 @@ def strip_leading_comment(cmd: str) -> str:
     return '\n'.join(lines).lstrip()
 
 
+def _find_matching_paren(cmd: str, start: int) -> int:
+    """Find the matching ')' for a '(' that was just consumed.
+
+    Tracks nested parentheses and respects quotes (both single and double).
+    Returns the index one past the matching ')'.
+    Returns len(cmd) if unmatched (unclosed substitution).
+    """
+    depth = 1
+    i = start
+    inner_quote = None
+
+    while i < len(cmd) and depth > 0:
+        char = cmd[i]
+
+        # Skip escaped characters
+        if char == '\\' and i + 1 < len(cmd):
+            i += 2
+            continue
+
+        if char in ('"', "'"):
+            if inner_quote is None:
+                inner_quote = char
+            elif inner_quote == char:
+                inner_quote = None
+        elif inner_quote is None:
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+
+        i += 1
+
+    return i
+
+
+def _parse_heredoc_delim(cmd: str, pos: int) -> tuple:
+    """Parse a heredoc delimiter starting after '<<'.
+
+    Handles: <<DELIM, <<'DELIM', <<"DELIM", <<-DELIM, <<-'DELIM'
+    Returns (delimiter_str, end_pos) or (None, pos) if not a valid heredoc.
+    """
+    j = pos
+    # Skip optional '-' (strip leading tabs)
+    if j < len(cmd) and cmd[j] == '-':
+        j += 1
+    # Skip optional whitespace
+    while j < len(cmd) and cmd[j] in ' \t':
+        j += 1
+    if j >= len(cmd) or cmd[j] == '\n':
+        return None, pos
+
+    if cmd[j] in ("'", '"'):
+        # Quoted delimiter: <<'EOF' or <<"EOF"
+        delim_quote = cmd[j]
+        k = cmd.find(delim_quote, j + 1)
+        if k > j + 1:
+            return cmd[j + 1:k], k + 1
+        return None, pos
+    else:
+        # Unquoted delimiter: word characters
+        m = re.match(r'[A-Za-z_][A-Za-z0-9_]*', cmd[j:])
+        if m:
+            return m.group(0), j + m.end()
+        return None, pos
+
+
 def split_commands(cmd: str) -> list[str]:
     """Split command on &&, ||, ;, newlines (respecting quotes, comments, and shell syntax).
 
@@ -145,14 +211,35 @@ def split_commands(cmd: str) -> list[str]:
     - ;; (case statement terminator) - not a split point
     - Quoted strings
     - Bare newlines are command separators (like ;) in shell
+    - $(...) command substitutions - consumed as atomic chunks
+    - Here-documents (<< DELIM) - content consumed until delimiter line
     """
     segments = []
     current = ""
     quote = None
     i = 0
+    heredoc_delim = None  # Active heredoc delimiter, if any
 
     while i < len(cmd):
         char = cmd[i]
+
+        # --- Heredoc mode: consume everything until the closing delimiter ---
+        if heredoc_delim is not None:
+            current += char
+            if char == '\n':
+                # Check if the next line is exactly the heredoc delimiter
+                next_nl = cmd.find('\n', i + 1)
+                if next_nl == -1:
+                    next_nl = len(cmd)
+                line = cmd[i + 1:next_nl].strip()
+                if line == heredoc_delim:
+                    # Consume the delimiter line and exit heredoc mode
+                    current += cmd[i + 1:next_nl]
+                    i = next_nl
+                    heredoc_delim = None
+                    continue
+            i += 1
+            continue
 
         # Track quotes (ignore escaped by odd number of backslashes)
         if char in ('"', "'"):
@@ -167,8 +254,26 @@ def split_commands(cmd: str) -> list[str]:
                 elif quote == char:
                     quote = None
 
+        # --- $(...) command substitution: consume as atomic chunk ---
+        # Valid in unquoted context and inside double quotes (not single quotes).
+        if char == '$' and i + 1 < len(cmd) and cmd[i + 1] == '(' and quote != "'":
+            end = _find_matching_paren(cmd, i + 2)
+            current += cmd[i:end]
+            i = end
+            continue
+
         # Split on && || ; \n outside quotes
         if quote is None:
+            # --- Heredoc operator << (but not <<< here-string) ---
+            if char == '<' and cmd[i:i+2] == '<<' and (i + 2 >= len(cmd) or cmd[i + 2] != '<'):
+                delim, end_pos = _parse_heredoc_delim(cmd, i + 2)
+                if delim:
+                    current += cmd[i:end_pos]
+                    i = end_pos
+                    heredoc_delim = delim
+                    continue
+                # Not a valid heredoc, fall through to normal processing
+
             if cmd[i:i+2] in ('&&', '||'):
                 if current.strip():
                     segments.append(current)

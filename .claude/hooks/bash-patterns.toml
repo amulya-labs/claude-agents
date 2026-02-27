@@ -470,6 +470,22 @@ patterns = [
     "^bash -n ",
     "^test$",
     "^\\[$",
+    # Loop/flow control builtins (bare keywords only)
+    "^continue$",
+    "^continue ",
+    "^break$",
+    "^break ",
+    "^shift$",
+    "^shift ",
+    # Variable/function builtins
+    "^unset ",
+    "^readonly ",
+    "^typeset ",
+    "^let ",
+    "^getopts ",
+    "^builtin ",
+    "^hash ",
+    "^hash$",
     # Control flow keywords - only bare keywords are auto-allowed.
     # Full constructs (e.g., 'if condition; then cmd; fi') are split by
     # the validator, and the body commands are validated separately.
