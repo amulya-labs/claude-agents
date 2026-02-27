@@ -113,7 +113,7 @@ jobs:
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
             --max-turns 15
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh *),Bash(cat *),Bash(echo *),Read,Glob,Grep"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(*),Read,Glob,Grep"
 
   # =============================
   # OSS / PUBLIC (public repos)
@@ -202,4 +202,4 @@ jobs:
             Only post GitHub comments - don't submit review text as messages.
           claude_args: |
             --max-turns 15
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh *),Bash(cat *),Bash(echo *),Read,Glob,Grep"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(*),Read,Glob,Grep"
