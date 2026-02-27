@@ -105,7 +105,7 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
 - Tests are data-driven: both `test_validate_bash.py` and `test-validate-bash.sh` read from this file
 
 ### Attribution
-- All `.sh`, `.py`, and `.toml` files under `.claude/hooks/` and `scripts/` must contain:
+- All `.sh`, `.py`, and `.toml` files under `.claude/hooks/` and `scripts/`, and all owned workflow files under `.github/workflows/` (`ci.yml`, `claude.yml`, `claude-code-review.yml`), must contain:
   ```
   # Source: https://github.com/amulya-labs/claude-code-config
   # License: MIT (https://opensource.org/licenses/MIT)
