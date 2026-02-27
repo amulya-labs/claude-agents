@@ -1,3 +1,6 @@
+# Source: https://github.com/amulya-labs/claude-code-config
+# License: MIT (https://opensource.org/licenses/MIT)
+
 name: CI
 
 on:
@@ -234,6 +237,23 @@ jobs:
           done
 
           echo ""
+          echo "=== Checking workflow files ==="
+          for wf in .github/workflows/ci.yml .github/workflows/claude.yml .github/workflows/claude-code-review.yml; do
+            if [ -f "$wf" ]; then
+              echo -n "Checking $wf... "
+              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$wf"; then
+                echo "MISSING source attribution"
+                errors=$((errors + 1))
+              elif ! grep -qi "License:.*MIT" "$wf"; then
+                echo "MISSING license attribution"
+                errors=$((errors + 1))
+              else
+                echo "✓"
+              fi
+            fi
+          done
+
+          echo ""
           if [ $errors -gt 0 ]; then
             echo "ERROR: $errors file(s) missing proper attributions"
             echo ""
@@ -243,4 +263,4 @@ jobs:
             exit 1
           fi
 
-          echo "All scripts have proper attributions!"
+          echo "All files have proper attributions!"

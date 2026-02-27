@@ -1,3 +1,6 @@
+# Source: https://github.com/amulya-labs/claude-code-config
+# License: MIT (https://opensource.org/licenses/MIT)
+
 name: Claude Code Review
 
 on:
