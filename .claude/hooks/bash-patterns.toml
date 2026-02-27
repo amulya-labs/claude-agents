@@ -103,8 +103,13 @@ patterns = [
     "^git rebase .*(-i |--interactive |--exec\\b|-i$|--interactive$)",
     # Use negative lookahead to avoid matching 'git merge-base' (read-only)
     # and any merge that includes 'origin/' anywhere in its arguments
-    # (covers 'git merge origin/main', 'git merge --no-edit origin/main', etc.)
+    # (covers 'git merge origin/main', 'git merge --no-edit origin/main', etc.).
+    # Destructive merge strategies (-X theirs/ours) always prompt even with origin/:
+    # they silently discard local conflict resolutions, which is hard to undo.
     "^git merge(?!-base\\b)(?!.* origin/)",
+    "^git merge.* -X (theirs|ours)",
+    "^git merge.* --strategy-option[= ](theirs|ours)",
+    "^git merge.* --squash",
     "^git cherry-pick",
     "^git revert",
     "^git stash drop",

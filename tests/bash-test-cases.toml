@@ -1580,6 +1580,19 @@ description = "git merge local branch (still prompts)"
 command = "git merge upstream/main"
 description = "git merge non-origin remote (still prompts)"
 
+# Destructive merge strategies always prompt even with origin/ (they discard local work)
+[[ask]]
+command = "git merge -X theirs origin/main"
+description = "git merge -X theirs silently discards local conflict resolutions"
+
+[[ask]]
+command = "git merge --strategy-option=ours origin/main"
+description = "git merge --strategy-option=ours discards remote changes"
+
+[[ask]]
+command = "git merge --squash origin/feature"
+description = "git merge --squash alters commit history"
+
 # git rebase interactive (still prompts)
 [[ask]]
 command = "git rebase -i main"
