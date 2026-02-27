@@ -97,9 +97,19 @@ patterns = [
     "^git push -f",
     "^git reset --hard",
     "^git clean -fd",
-    "^git rebase",
+    # Simple 'git rebase <branch>' is standard workflow and locally reversible;
+    # only prompt for interactive rebase (rewrites history in complex ways) and
+    # --exec (runs arbitrary shell commands per-commit during rebase)
+    "^git rebase .*(-i |--interactive |--exec\\b|-i$|--interactive$)",
     # Use negative lookahead to avoid matching 'git merge-base' (read-only)
-    "^git merge(?!-base\\b)",
+    # and any merge that includes 'origin/' anywhere in its arguments
+    # (covers 'git merge origin/main', 'git merge --no-edit origin/main', etc.).
+    # Destructive merge strategies (-X theirs/ours) always prompt even with origin/:
+    # they silently discard local conflict resolutions, which is hard to undo.
+    "^git merge(?!-base\\b)(?!.* origin/)",
+    "^git merge.* -X (theirs|ours)",
+    "^git merge.* --strategy-option[= ](theirs|ours)",
+    "^git merge.* --squash",
     "^git cherry-pick",
     "^git revert",
     "^git stash drop",
@@ -172,13 +182,28 @@ description = "GitHub API calls that mutate state (POST, PUT, PATCH, DELETE)"
 # so the before-path forms genuinely need their own patterns.
 # --method[= ] matches both "--method POST" and "--method=POST" (cobra CLI).
 # -X(METHOD) matches curl-style combined form "-XPOST" (no space).
+# Negative lookahead on POST-only variants excludes safe POST-only endpoints:
+#   /replies  — posting a reply comment (safe; DELETE would prompt)
+#   /reactions — adding a reaction (safe; DELETE would prompt)
+# DELETE, PUT, PATCH always ask even for /replies and /reactions endpoints,
+# since deleting or modifying comments is non-trivially destructive.
+# Flag-after-path: lookahead at start excludes safe paths in the URL.
+# Flag-before-path: lookahead after method excludes safe paths in trailing args.
 patterns = [
-    "^gh api .* -X (POST|PUT|PATCH|DELETE)",
-    "^gh api .* -X(POST|PUT|PATCH|DELETE)",
-    "^gh api .* --method[= ](POST|PUT|PATCH|DELETE)",
-    "^gh api -X (POST|PUT|PATCH|DELETE)",
-    "^gh api -X(POST|PUT|PATCH|DELETE)",
-    "^gh api --method[= ](POST|PUT|PATCH|DELETE)",
+    # POST with exemption for safe endpoints (/replies, /reactions)
+    "^gh api (?!.*/(replies|reactions)\\b).* -X POST",
+    "^gh api (?!.*/(replies|reactions)\\b).* -XPOST",
+    "^gh api (?!.*/(replies|reactions)\\b).* --method[= ]POST",
+    "^gh api -X POST(?!.*/(replies|reactions)\\b)",
+    "^gh api -XPOST(?!.*/(replies|reactions)\\b)",
+    "^gh api --method[= ]POST(?!.*/(replies|reactions)\\b)",
+    # PUT, PATCH, DELETE always ask (no safe-endpoint exemption)
+    "^gh api .* -X (PUT|PATCH|DELETE)",
+    "^gh api .* -X(PUT|PATCH|DELETE)",
+    "^gh api .* --method[= ](PUT|PATCH|DELETE)",
+    "^gh api -X (PUT|PATCH|DELETE)",
+    "^gh api -X(PUT|PATCH|DELETE)",
+    "^gh api --method[= ](PUT|PATCH|DELETE)",
 ]
 
 [ask.file_permissions]
@@ -1176,6 +1201,9 @@ description = "Virtual environment binaries"
 patterns = [
     "^\\.venv/bin/",
     "^venv/bin/",
+    # Absolute paths to .venv/bin/ (worktree agents use absolute paths)
+    "/\\.venv/bin/",
+    "/venv/bin/",
     # Poetry virtualenvs (common path: ~/.cache/pypoetry/virtualenvs/*/bin/)
     "pypoetry/virtualenvs/.*/bin/",
     # Conda environments

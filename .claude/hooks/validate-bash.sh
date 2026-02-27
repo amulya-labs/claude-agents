@@ -70,12 +70,22 @@ fi
 INPUT=$(cat)
 
 # Extract project name from cwd for log filename
+# Worktree paths like /path/to/project/.claude/worktrees/agent-abc123
+# become "project-agent-abc123" instead of just "agent-abc123"
 PROJECT=$(echo "$INPUT" | python3 -c "
 import sys, json, os
 try:
     data = json.load(sys.stdin)
     cwd = data.get('cwd', '')
-    print(os.path.basename(cwd) if cwd else 'unknown')
+    if not cwd:
+        print('unknown')
+    elif '/.claude/worktrees/' in cwd:
+        before, after = cwd.split('/.claude/worktrees/', 1)
+        project = os.path.basename(before)
+        agent = after.split('/')[0]
+        print(f'{project}-{agent}')
+    else:
+        print(os.path.basename(cwd))
 except:
     print('unknown')
 " 2>/dev/null)
