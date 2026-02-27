@@ -142,6 +142,15 @@ description = "gh api POST to comment reply (safe endpoint)"
 command = "gh api repos/owner/repo/issues/comments/123/reactions -X POST -f content=\"+1\""
 description = "gh api POST to reaction (safe endpoint)"
 
+# gh api DELETE on /replies and /reactions must still prompt (deleting is destructive)
+[[ask]]
+command = "gh api repos/owner/repo/issues/comments/123/reactions/456 -X DELETE"
+description = "gh api DELETE on reaction endpoint must still prompt"
+
+[[ask]]
+command = "gh api repos/owner/repo/pulls/1/comments/2/replies/789 -X DELETE"
+description = "gh api DELETE on replies endpoint must still prompt"
+
 [[allow]]
 command = "getent passwd root"
 description = "getent command"
@@ -1583,6 +1592,14 @@ description = "git rebase --interactive (rewrites history)"
 [[ask]]
 command = "git rebase main -i"
 description = "git rebase with -i flag after branch (still interactive)"
+
+[[ask]]
+command = "git rebase --exec \"make test\" main"
+description = "git rebase --exec runs arbitrary shell commands per-commit"
+
+[[ask]]
+command = "git rebase main --exec \"cargo test\""
+description = "git rebase --exec after branch name still prompts"
 
 # gh api mutations (non-safe endpoints still prompt)
 [[ask]]

@@ -285,6 +285,16 @@ class TestExtractAssignments:
             ("ls -la", {}),
             ("FOO=bar", {"FOO": "bar"}),
             ('A=1 B="two" C=3 cmd', {"A": "1", "B": "two", "C": "3"}),
+            # ${VAR} braced form must be treated as dynamic (not captured as literal)
+            ("FOO=${VENV_PATH}/bin/ruff", {}),
+            ("FOO=${BAR}", {}),
+            # $() inside double-quoted value must not be captured (security)
+            ('FOO="$(rm -rf /)"', {}),
+            ('FOO="`evil`"', {}),
+            # ${VAR} inside double-quoted value must not be captured
+            ('FOO="${BAR}/path"', {}),
+            # Unclosed double-quote: do not capture
+            ('FOO="unclosed', {}),
         ],
         ids=[
             "simple-unquoted",
@@ -296,6 +306,12 @@ class TestExtractAssignments:
             "no-assignments",
             "assignment-only",
             "mixed-quoting-styles",
+            "braced-var-ref-skipped",
+            "braced-var-only-skipped",
+            "subshell-in-double-quotes-skipped",
+            "backtick-in-double-quotes-skipped",
+            "braced-var-in-double-quotes-skipped",
+            "unclosed-double-quote-skipped",
         ],
     )
     def test_extract(self, input_seg, expected):
@@ -347,6 +363,11 @@ class TestStripBashCWrapper:
             ("bash -c 'git status; git log'", "bash -c 'git status; git log'"),
             ('bash -c "ls | grep foo"', 'bash -c "ls | grep foo"'),
             ('bash -c "cmd $(date)"', 'bash -c "cmd $(date)"'),
+            # Subshell grouping is NOT unwrapped (would bypass ^rm deny patterns)
+            ('bash -c "(rm -rf /)"', 'bash -c "(rm -rf /)"'),
+            # Redirect operators are NOT unwrapped (e.g. > /etc/cron.d/job)
+            ('bash -c "> /etc/cron.d/job echo evil"', 'bash -c "> /etc/cron.d/job echo evil"'),
+            ('bash -c "echo foo >> /etc/hosts"', 'bash -c "echo foo >> /etc/hosts"'),
             # Multi-line inner content is NOT unwrapped
             ('bash -c "line1\nline2"', 'bash -c "line1\nline2"'),
         ],
@@ -363,6 +384,9 @@ class TestStripBashCWrapper:
             "compound-semicolon-unchanged",
             "compound-pipe-unchanged",
             "compound-subshell-unchanged",
+            "subshell-grouping-unchanged",
+            "redirect-overwrite-unchanged",
+            "redirect-append-unchanged",
             "multiline-unchanged",
         ],
     )
