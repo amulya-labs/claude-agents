@@ -91,9 +91,9 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
+        timeout-minutes: 30
         uses: anthropics/claude-code-action@v1
         with:
-          timeout_minutes: 30
           track_progress: ${{ github.event_name != 'workflow_dispatch' && github.event.action != 'review_requested' }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
@@ -178,10 +178,10 @@ jobs:
 
       - name: Run Claude Code Review (OSS)
         id: claude-review
+        timeout-minutes: 30
         uses: anthropics/claude-code-action@v1
         with:
-          timeout_minutes: 30
-          track_progress: ${{ github.event_name != 'workflow_dispatch' && github.event.action != 'review_requested' }}
+          track_progress: false
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
