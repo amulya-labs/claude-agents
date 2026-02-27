@@ -54,7 +54,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
 
     steps:
@@ -69,6 +69,17 @@ jobs:
           else
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: React to triggering comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content='eyes'
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -135,7 +146,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
 
     steps:
@@ -150,6 +161,17 @@ jobs:
           else
             echo "number=${{ github.event.inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: React to triggering comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content='eyes'
 
       - name: Run Claude Code Review (OSS)
         id: claude-review
