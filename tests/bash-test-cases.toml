@@ -1908,3 +1908,195 @@ description = "bash -c unwrap exposes rm -rf /"
 [[deny]]
 command = "bash -c \"sudo apt install foo\""
 description = "bash -c unwrap exposes sudo"
+
+# =============================================================================
+# Shell builtins (loop/flow control)
+# =============================================================================
+
+[[allow]]
+command = "continue"
+description = "bare continue in loop"
+
+[[allow]]
+command = "continue 2"
+description = "continue with level"
+
+[[allow]]
+command = "break"
+description = "bare break in loop"
+
+[[allow]]
+command = "break 2"
+description = "break with level"
+
+[[allow]]
+command = "shift"
+description = "bare shift"
+
+[[allow]]
+command = "shift 2"
+description = "shift with count"
+
+[[allow]]
+command = "unset MY_VAR"
+description = "unset variable"
+
+[[allow]]
+command = "readonly MY_VAR=1"
+description = "readonly variable"
+
+[[allow]]
+command = "typeset -i NUM"
+description = "typeset variable"
+
+[[allow]]
+command = "let x=1+2"
+description = "let arithmetic"
+
+[[allow]]
+command = "getopts abc opt"
+description = "getopts option parsing"
+
+[[allow]]
+command = "builtin echo hello"
+description = "builtin prefix"
+
+[[allow]]
+command = "hash -r"
+description = "hash reset"
+
+[[allow]]
+command = "hash"
+description = "hash list"
+
+# for loop with continue should auto-approve the entire chain
+[[allow]]
+command = "for f in *.txt; do [ -z \"$f\" ] && continue; echo $f; done"
+description = "for loop with continue (all segments safe)"
+
+# =============================================================================
+# Heredoc handling — content inside heredocs must not be split/validated
+# =============================================================================
+
+[[allow]]
+command = "python3 - << 'PYEOF'\nimport os\nprint(os.getcwd())\nPYEOF"
+description = "python3 with heredoc (content not split)"
+
+[[allow]]
+command = "cat > /tmp/test.py << 'PYEOF'\nimport os\nprint(os.getcwd())\nPYEOF"
+description = "cat heredoc write to file"
+
+[[allow]]
+command = "cd /tmp && python3 - << 'PYEOF'\nimport os\nprint(os.getcwd())\nPYEOF"
+description = "cd + python3 heredoc chain"
+
+[[allow]]
+command = "cat > /tmp/test.txt << EOF\nhello world\nEOF"
+description = "cat heredoc with unquoted delimiter"
+
+[[allow]]
+command = "cat > /tmp/test.txt <<- 'INDENT'\n\thello\n\tworld\nINDENT"
+description = "cat heredoc with tab-stripping operator (<<-), tab-indented delimiter"
+
+# <<- heredoc: delimiter at column 0 (no tabs) also closes the heredoc
+[[allow]]
+command = "cat <<- EOF\n\thello\n\tworld\nEOF"
+description = "<<- heredoc with unindented delimiter at column 0"
+
+# <<- heredoc: space-indented delimiter does NOT close (only tabs are stripped by <<-)
+# The heredoc runs to end of string — the whole command is one segment, validated as cat
+[[allow]]
+command = "cat <<- EOF\n\thello\n  EOF"
+description = "<<- heredoc with space-indented delimiter (not closed, treated as cat)"
+
+# Regular <<: space-indented delimiter does NOT close (exact match required)
+# The heredoc runs to end of string — the whole thing is one segment, validated as cat
+[[allow]]
+command = "cat << EOF\nhello\n  EOF"
+description = "regular << heredoc with space-indented delimiter (not closed, treated as cat)"
+
+# Regular <<: exact delimiter line closes the heredoc; commands after are validated
+[[allow]]
+command = "cat << EOF\nhello world\nEOF\necho done"
+description = "regular << heredoc closed exactly, followed by echo"
+
+# $() with heredoc inside — the entire $(...) is consumed atomically
+[[allow]]
+command = "gh pr create --title \"my PR\" --body \"$(cat <<'EOF'\n## Summary\n- Added feature\nEOF\n)\""
+description = "gh pr create with $(cat heredoc) body"
+
+[[allow]]
+command = "git commit -m \"$(cat <<'EOF'\nFix the bug\n\nCo-Authored-By: test\nEOF\n)\""
+description = "git commit with $(cat heredoc) message"
+
+# Dangerous commands should still be caught even with heredocs
+[[deny]]
+command = "sudo cat << EOF\nhello\nEOF"
+description = "sudo with heredoc is still denied"
+
+# bash/sh with heredoc falls through to ask (bash not in allow list)
+[[ask]]
+command = "bash << EOF\necho hello\nEOF"
+description = "bash with heredoc (interpreter not in allow list)"
+
+# =============================================================================
+# $() command substitution — consumed atomically, inner content not split
+# =============================================================================
+
+[[allow]]
+command = "echo \"result: $(python3 -c 'print(1+1)')\""
+description = "echo with $() substitution"
+
+[[allow]]
+command = "echo \"$(git log --oneline -5)\""
+description = "echo with $(git log) substitution"
+
+# Unresolvable variable from $() still asks
+[[ask]]
+command = "TOOL=$(which ruff) && $TOOL check src/"
+description = "$() variable assignment not resolvable — $TOOL stays opaque"
+
+# ) in heredoc body inside $(): must not prematurely close the $() substitution
+[[allow]]
+command = "git commit -m \"$(cat <<'EOF'\nFix the) bug\nEOF\n)\""
+description = "$() with unbalanced ) in heredoc body — heredoc mode prevents premature close"
+
+[[allow]]
+command = "git commit -m \"$(cat <<'EOF'\nFix (the) bug\nEOF\n)\""
+description = "$() with balanced (the) in heredoc body — parens cancel out correctly"
+
+# =============================================================================
+# ^builtin pattern: deny-listed commands must not be bypassed via 'builtin'
+# =============================================================================
+
+# Safe builtins (bypass function shadowing, don't have ask/deny guards)
+[[allow]]
+command = "builtin echo hello"
+description = "builtin echo: safe use of builtin prefix"
+
+[[allow]]
+command = "builtin cd /tmp"
+description = "builtin cd: safe use of builtin prefix"
+
+[[allow]]
+command = "builtin hash"
+description = "builtin hash with no args: safe"
+
+# Dangerous builtins (have ask guards — ^builtin must not bypass them)
+[[ask]]
+command = "builtin eval dangerous_cmd"
+description = "builtin eval: ask guard not bypassed by builtin prefix"
+
+[[ask]]
+command = "builtin exec /bin/sh"
+description = "builtin exec: ask guard not bypassed by builtin prefix"
+
+# =============================================================================
+# Escape handling in $(): backslash inside single quotes is not an escape
+# =============================================================================
+
+# Backslash inside single-quoted $() arg: shell sees 'test\' (close quote) + s done
+# _find_matching_paren must not treat \' as escaping the closing single quote
+[[allow]]
+command = "echo $(echo 'test\\'s done')"
+description = "backslash in single-quoted arg inside $(): not an escape, paren closes correctly"

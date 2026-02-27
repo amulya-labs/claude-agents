@@ -138,6 +138,102 @@ def strip_leading_comment(cmd: str) -> str:
     return '\n'.join(lines).lstrip()
 
 
+def _find_matching_paren(cmd: str, start: int) -> int:
+    """Find the matching ')' for a '(' that was just consumed.
+
+    Tracks nested parentheses, quotes (single and double), and heredoc bodies
+    so that a ')' inside a heredoc is not mistaken for the closing paren.
+    Returns the index one past the matching ')'.
+    Returns len(cmd) if unmatched (unclosed substitution).
+    """
+    depth = 1
+    i = start
+    inner_quote = None
+    heredoc_delim = None  # active heredoc delimiter (str) inside $()
+
+    while i < len(cmd) and depth > 0:
+        char = cmd[i]
+
+        # --- Heredoc mode inside $(): consume body until delimiter ---
+        if heredoc_delim is not None:
+            if char == '\n':
+                next_nl = cmd.find('\n', i + 1)
+                if next_nl == -1:
+                    next_nl = len(cmd)
+                raw_line = cmd[i + 1:next_nl]
+                # Use exact match only (<<- stripping is unusual inside $(); treat
+                # conservatively and do not strip tabs so we don't close too early).
+                if raw_line == heredoc_delim:
+                    i = next_nl  # skip to end of delimiter line
+                    heredoc_delim = None
+                    continue
+            i += 1
+            continue
+
+        # Skip escaped characters — but NOT inside single quotes, where backslash
+        # has no special meaning in bash (\' does NOT escape the closing single quote).
+        if char == '\\' and i + 1 < len(cmd) and inner_quote != "'":
+            i += 2
+            continue
+
+        if char in ('"', "'"):
+            if inner_quote is None:
+                inner_quote = char
+            elif inner_quote == char:
+                inner_quote = None
+        elif inner_quote is None:
+            # Detect heredoc operator << (but not <<<) to enter heredoc mode
+            if char == '<' and cmd[i:i+2] == '<<' and (i + 2 >= len(cmd) or cmd[i + 2] != '<'):
+                delim, _strip, end_pos = _parse_heredoc_delim(cmd, i + 2)
+                if delim:
+                    i = end_pos
+                    heredoc_delim = delim
+                    continue
+            elif char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+
+        i += 1
+
+    return i
+
+
+def _parse_heredoc_delim(cmd: str, pos: int) -> tuple:
+    """Parse a heredoc delimiter starting after '<<'.
+
+    Handles: <<DELIM, <<'DELIM', <<"DELIM", <<-DELIM, <<-'DELIM'
+    Returns (delimiter_str, strip_tabs, end_pos) or (None, False, pos) if invalid.
+    strip_tabs is True for <<- heredocs (bash strips leading tabs from body lines
+    and the delimiter line); False for regular << (exact delimiter match required).
+    """
+    j = pos
+    # Check for optional '-' (<<- strips leading tabs from body and delimiter)
+    strip_tabs = False
+    if j < len(cmd) and cmd[j] == '-':
+        strip_tabs = True
+        j += 1
+    # Skip optional whitespace between << / <<- and the delimiter
+    while j < len(cmd) and cmd[j] in ' \t':
+        j += 1
+    if j >= len(cmd) or cmd[j] == '\n':
+        return None, False, pos
+
+    if cmd[j] in ("'", '"'):
+        # Quoted delimiter: <<'EOF' or <<"EOF"
+        delim_quote = cmd[j]
+        k = cmd.find(delim_quote, j + 1)
+        if k > j + 1:
+            return cmd[j + 1:k], strip_tabs, k + 1
+        return None, False, pos
+    else:
+        # Unquoted delimiter: word characters only
+        m = re.match(r'[A-Za-z_][A-Za-z0-9_]*', cmd[j:])
+        if m:
+            return m.group(0), strip_tabs, j + m.end()
+        return None, False, pos
+
+
 def split_commands(cmd: str) -> list[str]:
     """Split command on &&, ||, ;, newlines (respecting quotes, comments, and shell syntax).
 
@@ -145,14 +241,41 @@ def split_commands(cmd: str) -> list[str]:
     - ;; (case statement terminator) - not a split point
     - Quoted strings
     - Bare newlines are command separators (like ;) in shell
+    - $(...) command substitutions - consumed as atomic chunks
+    - Here-documents (<< DELIM) - content consumed until delimiter line
     """
     segments = []
     current = ""
     quote = None
     i = 0
+    heredoc_delim = None       # Active heredoc delimiter string, or None
+    heredoc_strip_tabs = False  # True for <<- (strip leading tabs from delimiter line)
 
     while i < len(cmd):
         char = cmd[i]
+
+        # --- Heredoc mode: consume everything until the closing delimiter ---
+        if heredoc_delim is not None:
+            current += char
+            if char == '\n':
+                # Check if the next line is the heredoc delimiter.
+                # For <<- heredocs, bash strips leading TABS (not spaces) from the
+                # delimiter line before comparing.  For regular << heredocs the line
+                # must match the delimiter exactly (no leading whitespace allowed).
+                next_nl = cmd.find('\n', i + 1)
+                if next_nl == -1:
+                    next_nl = len(cmd)
+                raw_line = cmd[i + 1:next_nl]
+                candidate = raw_line.lstrip('\t') if heredoc_strip_tabs else raw_line
+                if candidate == heredoc_delim:
+                    # Consume the delimiter line and exit heredoc mode
+                    current += raw_line
+                    i = next_nl
+                    heredoc_delim = None
+                    heredoc_strip_tabs = False
+                    continue
+            i += 1
+            continue
 
         # Track quotes (ignore escaped by odd number of backslashes)
         if char in ('"', "'"):
@@ -167,8 +290,27 @@ def split_commands(cmd: str) -> list[str]:
                 elif quote == char:
                     quote = None
 
+        # --- $(...) command substitution: consume as atomic chunk ---
+        # Valid in unquoted context and inside double quotes (not single quotes).
+        if char == '$' and i + 1 < len(cmd) and cmd[i + 1] == '(' and quote != "'":
+            end = _find_matching_paren(cmd, i + 2)
+            current += cmd[i:end]
+            i = end
+            continue
+
         # Split on && || ; \n outside quotes
         if quote is None:
+            # --- Heredoc operator << (but not <<< here-string) ---
+            if char == '<' and cmd[i:i+2] == '<<' and (i + 2 >= len(cmd) or cmd[i + 2] != '<'):
+                delim, strip_tabs, end_pos = _parse_heredoc_delim(cmd, i + 2)
+                if delim:
+                    current += cmd[i:end_pos]
+                    i = end_pos
+                    heredoc_delim = delim
+                    heredoc_strip_tabs = strip_tabs
+                    continue
+                # Not a valid heredoc, fall through to normal processing
+
             if cmd[i:i+2] in ('&&', '||'):
                 if current.strip():
                     segments.append(current)

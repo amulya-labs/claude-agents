@@ -31,18 +31,9 @@
       "Write(/tmp/*)",
       "Edit(/tmp/*)",
       "WebSearch",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:docs.rs)",
-      "WebFetch(domain:crates.io)",
-      "WebFetch(domain:lib.rs)",
-      "WebFetch(domain:docs.anthropic.com)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:pypi.org)",
-      "WebFetch(domain:npmjs.com)",
-      "WebFetch(domain:pkg.go.dev)",
-      "WebFetch(domain:rubygems.org)",
-      "WebFetch(domain:mvnrepository.com)",
-      "WebFetch(domain:hub.docker.com)"
+      "WebFetch",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
     ],
     "deny": []
   }

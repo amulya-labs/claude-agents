@@ -470,6 +470,26 @@ patterns = [
     "^bash -n ",
     "^test$",
     "^\\[$",
+    # Loop/flow control builtins (bare keywords only)
+    "^continue$",
+    "^continue ",
+    "^break$",
+    "^break ",
+    "^shift$",
+    "^shift ",
+    # Variable/function builtins
+    "^unset ",
+    "^readonly ",
+    "^typeset ",
+    "^let ",
+    "^getopts ",
+    # ^builtin with negative lookahead: block commands that have ask/deny guards.
+    # Without this, 'builtin eval dangerous' would skip ask.code_execution's eval guard
+    # because deny->ask->allow order means allow matches after ask misses (^eval pattern
+    # won't fire on 'builtin eval ...'). The lookahead re-blocks the dangerous forms.
+    "^builtin (?!eval|exec|source|mapfile)\\S",
+    "^hash ",
+    "^hash$",
     # Control flow keywords - only bare keywords are auto-allowed.
     # Full constructs (e.g., 'if condition; then cmd; fi') are split by
     # the validator, and the body commands are validated separately.
