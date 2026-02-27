@@ -1,3 +1,5 @@
+ Test PR — verify review workflow runs after fix #48
+
 # CLAUDE.md
 
 ## Quick Start
