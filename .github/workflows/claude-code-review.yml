@@ -153,7 +153,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REVIEW_OUTCOME: ${{ steps.claude-review.outcome }}
-          JOB_CANCELLED: ${{ cancelled() }}
+          JOB_STATUS: ${{ job.status }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           # Skip if review succeeded
@@ -162,7 +162,7 @@ jobs:
           fi
 
           # Determine failure reason
-          if [ "$JOB_CANCELLED" = "true" ]; then
+          if [ "$JOB_STATUS" = "cancelled" ]; then
             REASON="cancelled (likely superseded by a newer push or manual cancellation)"
           elif [ -z "$REVIEW_OUTCOME" ] || [ "$REVIEW_OUTCOME" = "skipped" ]; then
             REASON="review step did not run (a prior step failed or was skipped)"
@@ -306,7 +306,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REVIEW_OUTCOME: ${{ steps.claude-review.outcome }}
-          JOB_CANCELLED: ${{ cancelled() }}
+          JOB_STATUS: ${{ job.status }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           # Skip if review succeeded
@@ -315,7 +315,7 @@ jobs:
           fi
 
           # Determine failure reason
-          if [ "$JOB_CANCELLED" = "true" ]; then
+          if [ "$JOB_STATUS" = "cancelled" ]; then
             REASON="cancelled (likely superseded by a newer push or manual cancellation)"
           elif [ -z "$REVIEW_OUTCOME" ] || [ "$REVIEW_OUTCOME" = "skipped" ]; then
             REASON="review step did not run (a prior step failed or was skipped)"
