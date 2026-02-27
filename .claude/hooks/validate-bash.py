@@ -177,31 +177,35 @@ def _parse_heredoc_delim(cmd: str, pos: int) -> tuple:
     """Parse a heredoc delimiter starting after '<<'.
 
     Handles: <<DELIM, <<'DELIM', <<"DELIM", <<-DELIM, <<-'DELIM'
-    Returns (delimiter_str, end_pos) or (None, pos) if not a valid heredoc.
+    Returns (delimiter_str, strip_tabs, end_pos) or (None, False, pos) if invalid.
+    strip_tabs is True for <<- heredocs (bash strips leading tabs from body lines
+    and the delimiter line); False for regular << (exact delimiter match required).
     """
     j = pos
-    # Skip optional '-' (strip leading tabs)
+    # Check for optional '-' (<<- strips leading tabs from body and delimiter)
+    strip_tabs = False
     if j < len(cmd) and cmd[j] == '-':
+        strip_tabs = True
         j += 1
-    # Skip optional whitespace
+    # Skip optional whitespace between << / <<- and the delimiter
     while j < len(cmd) and cmd[j] in ' \t':
         j += 1
     if j >= len(cmd) or cmd[j] == '\n':
-        return None, pos
+        return None, False, pos
 
     if cmd[j] in ("'", '"'):
         # Quoted delimiter: <<'EOF' or <<"EOF"
         delim_quote = cmd[j]
         k = cmd.find(delim_quote, j + 1)
         if k > j + 1:
-            return cmd[j + 1:k], k + 1
-        return None, pos
+            return cmd[j + 1:k], strip_tabs, k + 1
+        return None, False, pos
     else:
-        # Unquoted delimiter: word characters
+        # Unquoted delimiter: word characters only
         m = re.match(r'[A-Za-z_][A-Za-z0-9_]*', cmd[j:])
         if m:
-            return m.group(0), j + m.end()
-        return None, pos
+            return m.group(0), strip_tabs, j + m.end()
+        return None, False, pos
 
 
 def split_commands(cmd: str) -> list[str]:
@@ -218,7 +222,8 @@ def split_commands(cmd: str) -> list[str]:
     current = ""
     quote = None
     i = 0
-    heredoc_delim = None  # Active heredoc delimiter, if any
+    heredoc_delim = None       # Active heredoc delimiter string, or None
+    heredoc_strip_tabs = False  # True for <<- (strip leading tabs from delimiter line)
 
     while i < len(cmd):
         char = cmd[i]
@@ -227,16 +232,21 @@ def split_commands(cmd: str) -> list[str]:
         if heredoc_delim is not None:
             current += char
             if char == '\n':
-                # Check if the next line is exactly the heredoc delimiter
+                # Check if the next line is the heredoc delimiter.
+                # For <<- heredocs, bash strips leading TABS (not spaces) from the
+                # delimiter line before comparing.  For regular << heredocs the line
+                # must match the delimiter exactly (no leading whitespace allowed).
                 next_nl = cmd.find('\n', i + 1)
                 if next_nl == -1:
                     next_nl = len(cmd)
-                line = cmd[i + 1:next_nl].strip()
-                if line == heredoc_delim:
+                raw_line = cmd[i + 1:next_nl]
+                candidate = raw_line.lstrip('\t') if heredoc_strip_tabs else raw_line
+                if candidate == heredoc_delim:
                     # Consume the delimiter line and exit heredoc mode
-                    current += cmd[i + 1:next_nl]
+                    current += raw_line
                     i = next_nl
                     heredoc_delim = None
+                    heredoc_strip_tabs = False
                     continue
             i += 1
             continue
@@ -266,11 +276,12 @@ def split_commands(cmd: str) -> list[str]:
         if quote is None:
             # --- Heredoc operator << (but not <<< here-string) ---
             if char == '<' and cmd[i:i+2] == '<<' and (i + 2 >= len(cmd) or cmd[i + 2] != '<'):
-                delim, end_pos = _parse_heredoc_delim(cmd, i + 2)
+                delim, strip_tabs, end_pos = _parse_heredoc_delim(cmd, i + 2)
                 if delim:
                     current += cmd[i:end_pos]
                     i = end_pos
                     heredoc_delim = delim
+                    heredoc_strip_tabs = strip_tabs
                     continue
                 # Not a valid heredoc, fall through to normal processing
 

@@ -1996,7 +1996,29 @@ description = "cat heredoc with unquoted delimiter"
 
 [[allow]]
 command = "cat > /tmp/test.txt <<- 'INDENT'\n\thello\n\tworld\nINDENT"
-description = "cat heredoc with tab-stripping operator"
+description = "cat heredoc with tab-stripping operator (<<-), tab-indented delimiter"
+
+# <<- heredoc: delimiter at column 0 (no tabs) also closes the heredoc
+[[allow]]
+command = "cat <<- EOF\n\thello\n\tworld\nEOF"
+description = "<<- heredoc with unindented delimiter at column 0"
+
+# <<- heredoc: space-indented delimiter does NOT close (only tabs are stripped by <<-)
+# The heredoc runs to end of string — the whole command is one segment, validated as cat
+[[allow]]
+command = "cat <<- EOF\n\thello\n  EOF"
+description = "<<- heredoc with space-indented delimiter (not closed, treated as cat)"
+
+# Regular <<: space-indented delimiter does NOT close (exact match required)
+# The heredoc runs to end of string — the whole thing is one segment, validated as cat
+[[allow]]
+command = "cat << EOF\nhello\n  EOF"
+description = "regular << heredoc with space-indented delimiter (not closed, treated as cat)"
+
+# Regular <<: exact delimiter line closes the heredoc; commands after are validated
+[[allow]]
+command = "cat << EOF\nhello world\nEOF\necho done"
+description = "regular << heredoc closed exactly, followed by echo"
 
 # $() with heredoc inside — the entire $(...) is consumed atomically
 [[allow]]
