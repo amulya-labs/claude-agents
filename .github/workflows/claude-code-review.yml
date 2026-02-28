@@ -96,12 +96,27 @@ jobs:
           # For pull_request, default ref is fine, but this also works consistently.
           ref: ${{ steps.pr.outputs.number != '' && format('refs/pull/{0}/head', steps.pr.outputs.number) || github.ref }}
 
+      - name: Post review-started notice
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr comment "${{ steps.pr.outputs.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "> Review in progress. [View run]($RUN_URL)"
+
       - name: Run Claude Code Review
         id: claude-review
         timeout-minutes: 30
         uses: anthropics/claude-code-action@v1
         with:
-          track_progress: ${{ github.event_name != 'workflow_dispatch' && github.event.action != 'review_requested' }}
+          # track_progress is limited to pull_request events. Enabling it for
+          # issue_comment triggers causes a self-cancellation loop: the progress
+          # comment fires a new issue_comment event that can land in the same
+          # concurrency group and cancel the in-progress review before the
+          # job-level `if` can reject it (concurrency is evaluated first).
+          track_progress: ${{ github.event_name == 'pull_request' && github.event.action != 'review_requested' }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
