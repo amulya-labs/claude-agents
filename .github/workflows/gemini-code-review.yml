@@ -77,7 +77,12 @@ jobs:
           fi
 
       - name: React to triggering comment
-        if: github.event_name == 'issue_comment'
+        if: |
+          github.event_name == 'issue_comment' && (
+            github.event.comment.author_association == 'MEMBER' ||
+            github.event.comment.author_association == 'OWNER' ||
+            github.event.comment.author_association == 'COLLABORATOR'
+          )
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -145,20 +150,20 @@ jobs:
           FILES=$(jq '.changedFiles' /tmp/pr-meta.json)
           LINES=$(jq '.additions + .deletions' /tmp/pr-meta.json)
 
-          # Fetch diff (truncate at 40000 chars to stay within token budget)
+          # Fetch diff (truncate at 500000 chars to stay within AI Pro token budget)
           gh pr diff "$PR_NUMBER" --repo "$REPO" > /tmp/pr-full.diff
           DIFF_CHARS=$(wc -c < /tmp/pr-full.diff)
-          if [ "$DIFF_CHARS" -gt 40000 ]; then
-            head -c 40000 /tmp/pr-full.diff > /tmp/pr.diff
-            printf '\n[DIFF TRUNCATED: full diff is %s chars; only first 40000 shown]\n' "$DIFF_CHARS" >> /tmp/pr.diff
+          if [ "$DIFF_CHARS" -gt 500000 ]; then
+            head -c 500000 /tmp/pr-full.diff > /tmp/pr.diff
+            printf '\n[DIFF TRUNCATED: full diff is %s chars; only first 500000 shown]\n' "$DIFF_CHARS" >> /tmp/pr.diff
           else
             cp /tmp/pr-full.diff /tmp/pr.diff
           fi
           DIFF=$(cat /tmp/pr.diff)
 
           # --- Phase 1: Narrative summary via Gemini Flash ---
-          SUMMARY_PROMPT="You are a narrative-focused AI Technical Lead reviewing a pull request.
-          Summarize the provided git diff into a Narrative Changelog.
+          SUMMARY_PROMPT="You are an experienced engineering lead reviewing a pull request for your team.
+          Write a concise narrative summary of these changes in exactly three paragraphs — no headers, no bullet points, no bold labels.
 
           PR Title: ${PR_TITLE}
           PR Description: ${PR_BODY}
@@ -166,20 +171,12 @@ jobs:
           Git Diff:
           ${DIFF}
 
-          Style Guidelines:
-          1. Use a professional, conversational tone. Avoid robotic bullet points where a short paragraph works better.
-          2. Explain the intent of the changes, not just what files changed.
-          3. Structure your response as:
-             ## PR Summary
+          First paragraph: Describe the overall intent and motivation for the change in plain language.
+          Second paragraph: Explain the key technical decisions — what logic was added, restructured, or removed, and why it matters.
+          Third paragraph: Give your honest read on the nature of this change (e.g. a targeted bug fix, a careful refactor, a broad feature addition) and flag any areas that deserve closer attention during review.
 
-             **Executive Summary:** A 2-sentence tl;dr of the PR.
-
-             **Key Changes:** What major logic was added, changed, or removed?
-
-             **Vibe Check:** Is this a clean-up, a feature addition, a bug fix, or refactoring?
-
-          Keep it under 200 words. Do not mention specific line numbers -- focus on the big picture.
-          Do not include any markdown code fences around your entire response."
+          Write as a thoughtful colleague, not as a template-filling bot. Keep it under 200 words total.
+          Do not include any markdown headers or code fences in your response."
 
           FLASH_RESPONSE=$(curl -s \
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}" \
@@ -218,7 +215,7 @@ jobs:
           Each object must follow this schema:
           {
             \"file\": \"string (relative path to the file)\",
-            \"line\": number (line number in the new file to comment on),
+            \"line\": number (the absolute line number in the new version of the file where the issue appears; use the line numbers shown after '+' in the diff hunk headers),
             \"severity\": \"string (Critical | High | Medium | Low)\",
             \"comment\": \"string (your technical explanation of the issue)\",
             \"suggestion\": \"string (the corrected code, or empty string if no suggestion)\"
@@ -229,7 +226,7 @@ jobs:
           Return ONLY the JSON array, nothing else."
 
             PRO_RESPONSE=$(curl -s \
-              "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key=${GEMINI_API_KEY}" \
+              "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}" \
               -H "Content-Type: application/json" \
               -d "$(jq -n --arg prompt "$INLINE_PROMPT" '{
                 contents: [{parts: [{text: $prompt}]}],
@@ -257,7 +254,7 @@ jobs:
           echo "$INLINE_JSON" > /tmp/inline-comments.json
           COUNT=$(jq 'length' /tmp/inline-comments.json)
 
-          # --- Phase 3: Build and post summary comment ---
+          # --- Phase 3: Build review body and upsert summary comment (edit existing or create new) ---
           {
             echo "## Gemini Code Review"
             echo ""
@@ -288,17 +285,34 @@ jobs:
             fi
           } > /tmp/review-body.md
 
-          gh pr comment "$PR_NUMBER" \
-            --repo "$REPO" \
-            --body-file /tmp/review-body.md
+          # Find an existing Gemini review comment posted by github-actions[bot] and edit it;
+          # fall back to creating a new comment if none exists yet.
+          EXISTING_ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | startswith("## Gemini Code Review"))] | last | .id // empty' \
+            2>/dev/null || true)
+
+          if [ -n "$EXISTING_ID" ]; then
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/issues/comments/$EXISTING_ID" \
+              --field body="$(cat /tmp/review-body.md)"
+          else
+            gh pr comment "$PR_NUMBER" \
+              --repo "$REPO" \
+              --body-file /tmp/review-body.md
+          fi
 
           # --- Phase 4: Post inline review comments (if any) ---
           if [ "$COUNT" -gt 0 ]; then
             echo "Posting $COUNT inline comment(s) via GitHub Reviews API..."
 
+            # Map each finding to a review comment using line + side instead of position,
+            # so comments land on the correct line rather than always at position 1.
             COMMENTS=$(jq '[.[] | {
               path: .file,
-              position: 1,
+              line: .line,
+              side: "RIGHT",
               body: (
                 "**[\(.severity)]** \(.comment)" +
                 (if (.suggestion != null and .suggestion != "") then
@@ -421,7 +435,12 @@ jobs:
           fi
 
       - name: React to triggering comment
-        if: github.event_name == 'issue_comment'
+        if: |
+          github.event_name == 'issue_comment' && (
+            github.event.comment.author_association == 'MEMBER' ||
+            github.event.comment.author_association == 'OWNER' ||
+            github.event.comment.author_association == 'COLLABORATOR'
+          )
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -460,20 +479,20 @@ jobs:
             REVIEW_STRATEGY="detailed"
           fi
 
-          # Fetch diff (truncate at 40000 chars to stay within token budget)
+          # Fetch diff (truncate at 500000 chars to stay within AI Pro token budget)
           gh pr diff "$PR_NUMBER" --repo "$REPO" > /tmp/pr-full.diff
           DIFF_CHARS=$(wc -c < /tmp/pr-full.diff)
-          if [ "$DIFF_CHARS" -gt 40000 ]; then
-            head -c 40000 /tmp/pr-full.diff > /tmp/pr.diff
-            printf '\n[DIFF TRUNCATED: full diff is %s chars; only first 40000 shown]\n' "$DIFF_CHARS" >> /tmp/pr.diff
+          if [ "$DIFF_CHARS" -gt 500000 ]; then
+            head -c 500000 /tmp/pr-full.diff > /tmp/pr.diff
+            printf '\n[DIFF TRUNCATED: full diff is %s chars; only first 500000 shown]\n' "$DIFF_CHARS" >> /tmp/pr.diff
           else
             cp /tmp/pr-full.diff /tmp/pr.diff
           fi
           DIFF=$(cat /tmp/pr.diff)
 
           # --- Phase 1: Narrative summary via Gemini Flash ---
-          SUMMARY_PROMPT="You are a narrative-focused AI Technical Lead reviewing a pull request.
-          Summarize the provided git diff into a Narrative Changelog.
+          SUMMARY_PROMPT="You are an experienced engineering lead reviewing a pull request for your team.
+          Write a concise narrative summary of these changes in exactly three paragraphs — no headers, no bullet points, no bold labels.
 
           PR Title: ${PR_TITLE}
           PR Description: ${PR_BODY}
@@ -481,20 +500,12 @@ jobs:
           Git Diff:
           ${DIFF}
 
-          Style Guidelines:
-          1. Use a professional, conversational tone. Avoid robotic bullet points where a short paragraph works better.
-          2. Explain the intent of the changes, not just what files changed.
-          3. Structure your response as:
-             ## PR Summary
+          First paragraph: Describe the overall intent and motivation for the change in plain language.
+          Second paragraph: Explain the key technical decisions — what logic was added, restructured, or removed, and why it matters.
+          Third paragraph: Give your honest read on the nature of this change (e.g. a targeted bug fix, a careful refactor, a broad feature addition) and flag any areas that deserve closer attention during review.
 
-             **Executive Summary:** A 2-sentence tl;dr of the PR.
-
-             **Key Changes:** What major logic was added, changed, or removed?
-
-             **Vibe Check:** Is this a clean-up, a feature addition, a bug fix, or refactoring?
-
-          Keep it under 200 words. Do not mention specific line numbers -- focus on the big picture.
-          Do not include any markdown code fences around your entire response."
+          Write as a thoughtful colleague, not as a template-filling bot. Keep it under 200 words total.
+          Do not include any markdown headers or code fences in your response."
 
           FLASH_RESPONSE=$(curl -s \
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}" \
@@ -533,7 +544,7 @@ jobs:
           Each object must follow this schema:
           {
             \"file\": \"string (relative path to the file)\",
-            \"line\": number (line number in the new file to comment on),
+            \"line\": number (the absolute line number in the new version of the file where the issue appears; use the line numbers shown after '+' in the diff hunk headers),
             \"severity\": \"string (Critical | High | Medium | Low)\",
             \"comment\": \"string (your technical explanation of the issue)\",
             \"suggestion\": \"string (the corrected code, or empty string if no suggestion)\"
@@ -544,7 +555,7 @@ jobs:
           Return ONLY the JSON array, nothing else."
 
             PRO_RESPONSE=$(curl -s \
-              "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key=${GEMINI_API_KEY}" \
+              "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}" \
               -H "Content-Type: application/json" \
               -d "$(jq -n --arg prompt "$INLINE_PROMPT" '{
                 contents: [{parts: [{text: $prompt}]}],
@@ -572,7 +583,7 @@ jobs:
           echo "$INLINE_JSON" > /tmp/inline-comments.json
           COUNT=$(jq 'length' /tmp/inline-comments.json)
 
-          # --- Phase 3: Build and post summary comment ---
+          # --- Phase 3: Build review body and upsert summary comment (edit existing or create new) ---
           {
             echo "## Gemini Code Review"
             echo ""
@@ -603,17 +614,34 @@ jobs:
             fi
           } > /tmp/review-body.md
 
-          gh pr comment "$PR_NUMBER" \
-            --repo "$REPO" \
-            --body-file /tmp/review-body.md
+          # Find an existing Gemini review comment posted by github-actions[bot] and edit it;
+          # fall back to creating a new comment if none exists yet.
+          EXISTING_ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | startswith("## Gemini Code Review"))] | last | .id // empty' \
+            2>/dev/null || true)
+
+          if [ -n "$EXISTING_ID" ]; then
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/issues/comments/$EXISTING_ID" \
+              --field body="$(cat /tmp/review-body.md)"
+          else
+            gh pr comment "$PR_NUMBER" \
+              --repo "$REPO" \
+              --body-file /tmp/review-body.md
+          fi
 
           # --- Phase 4: Post inline review comments (if any) ---
           if [ "$COUNT" -gt 0 ]; then
             echo "Posting $COUNT inline comment(s) via GitHub Reviews API..."
 
+            # Map each finding to a review comment using line + side instead of position,
+            # so comments land on the correct line rather than always at position 1.
             COMMENTS=$(jq '[.[] | {
               path: .file,
-              position: 1,
+              line: .line,
+              side: "RIGHT",
               body: (
                 "**[\(.severity)]** \(.comment)" +
                 (if (.suggestion != null and .suggestion != "") then
