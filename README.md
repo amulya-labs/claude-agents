@@ -154,6 +154,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for hook configuration details.
 
 Run `./scripts/manage-ai-configs.sh` or `git-subtree-mgr --help` for usage.
 
+## GitHub Actions Workflows
+
+| Workflow | Purpose | Trigger |
+|----------|---------|---------|
+| `claude-code-review.yml` | Automated PR review using Claude | PR opened/updated; `/claude-review` comment |
+| `gemini-code-review.yml` | Automated PR review using Gemini Flash + Pro | PR opened/updated; `/gemini-review` comment |
+
+### Gemini Code Review Setup
+
+Add your Gemini API key as a repository secret named `GEMINI_API_KEY`. The workflow uses:
+- **Gemini Flash** for the narrative PR summary (fast, quota-efficient)
+- **Gemini Pro** for line-level inline comments (deep reasoning)
+
+Trigger manually by commenting `/gemini-review` on any PR (members/owners/collaborators only).
+
 ## Contributing
 
 PRs welcome. Agents should be generalized (no project-specific references), focused (one domain per agent), and well-structured. See [CONTRIBUTING.md](CONTRIBUTING.md) for the agent file format and guidelines.
