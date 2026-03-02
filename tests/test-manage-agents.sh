@@ -45,7 +45,7 @@ assert() {
 
 echo "=== Workflow file locations ==="
 
-EXPECTED_WORKFLOWS=(claude.yml claude-code-review.yml)
+EXPECTED_WORKFLOWS=(claude.yml claude-code-review.yml gemini-code-review.yml)
 
 for f in "${EXPECTED_WORKFLOWS[@]}"; do
     if [[ -f "$REPO_ROOT/.github/workflows/$f" ]]; then
@@ -162,6 +162,55 @@ if grep -q 'github-workflow-templates' "$MANAGE_SCRIPT"; then
 else
     assert "Script references github-workflow-templates directory" "fail" \
         "Expected reference to github-workflow-templates in script"
+fi
+
+echo
+
+# ── Gemini provider checks ──────────────────────────────────────────
+
+echo "=== Gemini provider support ==="
+
+if grep -q 'download_gha_gemini_workflows()' "$MANAGE_SCRIPT"; then
+    assert "Function download_gha_gemini_workflows() exists" "pass"
+else
+    assert "Function download_gha_gemini_workflows() exists" "fail" \
+        "Expected download_gha_gemini_workflows() function in script"
+fi
+
+if grep -q -- '--gemini)' "$MANAGE_SCRIPT"; then
+    assert "Flag --gemini is recognized" "pass"
+else
+    assert "Flag --gemini is recognized" "fail" \
+        "Expected --gemini) case in flag parsing"
+fi
+
+if grep -q -- '--ai' "$MANAGE_SCRIPT"; then
+    assert "Flag --ai is recognized" "pass"
+else
+    assert "Flag --ai is recognized" "fail" \
+        "Expected --ai flag parsing in script"
+fi
+
+if grep -q 'gemini-code-review.yml' "$MANAGE_SCRIPT"; then
+    assert "download_gha_gemini_workflows references gemini-code-review.yml" "pass"
+else
+    assert "download_gha_gemini_workflows references gemini-code-review.yml" "fail" \
+        "Expected gemini-code-review.yml in script"
+fi
+
+if grep -q 'GEMINI_API_KEY' "$MANAGE_SCRIPT"; then
+    assert "Script mentions GEMINI_API_KEY secret" "pass"
+else
+    assert "Script mentions GEMINI_API_KEY secret" "fail" \
+        "Expected GEMINI_API_KEY hint for users in script"
+fi
+
+# download_gha_gemini_workflows should be called conditionally on PROVIDER_GEMINI
+if grep -B1 'download_gha_gemini_workflows' "$MANAGE_SCRIPT" | grep -q 'if \$PROVIDER_GEMINI'; then
+    assert "download_gha_gemini_workflows is called conditionally with PROVIDER_GEMINI" "pass"
+else
+    assert "download_gha_gemini_workflows is called conditionally with PROVIDER_GEMINI" "fail" \
+        "download_gha_gemini_workflows should be inside an if \$PROVIDER_GEMINI block"
 fi
 
 echo
