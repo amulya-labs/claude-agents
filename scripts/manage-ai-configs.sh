@@ -26,16 +26,20 @@ RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH"
 WITH_GHA_WORKFLOWS=false
 
 # Provider registry — to add a new provider, add 3 lines here only
+# (Variables are referenced via indirect expansion in download_provider_workflows(); SC2034 is suppressed per-variable)
+# shellcheck disable=SC2034
 PROVIDER_CLAUDE_WORKFLOWS="claude.yml claude-code-review.yml"
+# shellcheck disable=SC2034
 PROVIDER_CLAUDE_SECRET="CLAUDE_CODE_OAUTH_TOKEN"
+# shellcheck disable=SC2034
 PROVIDER_CLAUDE_LABEL="Claude"
 
+# shellcheck disable=SC2034
 PROVIDER_GEMINI_WORKFLOWS="gemini-code-review.yml"
+# shellcheck disable=SC2034
 PROVIDER_GEMINI_SECRET="GEMINI_API_KEY"
+# shellcheck disable=SC2034
 PROVIDER_GEMINI_LABEL="Gemini"
-# Referenced via indirect expansion in download_provider_workflows(); suppress SC2034
-: "${PROVIDER_CLAUDE_WORKFLOWS}" "${PROVIDER_CLAUDE_SECRET}" "${PROVIDER_CLAUDE_LABEL}" \
-  "${PROVIDER_GEMINI_WORKFLOWS}" "${PROVIDER_GEMINI_SECRET}" "${PROVIDER_GEMINI_LABEL}"
 
 # Populated by flag parsing; positional 'claude' arg also adds "claude" here
 PROVIDERS_ENABLED=()
@@ -195,11 +199,13 @@ install_config() {
     echo ""
     download_all
 
-    git add "$CLAUDE_DIR"
+    if contains "claude" "${PROVIDERS_ENABLED[@]}"; then
+        git add "$CLAUDE_DIR"
+    fi
     git add .github/workflows/ 2>/dev/null || true
 
     echo ""
-    info "Done! Config installed to $CLAUDE_DIR"
+    info "Done! Config installed."
     for provider in "${PROVIDERS_ENABLED[@]}"; do
         local upper
         upper=$(printf '%s' "$provider" | tr '[:lower:]' '[:upper:]')
@@ -220,7 +226,7 @@ install_config() {
 update_config() {
     check_git
 
-    if [ ! -d "$CLAUDE_DIR" ]; then
+    if contains "claude" "${PROVIDERS_ENABLED[@]}" && [ ! -d "$CLAUDE_DIR" ]; then
         error "Directory $CLAUDE_DIR not found. Use 'install' first."
     fi
 
@@ -228,7 +234,9 @@ update_config() {
     echo ""
     download_all
 
-    git add "$CLAUDE_DIR"
+    if contains "claude" "${PROVIDERS_ENABLED[@]}"; then
+        git add "$CLAUDE_DIR"
+    fi
     git add .github/workflows/ 2>/dev/null || true
 
     echo ""
@@ -313,10 +321,13 @@ for arg in "$@"; do
             _ai_val="${arg#--ai=}"
             IFS=',' read -ra _providers <<< "$_ai_val"
             for _p in "${_providers[@]}"; do
-                case "$_p" in
-                    claude|gemini) PROVIDERS_ENABLED+=("$_p") ;;
-                    *) warn "Unknown provider '$_p' in --ai; ignoring" ;;
-                esac
+                _upper_p=$(printf '%s' "$_p" | tr '[:lower:]' '[:upper:]')
+                _wf_var="PROVIDER_${_upper_p}_WORKFLOWS"
+                if [[ -n "${!_wf_var+x}" ]]; then
+                    PROVIDERS_ENABLED+=("$_p")
+                else
+                    warn "Unknown provider '$_p' in --ai; ignoring"
+                fi
             done
             ;;
         *) _shifted+=("$arg") ;;
@@ -336,10 +347,13 @@ while [ $_i -lt ${#_args[@]} ]; do
             _ai_val="${_args[$_i]}"
             IFS=',' read -ra _providers <<< "$_ai_val"
             for _p in "${_providers[@]}"; do
-                case "$_p" in
-                    claude|gemini) PROVIDERS_ENABLED+=("$_p") ;;
-                    *) warn "Unknown provider '$_p' in --ai; ignoring" ;;
-                esac
+                _upper_p=$(printf '%s' "$_p" | tr '[:lower:]' '[:upper:]')
+                _wf_var="PROVIDER_${_upper_p}_WORKFLOWS"
+                if [[ -n "${!_wf_var+x}" ]]; then
+                    PROVIDERS_ENABLED+=("$_p")
+                else
+                    warn "Unknown provider '$_p' in --ai; ignoring"
+                fi
             done
         else
             error "--ai requires a value (e.g. --ai claude,gemini)"
@@ -353,7 +367,11 @@ set -- "${_final[@]+"${_final[@]}"}"
 
 case "$AGENT" in
     claude)
-        PROVIDERS_ENABLED=("claude" "${PROVIDERS_ENABLED[@]}")  # prepend for consistent order
+        # If --ai was not given, default to claude-only.
+        # If --ai was given, treat it as authoritative (supports "claude update --ai gemini" = Gemini-only).
+        if [ ${#PROVIDERS_ENABLED[@]} -eq 0 ]; then
+            PROVIDERS_ENABLED=("claude")
+        fi
         # Deduplicate (preserve order, first occurrence wins)
         _deduped=()
         for _p in "${PROVIDERS_ENABLED[@]}"; do
