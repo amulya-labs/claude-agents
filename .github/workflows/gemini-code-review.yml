@@ -14,8 +14,8 @@ on:
   pull_request:
     types:
       - opened
-      - synchronize
       - ready_for_review
+      - review_requested
       - reopened
 
   issue_comment:
