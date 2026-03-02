@@ -1,15 +1,15 @@
 #!/bin/bash
-# Tests for manage-claude-code-config.sh — verifies workflow templates are distributed
+# Tests for manage-ai-configs.sh — verifies workflow templates are distributed
 # correctly (sourced from .github/workflows/).
 #
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-MANAGE_SCRIPT="$REPO_ROOT/scripts/manage-claude-code-config.sh"
+MANAGE_SCRIPT="$REPO_ROOT/scripts/manage-ai-configs.sh"
 
 PASS=0
 FAIL=0
@@ -65,9 +65,9 @@ fi
 
 echo
 
-# ── manage-claude-code-config.sh script checks ─────────────────────
+# ── manage-ai-configs.sh script checks ─────────────────────
 
-echo "=== manage-claude-code-config.sh flag and function checks ==="
+echo "=== manage-ai-configs.sh flag and function checks ==="
 
 # shellcheck disable=SC2310
 if grep -q 'WITH_GHA_WORKFLOWS=false' "$MANAGE_SCRIPT"; then
@@ -172,9 +172,9 @@ echo "=== shellcheck ==="
 
 if command -v shellcheck &>/dev/null; then
     if shellcheck "$MANAGE_SCRIPT" 2>&1; then
-        assert "manage-claude-code-config.sh passes shellcheck" "pass"
+        assert "manage-ai-configs.sh passes shellcheck" "pass"
     else
-        assert "manage-claude-code-config.sh passes shellcheck" "fail"
+        assert "manage-ai-configs.sh passes shellcheck" "fail"
     fi
 else
     echo "  (shellcheck not installed — skipping)"

@@ -1,7 +1,7 @@
 ---
 name: refactoring-expert
 description: Improve code structure without changing behavior. Use for cleaning up technical debt, improving maintainability, or restructuring code.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: pink

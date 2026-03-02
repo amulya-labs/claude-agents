@@ -1,4 +1,4 @@
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 
 name: CI
@@ -156,8 +156,8 @@ jobs:
           echo "Running bash hook tests..."
           tests/test-validate-bash.sh
 
-  validate-manage-agents:
-    name: Validate manage-claude-code-config.sh
+  validate-manage-configs:
+    name: Validate manage-ai-configs.sh
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -165,7 +165,7 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get install -y shellcheck
 
-      - name: Run manage-claude-code-config tests
+      - name: Run manage-ai-configs tests
         run: tests/test-manage-agents.sh
 
   validate-attributions:
@@ -190,7 +190,7 @@ jobs:
           for script in .claude/hooks/*.sh scripts/*.sh scripts/git-subtree-mgr; do
             if [ -f "$script" ]; then
               echo -n "Checking $script... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$script"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/ai-dev-foundry" "$script"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$script"; then
@@ -207,7 +207,7 @@ jobs:
           for script in .claude/hooks/*.py; do
             if [ -f "$script" ]; then
               echo -n "Checking $script... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$script"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/ai-dev-foundry" "$script"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$script"; then
@@ -224,7 +224,7 @@ jobs:
           for config in .claude/hooks/*.toml; do
             if [ -f "$config" ]; then
               echo -n "Checking $config... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$config"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/ai-dev-foundry" "$config"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$config"; then
@@ -241,7 +241,7 @@ jobs:
           for wf in .github/workflows/ci.yml .github/workflows/claude.yml .github/workflows/claude-code-review.yml; do
             if [ -f "$wf" ]; then
               echo -n "Checking $wf... "
-              if ! grep -q "Source:.*github.com/amulya-labs/claude-code-config" "$wf"; then
+              if ! grep -q "Source:.*github.com/amulya-labs/ai-dev-foundry" "$wf"; then
                 echo "MISSING source attribution"
                 errors=$((errors + 1))
               elif ! grep -qi "License:.*MIT" "$wf"; then
@@ -258,7 +258,7 @@ jobs:
             echo "ERROR: $errors file(s) missing proper attributions"
             echo ""
             echo "Required format for scripts:"
-            echo "  # Source: https://github.com/amulya-labs/claude-code-config"
+            echo "  # Source: https://github.com/amulya-labs/ai-dev-foundry"
             echo "  # License: MIT (https://opensource.org/licenses/MIT)"
             exit 1
           fi

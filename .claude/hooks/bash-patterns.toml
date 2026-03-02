@@ -1,7 +1,7 @@
 # Bash command validation patterns for Claude Code PreToolUse hook
 # Patterns are regular expressions matched against commands
 #
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Categories:

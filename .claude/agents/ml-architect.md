@@ -1,7 +1,7 @@
 ---
 name: ml-architect
 description: Design and review ML systems end-to-end — data pipelines, training, serving, monitoring, and retraining. Use for ML architecture, pipeline design, model selection, and production ML decisions.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus
 color: cyan

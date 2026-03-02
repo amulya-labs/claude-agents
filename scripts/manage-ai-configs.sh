@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-# Claude Code Config Manager
-# Copy this script to your project and use it to install/update .claude config
+# AI Dev Foundry Config Manager
+# Copy this script to your project and use it to install/update AI agent configs
 #
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 #
 # Usage:
-#   ./scripts/manage-claude-code-config.sh install                        # First-time setup (includes Claude workflows)
-#   ./scripts/manage-claude-code-config.sh install --with-gha-workflows   # Also install extra workflow templates
-#   ./scripts/manage-claude-code-config.sh update                         # Pull latest config (includes Claude workflows)
-#   ./scripts/manage-claude-code-config.sh update --with-gha-workflows    # Update including extra workflow templates
+#   ./scripts/manage-ai-configs.sh claude install                        # First-time setup (includes Claude workflows)
+#   ./scripts/manage-ai-configs.sh claude install --with-gha-workflows   # Also install extra workflow templates
+#   ./scripts/manage-ai-configs.sh claude update                         # Pull latest config (includes Claude workflows)
+#   ./scripts/manage-ai-configs.sh claude update --with-gha-workflows    # Update including extra workflow templates
 
-REPO="amulya-labs/claude-code-config"
+REPO="amulya-labs/ai-dev-foundry"
 BRANCH="main"
 CLAUDE_DIR=".claude"
 API_BASE="https://api.github.com/repos/$REPO/contents"
@@ -199,46 +199,66 @@ update_config() {
     echo "  git push"
 }
 
-# Parse global flags
-shift_args=()
+
+usage_claude() {
+    echo "Usage: $0 claude <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  install   Add .claude config to your project (first-time setup)"
+    echo "  update    Pull the latest config (agents, hooks, settings)"
+    echo ""
+    echo "Options:"
+    echo "  --with-gha-workflows   Also install extra workflow templates from"
+    echo "                         github-workflow-templates/ in the source repo"
+    echo ""
+    echo "This downloads:"
+    echo "  .claude/agents/   - Reusable Claude Code agents"
+    echo "  .claude/hooks/    - PreToolUse hooks (e.g., bash validation)"
+    echo "  .claude/settings.json - Hook configuration"
+    echo "  .github/workflows/claude.yml             - @claude mention handler"
+    echo "  .github/workflows/claude-code-review.yml - Auto PR review"
+    echo "  (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
+    echo ""
+    echo "With --with-gha-workflows, also downloads:"
+    echo "  Extra workflow templates from github-workflow-templates/"
+}
+
+usage_main() {
+    echo "AI Dev Foundry Config Manager"
+    echo ""
+    echo "Usage: $0 <agent> <command> [options]"
+    echo ""
+    echo "Agents:"
+    echo "  claude    Manage Claude Code agents, hooks, and GitHub Actions workflows"
+    echo ""
+    echo "Run '$0 <agent>' for agent-specific usage."
+}
+
+# --- Main ---
+
+AGENT="${1:-}"
+shift || true
+
+# Parse flags from remaining args
+_shifted=()
 for arg in "$@"; do
     case "$arg" in
         --with-gha-workflows) WITH_GHA_WORKFLOWS=true ;;
-        *) shift_args+=("$arg") ;;
+        *) _shifted+=("$arg") ;;
     esac
 done
-set -- "${shift_args[@]}"
+set -- "${_shifted[@]+"${_shifted[@]}"}"
 
-case "${1:-}" in
-    install)
-        install_config
-        ;;
-    update)
-        update_config
+case "$AGENT" in
+    claude)
+        case "${1:-}" in
+            install) install_config ;;
+            update)  update_config ;;
+            *)       usage_claude; exit 1 ;;
+        esac
         ;;
     *)
-        echo "Claude Code Config Manager"
-        echo ""
-        echo "Usage: $0 <command> [options]"
-        echo ""
-        echo "Commands:"
-        echo "  install   Add .claude config to your project (first-time setup)"
-        echo "  update    Pull the latest config (agents, hooks, settings)"
-        echo ""
-        echo "Options:"
-        echo "  --with-gha-workflows   Also install extra workflow templates from"
-        echo "                         github-workflow-templates/ in the source repo"
-        echo ""
-        echo "This downloads:"
-        echo "  .claude/agents/   - Reusable Claude Code agents"
-        echo "  .claude/hooks/    - PreToolUse hooks (e.g., bash validation)"
-        echo "  .claude/settings.json - Hook configuration"
-        echo "  .github/workflows/claude.yml             - @claude mention handler"
-        echo "  .github/workflows/claude-code-review.yml - Auto PR review"
-        echo "  (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
-        echo ""
-        echo "With --with-gha-workflows, also downloads:"
-        echo "  Extra workflow templates from github-workflow-templates/"
+        usage_main
         exit 1
         ;;
 esac

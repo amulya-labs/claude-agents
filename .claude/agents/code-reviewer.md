@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Perform thorough code reviews focusing on correctness, security, performance, and maintainability. Use when you need a fresh perspective on code quality.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: yellow

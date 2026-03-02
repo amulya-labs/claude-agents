@@ -1,7 +1,7 @@
 ---
 name: claudemd-architect
 description: Create or update CLAUDE.md files so Claude/agents can setup, change, test, debug, and ship with minimal iteration. Use when bootstrapping or improving a repo's CLAUDE.md.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus
 color: cyan

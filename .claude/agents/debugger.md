@@ -1,7 +1,7 @@
 ---
 name: debugger
 description: Investigate and fix bugs systematically using root cause analysis. Use when troubleshooting errors, unexpected behavior, or system failures.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: red

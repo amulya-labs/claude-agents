@@ -1,7 +1,7 @@
 ---
 name: marketing-lead
 description: Craft positioning, messaging, and go-to-market copy that converts. Use for landing pages, launch messaging, pricing pages, email sequences, ad copy, and competitive positioning.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus
 color: orange

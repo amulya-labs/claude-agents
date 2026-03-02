@@ -2,7 +2,7 @@
 # Format: Each section contains test cases for a specific category
 # Each test case has: command, expected (allow|ask|deny), description
 #
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 
 # =============================================================================
