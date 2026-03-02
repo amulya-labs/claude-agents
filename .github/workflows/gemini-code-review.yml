@@ -188,8 +188,9 @@ jobs:
 
           SUMMARY_TEXT=$(echo "$FLASH_RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty' 2>/dev/null)
           if [ -z "$SUMMARY_TEXT" ]; then
-            echo "WARNING: Gemini Flash did not return a summary." >&2
-            SUMMARY_TEXT="_Narrative summary unavailable (Gemini Flash did not respond). See [workflow run]($RUN_URL) for details._"
+            FLASH_ERROR=$(echo "$FLASH_RESPONSE" | jq -r '.error | "[\(.code)] \(.message)" // "unknown error"' 2>/dev/null)
+            echo "ERROR: Gemini Flash API call failed: $FLASH_ERROR" >&2
+            exit 1
           fi
 
           # --- Phase 2: Inline review via Gemini Pro (skipped for large PRs) ---
@@ -247,7 +248,8 @@ jobs:
                 echo "WARNING: Gemini Pro returned invalid JSON; skipping inline comments." >&2
               fi
             else
-              echo "WARNING: Gemini Pro did not return inline comments." >&2
+              PRO_ERROR=$(echo "$PRO_RESPONSE" | jq -r '.error | "[\(.code)] \(.message)" // "unknown error"' 2>/dev/null)
+              echo "WARNING: Gemini Pro API call failed: $PRO_ERROR" >&2
             fi
           fi
 
@@ -517,8 +519,9 @@ jobs:
 
           SUMMARY_TEXT=$(echo "$FLASH_RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty' 2>/dev/null)
           if [ -z "$SUMMARY_TEXT" ]; then
-            echo "WARNING: Gemini Flash did not return a summary." >&2
-            SUMMARY_TEXT="_Narrative summary unavailable (Gemini Flash did not respond). See [workflow run]($RUN_URL) for details._"
+            FLASH_ERROR=$(echo "$FLASH_RESPONSE" | jq -r '.error | "[\(.code)] \(.message)" // "unknown error"' 2>/dev/null)
+            echo "ERROR: Gemini Flash API call failed: $FLASH_ERROR" >&2
+            exit 1
           fi
 
           # --- Phase 2: Inline review via Gemini Pro (skipped for large PRs) ---
@@ -576,7 +579,8 @@ jobs:
                 echo "WARNING: Gemini Pro returned invalid JSON; skipping inline comments." >&2
               fi
             else
-              echo "WARNING: Gemini Pro did not return inline comments." >&2
+              PRO_ERROR=$(echo "$PRO_RESPONSE" | jq -r '.error | "[\(.code)] \(.message)" // "unknown error"' 2>/dev/null)
+              echo "WARNING: Gemini Pro API call failed: $PRO_ERROR" >&2
             fi
           fi
 
