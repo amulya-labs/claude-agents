@@ -12,6 +12,11 @@ set -e
 #   ./scripts/manage-ai-configs.sh claude install --with-gha-workflows   # Also install extra workflow templates
 #   ./scripts/manage-ai-configs.sh claude update                         # Pull latest config (includes Claude workflows)
 #   ./scripts/manage-ai-configs.sh claude update --with-gha-workflows    # Update including extra workflow templates
+#
+# Multi-provider usage (comma-separated or individual flags):
+#   ./scripts/manage-ai-configs.sh claude install --gemini               # Claude + Gemini workflows
+#   ./scripts/manage-ai-configs.sh claude install --ai claude,gemini     # Same as above
+#   ./scripts/manage-ai-configs.sh claude update --ai gemini             # Update Gemini workflow only (no Claude .claude/ dir)
 
 REPO="amulya-labs/ai-dev-foundry"
 BRANCH="main"
@@ -19,6 +24,9 @@ CLAUDE_DIR=".claude"
 API_BASE="https://api.github.com/repos/$REPO/contents"
 RAW_BASE="https://raw.githubusercontent.com/$REPO/$BRANCH"
 WITH_GHA_WORKFLOWS=false
+
+# Provider flags — set by --ai / --gemini flags (claude is always implied by the positional arg)
+PROVIDER_GEMINI=false
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -116,6 +124,11 @@ download_all() {
     # Always download Claude workflows
     download_gha_workflows
 
+    # Download Gemini workflows if requested
+    if $PROVIDER_GEMINI; then
+        download_gha_gemini_workflows
+    fi
+
     # Optionally download extra workflow templates
     if $WITH_GHA_WORKFLOWS; then
         download_gha_workflow_templates
@@ -135,6 +148,19 @@ download_gha_workflows() {
         fi
     done
     warn "Requires CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
+}
+
+download_gha_gemini_workflows() {
+    info "Fetching Gemini GitHub Actions workflows..."
+    local workflow_dir=".github/workflows"
+    mkdir -p "$workflow_dir"
+    local url="$RAW_BASE/.github/workflows/gemini-code-review.yml"
+    if curl -fsSL "$url" -o "$workflow_dir/gemini-code-review.yml" 2>/dev/null; then
+        info "  Downloaded gemini-code-review.yml"
+    else
+        warn "  Failed to download gemini-code-review.yml"
+    fi
+    warn "Requires GEMINI_API_KEY secret in your repo settings"
 }
 
 download_gha_workflow_templates() {
@@ -162,6 +188,10 @@ install_config() {
     info "Done! Config installed to $CLAUDE_DIR"
     info "Claude workflows installed to .github/workflows/"
     warn "  → Workflows require CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
+    if $PROVIDER_GEMINI; then
+        info "Gemini workflows installed to .github/workflows/"
+        warn "  → Gemini workflows require GEMINI_API_KEY secret in your repo settings"
+    fi
     if $WITH_GHA_WORKFLOWS; then
         info "Extra workflow templates installed to .github/workflows/"
     fi
@@ -189,6 +219,10 @@ update_config() {
     info "Done! Config updated."
     info "Claude workflows updated in .github/workflows/"
     warn "  → Workflows require CLAUDE_CODE_OAUTH_TOKEN secret in your repo settings"
+    if $PROVIDER_GEMINI; then
+        info "Gemini workflows updated in .github/workflows/"
+        warn "  → Gemini workflows require GEMINI_API_KEY secret in your repo settings"
+    fi
     if $WITH_GHA_WORKFLOWS; then
         info "Extra workflow templates updated in .github/workflows/"
     fi
@@ -208,6 +242,8 @@ usage_claude() {
     echo "  update    Pull the latest config (agents, hooks, settings)"
     echo ""
     echo "Options:"
+    echo "  --gemini               Also install Gemini PR review workflow"
+    echo "  --ai <providers>       Comma-separated provider list (e.g. claude,gemini)"
     echo "  --with-gha-workflows   Also install extra workflow templates from"
     echo "                         github-workflow-templates/ in the source repo"
     echo ""
@@ -218,6 +254,10 @@ usage_claude() {
     echo "  .github/workflows/claude.yml             - @claude mention handler"
     echo "  .github/workflows/claude-code-review.yml - Auto PR review"
     echo "  (requires CLAUDE_CODE_OAUTH_TOKEN secret in repo)"
+    echo ""
+    echo "With --gemini or --ai claude,gemini, also downloads:"
+    echo "  .github/workflows/gemini-code-review.yml - Gemini PR review (Flash + Pro)"
+    echo "  (requires GEMINI_API_KEY secret in repo)"
     echo ""
     echo "With --with-gha-workflows, also downloads:"
     echo "  Extra workflow templates from github-workflow-templates/"
@@ -244,10 +284,56 @@ _shifted=()
 for arg in "$@"; do
     case "$arg" in
         --with-gha-workflows) WITH_GHA_WORKFLOWS=true ;;
+        --gemini)             PROVIDER_GEMINI=true ;;
+        --ai)
+            # --ai requires the next argument; handle below via index tracking
+            # We use a sentinel so the next iteration picks up the value
+            _shifted+=("$arg")
+            ;;
+        --ai=*)
+            # --ai=claude,gemini style
+            _ai_val="${arg#--ai=}"
+            IFS=',' read -ra _providers <<< "$_ai_val"
+            for _p in "${_providers[@]}"; do
+                case "$_p" in
+                    claude) ;;  # always included via 'claude' positional arg
+                    gemini) PROVIDER_GEMINI=true ;;
+                    *) warn "Unknown provider '$_p' in --ai; ignoring" ;;
+                esac
+            done
+            ;;
         *) _shifted+=("$arg") ;;
     esac
 done
 set -- "${_shifted[@]+"${_shifted[@]}"}"
+
+# Second pass: handle --ai <value> (space-separated form)
+_final=()
+_i=0
+_args=("$@")
+while [ $_i -lt ${#_args[@]} ]; do
+    arg="${_args[$_i]}"
+    if [ "$arg" = "--ai" ]; then
+        _i=$((_i + 1))
+        if [ $_i -lt ${#_args[@]} ]; then
+            _ai_val="${_args[$_i]}"
+            IFS=',' read -ra _providers <<< "$_ai_val"
+            for _p in "${_providers[@]}"; do
+                case "$_p" in
+                    claude) ;;  # always included via 'claude' positional arg
+                    gemini) PROVIDER_GEMINI=true ;;
+                    *) warn "Unknown provider '$_p' in --ai; ignoring" ;;
+                esac
+            done
+        else
+            error "--ai requires a value (e.g. --ai claude,gemini)"
+        fi
+    else
+        _final+=("$arg")
+    fi
+    _i=$((_i + 1))
+done
+set -- "${_final[@]+"${_final[@]}"}"
 
 case "$AGENT" in
     claude)
