@@ -4,7 +4,7 @@ Data-driven parametrized tests for the Bash command validator.
 Loads test cases from bash-test-cases.toml and tests the validator
 directly (no shell wrapper overhead).
 
-Source: https://github.com/amulya-labs/claude-code-config
+Source: https://github.com/amulya-labs/ai-dev-foundry
 License: MIT (https://opensource.org/licenses/MIT)
 """
 

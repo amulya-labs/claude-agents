@@ -1,7 +1,7 @@
 ---
 name: documentation-writer
 description: Create clear, minimal documentation that follows DRY principles. Use when documentation needs to be written or improved.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: white

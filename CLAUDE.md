@@ -65,7 +65,7 @@ shellcheck .claude/hooks/*.sh && \
   post-bash.sh           -- PostToolUse hook: logs ASK->APPROVED outcomes
 .claude/settings.json    -- Hook wiring + permission allow/deny lists (shared/committed)
 .claude/settings.local.json -- Local-only permission overrides (committed but for local use)
-scripts/manage-claude-code-config.sh -- Install/update .claude config and GHA workflows via curl from GitHub
+scripts/manage-ai-configs.sh -- Install/update AI agent configs and GHA workflows via curl from GitHub
 scripts/git-subtree-mgr  -- Git subtree manager for tracking upstream changes
 .github/workflows/       -- Live GitHub Actions: ci.yml, scorecard.yml, claude.yml, claude-code-review.yml
 tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.py, test-validate-bash.sh, test-manage-agents.sh
@@ -107,7 +107,7 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
 ### Attribution
 - All `.sh`, `.py`, and `.toml` files under `.claude/hooks/` and `scripts/`, and all owned workflow files under `.github/workflows/` (`ci.yml`, `claude.yml`, `claude-code-review.yml`), must contain:
   ```
-  # Source: https://github.com/amulya-labs/claude-code-config
+  # Source: https://github.com/amulya-labs/ai-dev-foundry
   # License: MIT (https://opensource.org/licenses/MIT)
   ```
 - CI enforces this (`validate-attributions` job)
@@ -121,7 +121,7 @@ tests/                   -- All tests: bash-test-cases.toml, test_validate_bash.
   ```bash
   echo '{"tool_input":{"command":"git status && ls"}}' | .claude/hooks/validate-bash.sh
   ```
-- **manage-claude-code-config**: `tests/test-manage-agents.sh`
+- **manage-ai-configs**: `tests/test-manage-agents.sh`
 - No external services or fixtures needed; all tests are self-contained
 
 ## Debug Playbook

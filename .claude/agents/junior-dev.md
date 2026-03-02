@@ -1,7 +1,7 @@
 ---
 name: junior-dev
 description: Implement straightforward features, fix simple bugs, and write code under guidance. Use for development tasks suitable for early-career developers working on focused, well-scoped work.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: haiku
 color: green

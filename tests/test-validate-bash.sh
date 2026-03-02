@@ -3,7 +3,7 @@
 # Reads test cases from bash-test-cases.toml
 # Exit codes: 0 = all tests pass, 1 = failures
 #
-# Source: https://github.com/amulya-labs/claude-code-config
+# Source: https://github.com/amulya-labs/ai-dev-foundry
 # License: MIT (https://opensource.org/licenses/MIT)
 
 set -euo pipefail

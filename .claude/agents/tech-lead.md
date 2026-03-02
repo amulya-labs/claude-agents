@@ -1,7 +1,7 @@
 ---
 name: tech-lead
 description: Plan implementation approaches and break down complex tasks. Use for scoping work, creating implementation plans, and making technical decisions. Does not write code.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus
 color: magenta

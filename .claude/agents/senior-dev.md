@@ -1,7 +1,7 @@
 ---
 name: senior-dev
 description: Implement features, fix bugs, and refactor code with production-quality standards. Use for development tasks requiring deep codebase understanding and engineering best practices.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: cyan

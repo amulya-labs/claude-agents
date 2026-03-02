@@ -1,7 +1,7 @@
 ---
 name: digital-designer
 description: Create print-ready digital designs including booklets, brochures, flyers, and posters. Use when designing layouts that need to be printed or converted to PDF.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: sonnet
 color: magenta

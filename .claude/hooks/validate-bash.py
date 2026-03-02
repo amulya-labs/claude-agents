@@ -3,7 +3,7 @@
 Bash command validator for Claude Code PreToolUse hook.
 Reads patterns from TOML config and validates commands.
 
-Source: https://github.com/amulya-labs/claude-code-config
+Source: https://github.com/amulya-labs/ai-dev-foundry
 License: MIT (https://opensource.org/licenses/MIT)
 """
 

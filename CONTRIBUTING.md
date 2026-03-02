@@ -8,7 +8,7 @@ PRs welcome. When adding or improving agents, ensure they are generalized, focus
 ---
 name: agent-name
 description: Brief description of when to use this agent.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus  # optional: opus, sonnet, haiku (omit for default)
 color: blue  # optional: terminal color
@@ -109,8 +109,8 @@ CMD:    git rebase main
 
 | Use case | Recommended |
 |----------|-------------|
-| Just want the agents, minimal setup | `manage-claude-code-config.sh` |
-| Also want Claude GitHub Actions workflows | `manage-claude-code-config.sh --with-gha-workflows` |
+| Just want the agents, minimal setup | `manage-ai-configs.sh claude install` |
+| Also want Claude GitHub Actions workflows | `manage-ai-configs.sh claude install --with-gha-workflows` |
 | Want git history of upstream changes | `git-subtree-mgr` |
 | Managing multiple subtrees in a project | `git-subtree-mgr` |
-| Non-technical team members | `manage-claude-code-config.sh` |
+| Non-technical team members | `manage-ai-configs.sh claude install` |

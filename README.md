@@ -1,16 +1,16 @@
-# Claude Code Config
+# AI Dev Foundry
 
-[![CI](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/claude-code-config/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/claude-code-config/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/claude-code-config)
+[![CI](https://github.com/amulya-labs/ai-dev-foundry/actions/workflows/ci.yml/badge.svg)](https://github.com/amulya-labs/ai-dev-foundry/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/amulya-labs/ai-dev-foundry/badge)](https://scorecard.dev/viewer/?uri=github.com/amulya-labs/ai-dev-foundry)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Agents](https://img.shields.io/badge/agents-19-blue.svg)](.claude/agents/)
 
-**Production-ready configuration for Claude Code.** Agents, hooks, and settings you can drop into any project.
+**Production-ready configuration for AI coding agents.** Agents, hooks, and settings you can drop into any project.
 
 ## Quick Install
 
 ```bash
-mkdir -p scripts && curl -fsSL -o scripts/manage-claude-code-config.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-claude-code-config.sh && chmod +x scripts/manage-claude-code-config.sh && ./scripts/manage-claude-code-config.sh install
+mkdir -p scripts && curl -fsSL -o scripts/manage-ai-configs.sh https://raw.githubusercontent.com/amulya-labs/ai-dev-foundry/main/scripts/manage-ai-configs.sh && chmod +x scripts/manage-ai-configs.sh && ./scripts/manage-ai-configs.sh claude install
 ```
 
 ## What You Get
@@ -110,22 +110,22 @@ Claude can also select agents automatically based on your request.
 
 ```bash
 mkdir -p scripts
-curl -fsSL -o scripts/manage-claude-code-config.sh https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/manage-claude-code-config.sh
-chmod +x scripts/manage-claude-code-config.sh
-./scripts/manage-claude-code-config.sh install
+curl -fsSL -o scripts/manage-ai-configs.sh https://raw.githubusercontent.com/amulya-labs/ai-dev-foundry/main/scripts/manage-ai-configs.sh
+chmod +x scripts/manage-ai-configs.sh
+./scripts/manage-ai-configs.sh claude install
 ```
 
-Update later with `./scripts/manage-claude-code-config.sh update`.
+Update later with `./scripts/manage-ai-configs.sh claude update`.
 
 ### Option 2: Git Subtree
 
 ```bash
 # Install the manager globally
-curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/claude-code-config/main/scripts/git-subtree-mgr
+curl -fsSL -o ~/bin/git-subtree-mgr https://raw.githubusercontent.com/amulya-labs/ai-dev-foundry/main/scripts/git-subtree-mgr
 chmod +x ~/bin/git-subtree-mgr
 
 # Add .claude as a subtree
-git-subtree-mgr add --prefix=.claude --repo=amulya-labs/claude-code-config --path=.claude
+git-subtree-mgr add --prefix=.claude --repo=amulya-labs/ai-dev-foundry --path=.claude
 ```
 
 Update later with `git-subtree-mgr pull .claude`.
@@ -133,8 +133,8 @@ Update later with `git-subtree-mgr pull .claude`.
 ### Option 3: Manual Copy
 
 ```bash
-git clone https://github.com/amulya-labs/claude-code-config.git
-cp -r claude-code-config/.claude/ /path/to/your/project/.claude/
+git clone https://github.com/amulya-labs/ai-dev-foundry.git
+cp -r ai-dev-foundry/.claude/ /path/to/your/project/.claude/
 ```
 
 </details>
@@ -149,10 +149,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for hook configuration details.
 
 | Script | Purpose |
 |--------|---------|
-| `manage-claude-code-config.sh` | Install and update `.claude` config and GHA workflows via curl (no git knowledge needed) |
+| `manage-ai-configs.sh` | Install and update AI agent configs and GHA workflows via curl (no git knowledge needed) |
 | `git-subtree-mgr` | Manage git subtrees with history tracking (install globally in `~/bin`) |
 
-Run `./scripts/manage-claude-code-config.sh --help` or `git-subtree-mgr --help` for usage.
+Run `./scripts/manage-ai-configs.sh` or `git-subtree-mgr --help` for usage.
 
 ## Contributing
 

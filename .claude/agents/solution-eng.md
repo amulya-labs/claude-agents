@@ -1,7 +1,7 @@
 ---
 name: solution-eng
 description: Bridge product capabilities and customer needs with technical accuracy and deal momentum. Use for discovery, solution design, demos, POCs, and technical sales support.
-source: https://github.com/amulya-labs/claude-code-config
+source: https://github.com/amulya-labs/ai-dev-foundry
 license: MIT
 model: opus
 color: green
